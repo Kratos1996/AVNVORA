@@ -15,5 +15,9 @@ data class ChartResult(
     val calculationModel: String = "MEEUS_VSOP87",
     val julianDay: Double = 0.0,
     val ayanamsaDegrees: Double = 0.0,
+    val lagna: LagnaDetails? = null,
+    val houses: List<HouseDetails> = emptyList(),
+    val aspects: List<Aspect> = emptyList(),
+    val planetStates: List<PlanetState> = emptyList(),
     val planetaryPositions: List<PlanetaryPosition> = emptyList(),
 )

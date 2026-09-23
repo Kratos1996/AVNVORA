@@ -1,5 +1,5 @@
 # AYNVORA Data Architecture
-Version: 1.1 (Phase 3 Foundation)
+Version: 1.2 (Phase 4.5 Localization)
 
 ## Principles
 - **Offline-First**: Core calculations, profile management, and chart persistence operate completely offline without network requirements.
@@ -48,3 +48,34 @@ Version: 1.1 (Phase 3 Foundation)
 - **Concurrency & Atomicity**: Coroutine `Mutex` serialization guarantees single-writer safety and prevents race conditions. File writes use temporary swap files (`.tmp`) followed by atomic rename to eliminate partial write corruption.
 - **Schema Evolution**: Schema Version 1 baseline with automated `MigrationRunner` ensuring sequential forward migrations and prohibiting unsupported schema downgrades.
 - **Security & Encryption**: Payload-level `StorageCipher` interface enables seamless binding to platform-secure keystores/keychains without leaking crypto specifics.
+
+## Locale Field (Phase 4.5)
+
+`UserPreferences.languageCode: String` is the persisted locale key.
+
+- **Type**: `String` — canonical locale ID (e.g. `"en"`, `"hi"`)
+- **Default**: `"en"` (set in `UserPreferencesEntity` default value)
+- **Validation**: Validated against `LanguageRegistry` at runtime; unknown values fall back to English
+- **Writer**: `AynvoraLocaleManagerImpl.setLocale()` via `UserPreferencesRepository.updatePreferences()`
+- **Reader**: `AynvoraLocaleManagerImpl.initialize()` reads it once at startup
+- **Sensitivity**: Non-sensitive; does NOT require encryption
+- **No Migration**: The field existed since Phase 3; Phase 4.5 formalizes its usage
+
+### Locale Persistence Contract
+
+```
+Language changed by user
+    ↓
+AynvoraLocaleManagerImpl.setLocale(locale)
+    ↓
+_currentLocale.value = locale          ← In-memory state updated immediately
+    ↓
+UserPreferencesRepository.updatePreferences(prefs.copy(languageCode = locale.localeId))
+    ↓
+UserPreferencesRepositoryImpl → AynvoraStorageEngine → StorageDriver
+    ↓
+Persisted to JSON storage (or in-memory for tests)
+```
+
+Persistence failure is non-fatal. In-memory locale is authoritative for the current session.
+On next startup, if persistence failed, the app will fall back to the default locale.

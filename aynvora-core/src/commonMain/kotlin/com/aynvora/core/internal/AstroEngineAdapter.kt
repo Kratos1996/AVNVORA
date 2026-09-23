@@ -5,13 +5,21 @@ import com.aynvora.astro.AynvoraAstroEngine
 import com.aynvora.astro.BirthData as InternalBirthData
 import com.aynvora.astro.BodyId
 import com.aynvora.astro.EngineCalculationConfig
+import com.aynvora.core.models.Aspect
+import com.aynvora.core.models.AspectType
 import com.aynvora.core.models.BirthData
 import com.aynvora.core.models.CelestialBody
 import com.aynvora.core.models.ChartRequest
 import com.aynvora.core.models.ChartResult
+import com.aynvora.core.models.CombustionState
 import com.aynvora.core.models.EngineMetadata
+import com.aynvora.core.models.HouseDetails
+import com.aynvora.core.models.HouseSystem
+import com.aynvora.core.models.LagnaDetails
 import com.aynvora.core.models.Nakshatra
 import com.aynvora.core.models.NakshatraPosition
+import com.aynvora.core.models.PlanetMotionState
+import com.aynvora.core.models.PlanetState
 import com.aynvora.core.models.PlanetaryPosition
 import com.aynvora.core.models.Rashi
 import com.aynvora.core.models.RashiPosition
@@ -24,8 +32,8 @@ internal class AstroEngineAdapter(
     private val engine: AstroEngine = AynvoraAstroEngine(),
 ) {
     private val metadata = EngineMetadata(
-        engineVersion = "0.2.0",
-        buildNumber = "astro-b2",
+        engineVersion = "0.3.0",
+        buildNumber = "astro-b3",
         isDeterministic = true,
         supportedDomains = listOf(
             "PLANETARY_POSITIONS",
@@ -35,6 +43,13 @@ internal class AstroEngineAdapter(
             "NAKSHATRA",
             "PADA",
             "RETROGRADE",
+            "ASCENDANT_LAGNA",
+            "HOUSES_BHAVAS",
+            "HOUSE_OCCUPANCY",
+            "PLANETARY_ASPECTS",
+            "CONJUNCTIONS",
+            "COMBUSTION",
+            "PLANET_STATES",
         ),
     )
 
@@ -72,21 +87,28 @@ internal class AstroEngineAdapter(
 
             val rawResult = engine.calculate(internalBirthData, engineConfig)
 
-            val publicPositions = rawResult.positions.map { raw ->
-                val body = when (raw.bodyId) {
-                    BodyId.SUN -> CelestialBody.SUN
-                    BodyId.MOON -> CelestialBody.MOON
-                    BodyId.MERCURY -> CelestialBody.MERCURY
-                    BodyId.VENUS -> CelestialBody.VENUS
-                    BodyId.MARS -> CelestialBody.MARS
-                    BodyId.JUPITER -> CelestialBody.JUPITER
-                    BodyId.SATURN -> CelestialBody.SATURN
-                    BodyId.RAHU -> CelestialBody.RAHU
-                    BodyId.KETU -> CelestialBody.KETU
-                }
+            val planetStatesMap = rawResult.planetStates.associateBy { it.bodyId }
 
+            val publicPositions = rawResult.positions.map { raw ->
+                val body = mapBodyId(raw.bodyId)
                 val rashi = Rashi.fromIndex(raw.rashiIndex)
                 val nakshatra = Nakshatra.fromIndex(raw.nakshatraIndex)
+                val houseNumber = rawResult.planetHouseOccupancy[raw.bodyId] ?: 1
+
+                val statePos = planetStatesMap[raw.bodyId]
+                val motionState = if (statePos != null) {
+                    mapMotionState(statePos.motionState)
+                } else if (raw.isRetrograde) {
+                    PlanetMotionState.RETROGRADE
+                } else {
+                    PlanetMotionState.DIRECT
+                }
+
+                val combustionState = if (statePos != null) {
+                    mapCombustionState(statePos.combustionState)
+                } else {
+                    CombustionState.NORMAL
+                }
 
                 PlanetaryPosition(
                     body = body,
@@ -102,8 +124,79 @@ internal class AstroEngineAdapter(
                         degreeInNakshatra = raw.degreeInNakshatra,
                         pada = raw.pada,
                     ),
+                    houseNumber = houseNumber,
+                    motionState = motionState,
+                    combustionState = combustionState,
                     isRetrograde = raw.isRetrograde,
                     dailyMotionDegrees = raw.dailyMotionDegrees,
+                )
+            }
+
+            val publicLagna = rawResult.lagna?.let { rawLagna ->
+                val rashi = Rashi.fromIndex(rawLagna.rashiIndex)
+                val nakshatra = Nakshatra.fromIndex(rawLagna.nakshatraIndex)
+
+                LagnaDetails(
+                    tropicalLongitude = rawLagna.tropicalLongitude,
+                    siderealLongitude = rawLagna.siderealLongitude,
+                    rashiPosition = RashiPosition(
+                        rashi = rashi,
+                        degreeInSign = rawLagna.degreeInRashi,
+                        totalSiderealLongitude = rawLagna.siderealLongitude,
+                    ),
+                    nakshatraPosition = NakshatraPosition(
+                        nakshatra = nakshatra,
+                        degreeInNakshatra = rawLagna.degreeInNakshatra,
+                        pada = rawLagna.pada,
+                    ),
+                    localSiderealTimeDegrees = rawLagna.localSiderealTimeDegrees,
+                    obliquityDegrees = rawLagna.obliquityDegrees,
+                    midheavenTropicalLongitude = rawLagna.midheavenTropicalLongitude,
+                    midheavenSiderealLongitude = rawLagna.midheavenSiderealLongitude,
+                )
+            }
+
+            val publicHouses = rawResult.houses.map { rawHouse ->
+                val houseSystem = when (rawHouse.houseSystem.uppercase()) {
+                    "WHOLE_SIGN" -> HouseSystem.WHOLE_SIGN
+                    "EQUAL_HOUSE" -> HouseSystem.EQUAL_HOUSE
+                    "PLACIDUS" -> HouseSystem.PLACIDUS
+                    else -> request.config.houseSystem
+                }
+                val rashi = Rashi.fromIndex(rawHouse.rashiIndex)
+
+                HouseDetails(
+                    houseNumber = rawHouse.houseNumber,
+                    system = houseSystem,
+                    cuspLongitude = rawHouse.cuspLongitude,
+                    startLongitude = rawHouse.startLongitude,
+                    endLongitude = rawHouse.endLongitude,
+                    rashiPosition = RashiPosition(
+                        rashi = rashi,
+                        degreeInSign = rawHouse.degreeInRashi,
+                        totalSiderealLongitude = rawHouse.cuspLongitude,
+                    ),
+                )
+            }
+
+            val publicAspects = rawResult.aspects.map { rawAspect ->
+                Aspect(
+                    firstBody = mapBodyId(rawAspect.firstBody),
+                    secondBody = mapBodyId(rawAspect.secondBody),
+                    type = mapAspectType(rawAspect.type),
+                    exactAngle = rawAspect.exactAngle,
+                    actualSeparation = rawAspect.actualSeparation,
+                    orb = rawAspect.orb,
+                )
+            }
+
+            val publicPlanetStates = rawResult.planetStates.map { rawState ->
+                PlanetState(
+                    body = mapBodyId(rawState.bodyId),
+                    motionState = mapMotionState(rawState.motionState),
+                    combustionState = mapCombustionState(rawState.combustionState),
+                    separationFromSun = rawState.separationFromSun,
+                    combustionThresholdDegrees = rawState.combustionThresholdDegrees,
                 )
             }
 
@@ -116,6 +209,10 @@ internal class AstroEngineAdapter(
                     calculationModel = rawResult.calculationModel,
                     julianDay = rawResult.julianDay,
                     ayanamsaDegrees = rawResult.ayanamsaDegrees,
+                    lagna = publicLagna,
+                    houses = publicHouses,
+                    aspects = publicAspects,
+                    planetStates = publicPlanetPlanetStatesCheck(publicPlanetStates),
                     planetaryPositions = publicPositions,
                 ),
                 metadata = metadata.copy(engineVersion = rawResult.engineVersion),
@@ -129,6 +226,39 @@ internal class AstroEngineAdapter(
                 message = e.message ?: "Calculation terminated due to an unexpected internal error.",
             )
         }
+    }
+
+    private fun publicPlanetPlanetStatesCheck(states: List<PlanetState>): List<PlanetState> = states
+
+    private fun mapBodyId(id: BodyId): CelestialBody = when (id) {
+        BodyId.SUN -> CelestialBody.SUN
+        BodyId.MOON -> CelestialBody.MOON
+        BodyId.MERCURY -> CelestialBody.MERCURY
+        BodyId.VENUS -> CelestialBody.VENUS
+        BodyId.MARS -> CelestialBody.MARS
+        BodyId.JUPITER -> CelestialBody.JUPITER
+        BodyId.SATURN -> CelestialBody.SATURN
+        BodyId.RAHU -> CelestialBody.RAHU
+        BodyId.KETU -> CelestialBody.KETU
+    }
+
+    private fun mapAspectType(type: com.aynvora.astro.aspects.AspectType): AspectType = when (type) {
+        com.aynvora.astro.aspects.AspectType.CONJUNCTION -> AspectType.CONJUNCTION
+        com.aynvora.astro.aspects.AspectType.SEXTILE -> AspectType.SEXTILE
+        com.aynvora.astro.aspects.AspectType.SQUARE -> AspectType.SQUARE
+        com.aynvora.astro.aspects.AspectType.TRINE -> AspectType.TRINE
+        com.aynvora.astro.aspects.AspectType.OPPOSITION -> AspectType.OPPOSITION
+    }
+
+    private fun mapMotionState(state: com.aynvora.astro.states.PlanetMotionState): PlanetMotionState = when (state) {
+        com.aynvora.astro.states.PlanetMotionState.DIRECT -> PlanetMotionState.DIRECT
+        com.aynvora.astro.states.PlanetMotionState.RETROGRADE -> PlanetMotionState.RETROGRADE
+    }
+
+    private fun mapCombustionState(state: com.aynvora.astro.states.CombustionState): CombustionState = when (state) {
+        com.aynvora.astro.states.CombustionState.NORMAL -> CombustionState.NORMAL
+        com.aynvora.astro.states.CombustionState.COMBUST -> CombustionState.COMBUST
+        com.aynvora.astro.states.CombustionState.NOT_APPLICABLE -> CombustionState.NOT_APPLICABLE
     }
 
     private fun validate(birthData: BirthData): AynvoraResult.Failure.InvalidInput? {

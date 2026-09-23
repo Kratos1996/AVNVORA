@@ -73,17 +73,21 @@ class AynvoraSdkTest {
         assertNotNull(success.value)
 
         // Verifies public response attributes
-        assertEquals("0.2.0", success.value.engineVersion)
+        assertEquals("0.3.0", success.value.engineVersion)
         assertEquals("CALCULATED", success.value.calculationStatus)
         assertEquals("1995-05-21T14:30:00", success.value.birthData.toIsoDateTimeString())
 
-        // Requirement 4: Public result must not expose engine implementation types
+        // Public result must not expose engine implementation types
         assertEquals("com.aynvora.core.models.ChartResult", success.value::class.qualifiedName)
 
         // Verifies engine metadata is present
-        assertEquals("0.2.0", success.metadata.engineVersion)
+        assertEquals("0.3.0", success.metadata.engineVersion)
         assertTrue(success.metadata.isDeterministic)
         assertTrue(success.metadata.supportedDomains.contains("PLANETARY_POSITIONS"))
+        assertTrue(success.metadata.supportedDomains.contains("ASCENDANT_LAGNA"))
+        assertTrue(success.metadata.supportedDomains.contains("HOUSES_BHAVAS"))
+        assertTrue(success.metadata.supportedDomains.contains("PLANETARY_ASPECTS"))
+        assertTrue(success.metadata.supportedDomains.contains("PLANET_STATES"))
     }
 
     @Test
@@ -114,8 +118,7 @@ class AynvoraSdkTest {
         val sdk = Aynvora.create()
         val metadata = sdk.getMetadata()
 
-        assertEquals("0.2.0", metadata.engineVersion)
+        assertEquals("0.3.0", metadata.engineVersion)
         assertTrue(metadata.isDeterministic)
     }
 }
-

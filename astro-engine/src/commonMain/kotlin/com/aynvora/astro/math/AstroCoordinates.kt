@@ -37,6 +37,17 @@ object AstroMath {
         return if (norm >= 180.0) norm - 360.0 else norm
     }
 
+    /**
+     * Calculates the shortest angular separation between two ecliptic longitudes in degrees.
+     * Guaranteed to return a value in the range [0.0, 180.0].
+     */
+    fun angularSeparation(deg1: Double, deg2: Double): Double {
+        val norm1 = normalizeDegrees(deg1)
+        val norm2 = normalizeDegrees(deg2)
+        val diff = abs(norm1 - norm2) % 360.0
+        return if (diff > 180.0) 360.0 - diff else diff
+    }
+
     fun sinDeg(deg: Double): Double = sin(deg * DEG2RAD)
 
     fun cosDeg(deg: Double): Double = cos(deg * DEG2RAD)

@@ -100,7 +100,91 @@ data class NakshatraPosition(
 )
 
 /**
- * Calculated planetary coordinate and motion output.
+ * Ascendant / Lagna astronomical details.
+ */
+@Serializable
+data class LagnaDetails(
+    val tropicalLongitude: Double,
+    val siderealLongitude: Double,
+    val rashiPosition: RashiPosition,
+    val nakshatraPosition: NakshatraPosition,
+    val localSiderealTimeDegrees: Double = 0.0,
+    val obliquityDegrees: Double = 0.0,
+    val midheavenTropicalLongitude: Double = 0.0,
+    val midheavenSiderealLongitude: Double = 0.0,
+)
+
+/**
+ * Calculated house (Bhava) details.
+ */
+@Serializable
+data class HouseDetails(
+    val houseNumber: Int, // 1..12
+    val system: HouseSystem,
+    val cuspLongitude: Double,
+    val startLongitude: Double,
+    val endLongitude: Double,
+    val rashiPosition: RashiPosition,
+)
+
+/**
+ * Classical planetary aspect classification types.
+ */
+@Serializable
+enum class AspectType(val exactAngle: Double, val defaultOrb: Double) {
+    CONJUNCTION(0.0, 8.0),
+    SEXTILE(60.0, 6.0),
+    SQUARE(90.0, 7.0),
+    TRINE(120.0, 8.0),
+    OPPOSITION(180.0, 8.0),
+}
+
+/**
+ * Apparent planetary motion state.
+ */
+@Serializable
+enum class PlanetMotionState {
+    DIRECT,
+    RETROGRADE,
+}
+
+/**
+ * Planetary solar combustion (Asta) state.
+ */
+@Serializable
+enum class CombustionState {
+    NORMAL,
+    COMBUST,
+    NOT_APPLICABLE,
+}
+
+/**
+ * Factual aspect relationship between two distinct celestial bodies.
+ */
+@Serializable
+data class Aspect(
+    val firstBody: CelestialBody,
+    val secondBody: CelestialBody,
+    val type: AspectType,
+    val exactAngle: Double,
+    val actualSeparation: Double,
+    val orb: Double,
+)
+
+/**
+ * Planetary condition and state details.
+ */
+@Serializable
+data class PlanetState(
+    val body: CelestialBody,
+    val motionState: PlanetMotionState,
+    val combustionState: CombustionState,
+    val separationFromSun: Double? = null,
+    val combustionThresholdDegrees: Double? = null,
+)
+
+/**
+ * Calculated planetary coordinate, house occupancy, and motion output.
  */
 @Serializable
 data class PlanetaryPosition(
@@ -109,6 +193,9 @@ data class PlanetaryPosition(
     val siderealLongitude: Double,
     val rashiPosition: RashiPosition,
     val nakshatraPosition: NakshatraPosition,
+    val houseNumber: Int = 1,
     val isRetrograde: Boolean,
     val dailyMotionDegrees: Double,
+    val motionState: PlanetMotionState = if (isRetrograde) PlanetMotionState.RETROGRADE else PlanetMotionState.DIRECT,
+    val combustionState: CombustionState = CombustionState.NORMAL,
 )

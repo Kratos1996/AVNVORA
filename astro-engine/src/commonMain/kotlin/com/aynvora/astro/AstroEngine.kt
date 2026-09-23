@@ -1,11 +1,21 @@
 package com.aynvora.astro
 
+import com.aynvora.astro.aspects.AspectCalculator
+import com.aynvora.astro.aspects.AspectPosition
+import com.aynvora.astro.aspects.AspectProfile
 import com.aynvora.astro.ayanamsa.AyanamsaCalculator
+import com.aynvora.astro.houses.HouseCalculationInput
+import com.aynvora.astro.houses.HousePosition
+import com.aynvora.astro.houses.HouseSystemRegistry
+import com.aynvora.astro.lagna.LagnaCalculator
+import com.aynvora.astro.lagna.LagnaPosition
 import com.aynvora.astro.planets.LunarNodesCalculator
 import com.aynvora.astro.planets.MoonCalculator
 import com.aynvora.astro.planets.PlanetaryCalculator
 import com.aynvora.astro.planets.PlanetaryCalculator.Planet
 import com.aynvora.astro.planets.SunCalculator
+import com.aynvora.astro.states.PlanetStateCalculator
+import com.aynvora.astro.states.PlanetStatePosition
 import com.aynvora.astro.time.TimeNormalizer
 import com.aynvora.astro.zodiac.ZodiacCalculator
 import kotlinx.serialization.Serializable
@@ -69,6 +79,11 @@ data class CalculationResult(
     val julianCenturies: Double = 0.0,
     val ayanamsaDegrees: Double = 0.0,
     val ayanamsaName: String = "LAHIRI_CHITRAPAKSHA",
+    val lagna: LagnaPosition? = null,
+    val houses: List<HousePosition> = emptyList(),
+    val planetHouseOccupancy: Map<BodyId, Int> = emptyMap(),
+    val aspects: List<AspectPosition> = emptyList(),
+    val planetStates: List<PlanetStatePosition> = emptyList(),
     val positions: List<BodyPosition> = emptyList(),
 )
 
@@ -170,14 +185,46 @@ class AynvoraAstroEngine : AstroEngine {
         positions.add(createBodyPosition(BodyId.RAHU, nodes.rahu.apparentLongitude, ayanamsaDegrees, true, nodes.rahu.dailyMotionDegrees))
         positions.add(createBodyPosition(BodyId.KETU, nodes.ketu.apparentLongitude, ayanamsaDegrees, true, nodes.ketu.dailyMotionDegrees))
 
+        // Ascendant / Lagna calculation
+        val lagna = LagnaCalculator.calculate(
+            jd = jd,
+            latitudeDeg = birthData.latitude,
+            longitudeDeg = birthData.longitude,
+            ayanamsaDegrees = ayanamsaDegrees,
+        )
+
+        // House / Bhava calculation
+        val planetLongitudes = positions.associate { it.bodyId to it.siderealLongitude }
+        val houseCalculator = HouseSystemRegistry.forName(config.houseSystem)
+        val houseResult = houseCalculator.calculate(
+            HouseCalculationInput(
+                lagna = lagna,
+                latitudeDeg = birthData.latitude,
+                longitudeDeg = birthData.longitude,
+                ayanamsaDegrees = ayanamsaDegrees,
+                planetPositions = planetLongitudes,
+            ),
+        )
+
+        // Aspects & Conjunctions calculation
+        val aspects = AspectCalculator.calculate(positions)
+
+        // Planet states (combustion & motion states)
+        val planetStates = PlanetStateCalculator.calculate(positions)
+
         return CalculationResult(
-            engineVersion = "0.2.0",
+            engineVersion = "0.3.0",
             status = "CALCULATED",
             calculationModel = "MEEUS_VSOP87",
             julianDay = jd.value,
             julianCenturies = jd.julianCenturiesJ2000,
             ayanamsaDegrees = ayanamsaDegrees,
             ayanamsaName = config.ayanamsa,
+            lagna = lagna,
+            houses = houseResult.houses,
+            planetHouseOccupancy = houseResult.planetHouseOccupancy,
+            aspects = aspects,
+            planetStates = planetStates,
             positions = positions,
         )
     }

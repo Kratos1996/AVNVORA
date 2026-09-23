@@ -28,6 +28,7 @@ enum class AyanamsaConvention {
  */
 @Serializable
 enum class HouseSystem {
+    WHOLE_SIGN,
     EQUAL_HOUSE,
     SHRIPATI_PORPHYRY,
     PLACIDUS,

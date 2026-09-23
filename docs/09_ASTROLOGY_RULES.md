@@ -1,5 +1,5 @@
 # AYNVORA Astrology Rules
-Version: 1.1 (Phase 4 Implemented Rules)
+Version: 1.3 (Phase 5.2 Implemented Rules)
 
 ## Implemented Rule Registry
 
@@ -39,3 +39,24 @@ Version: 1.1 (Phase 4 Implemented Rules)
   - Sun and Moon: Always direct ($\text{isRetrograde} = \text{false}$).
   - Mean Rahu and Ketu: Always retrograde ($\text{isRetrograde} = \text{true}$).
   - Mercury, Venus, Mars, Jupiter, Saturn: Determined from apparent longitudinal velocity.
+
+### ASTRO-R07: Angular Separation & Major Planetary Aspects
+- **Geometry**: Shortest circular distance along the ecliptic:
+  $\text{separation}(A, B) = \min(|A - B| \bmod 360^\circ, 360^\circ - (|A - B| \bmod 360^\circ)) \in [0.0^\circ, 180.0^\circ]$.
+- **Aspect Definitions & Default Orbs**:
+  - Conjunction ($0^\circ$): Orb $\le 8.0^\circ$
+  - Sextile ($60^\circ$): Orb $\le 6.0^\circ$
+  - Square ($90^\circ$): Orb $\le 7.0^\circ$
+  - Trine ($120^\circ$): Orb $\le 8.0^\circ$
+  - Opposition ($180^\circ$): Orb $\le 8.0^\circ$
+- **Pairs**: Distinct unordered pairs only $(A < B)$, deduplicated and deterministically ordered.
+
+### ASTRO-R08: Planetary Combustion (Asta)
+- **Tradition**: Surya Siddhanta / Brihat Parashara Hora Shastra classical solar proximity thresholds:
+  - Moon: $\le 12.0^\circ$
+  - Mars: $\le 17.0^\circ$
+  - Mercury: $\le 14.0^\circ$ (Direct), $\le 12.0^\circ$ (Retrograde)
+  - Jupiter: $\le 11.0^\circ$
+  - Venus: $\le 10.0^\circ$ (Direct), $\le 8.0^\circ$ (Retrograde)
+  - Saturn: $\le 15.0^\circ$
+  - Sun, Rahu, Ketu: `NOT_APPLICABLE` (Sun cannot be combust; shadow nodes are exempt from solar combustion).
