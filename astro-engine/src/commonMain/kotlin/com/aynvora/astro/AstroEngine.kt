@@ -1,0 +1,211 @@
+package com.aynvora.astro
+
+import com.aynvora.astro.ayanamsa.AyanamsaCalculator
+import com.aynvora.astro.planets.LunarNodesCalculator
+import com.aynvora.astro.planets.MoonCalculator
+import com.aynvora.astro.planets.PlanetaryCalculator
+import com.aynvora.astro.planets.PlanetaryCalculator.Planet
+import com.aynvora.astro.planets.SunCalculator
+import com.aynvora.astro.time.TimeNormalizer
+import com.aynvora.astro.zodiac.ZodiacCalculator
+import kotlinx.serialization.Serializable
+
+@Serializable
+enum class BodyId {
+    SUN,
+    MOON,
+    MERCURY,
+    VENUS,
+    MARS,
+    JUPITER,
+    SATURN,
+    RAHU,
+    KETU,
+}
+
+@Serializable
+data class BodyPosition(
+    val bodyId: BodyId,
+    val tropicalLongitude: Double,
+    val siderealLongitude: Double,
+    val rashiIndex: Int,
+    val rashiName: String,
+    val degreeInRashi: Double,
+    val nakshatraIndex: Int,
+    val nakshatraName: String,
+    val degreeInNakshatra: Double,
+    val pada: Int,
+    val isRetrograde: Boolean,
+    val dailyMotionDegrees: Double,
+)
+
+@Serializable
+data class EngineCalculationConfig(
+    val ayanamsa: String = "LAHIRI_CHITRAPAKSHA",
+    val houseSystem: String = "EQUAL_HOUSE",
+    val profile: String = "STANDARD_VEDIC",
+)
+
+@Serializable
+data class BirthData(
+    val dateTimeIso: String,
+    val latitude: Double,
+    val longitude: Double,
+    val timeZoneId: String,
+    val year: Int? = null,
+    val month: Int? = null,
+    val day: Int? = null,
+    val hour: Int? = null,
+    val minute: Int? = null,
+    val second: Int? = null,
+)
+
+@Serializable
+data class CalculationResult(
+    val engineVersion: String,
+    val status: String,
+    val calculationModel: String = "MEEUS_VSOP87",
+    val julianDay: Double = 0.0,
+    val julianCenturies: Double = 0.0,
+    val ayanamsaDegrees: Double = 0.0,
+    val ayanamsaName: String = "LAHIRI_CHITRAPAKSHA",
+    val positions: List<BodyPosition> = emptyList(),
+)
+
+interface AstroEngine {
+    suspend fun calculate(
+        birthData: BirthData,
+        config: EngineCalculationConfig = EngineCalculationConfig(),
+    ): CalculationResult
+}
+
+class AynvoraAstroEngine : AstroEngine {
+
+    override suspend fun calculate(
+        birthData: BirthData,
+        config: EngineCalculationConfig,
+    ): CalculationResult {
+        // Resolve date-time components
+        val y: Int
+        val m: Int
+        val d: Int
+        val h: Int
+        val min: Int
+        val s: Int
+
+        if (birthData.year != null && birthData.month != null && birthData.day != null &&
+            birthData.hour != null && birthData.minute != null
+        ) {
+            y = birthData.year
+            m = birthData.month
+            d = birthData.day
+            h = birthData.hour
+            min = birthData.minute
+            s = birthData.second ?: 0
+        } else {
+            // Parse ISO format YYYY-MM-DDTHH:MM:SS
+            val parts = birthData.dateTimeIso.split("T")
+            require(parts.size == 2) { "Invalid dateTimeIso format: ${birthData.dateTimeIso}" }
+            val dateParts = parts[0].split("-").map { it.toInt() }
+            val cleanTime = parts[1].removeSuffix("Z").split("+")[0].split("-")[0]
+            val timeParts = cleanTime.split(":").map { it.toInt() }
+
+            y = dateParts[0]
+            m = dateParts[1]
+            d = dateParts[2]
+            h = timeParts[0]
+            min = timeParts[1]
+            s = if (timeParts.size > 2) timeParts[2] else 0
+        }
+
+        // Time normalization to UTC and Julian Day
+        val normalizedTime = TimeNormalizer.normalize(
+            year = y,
+            month = m,
+            day = d,
+            hour = h,
+            minute = min,
+            second = s,
+            timezoneId = birthData.timeZoneId,
+        )
+        val jd = normalizedTime.julianDay
+
+        // Ayanamsa calculation
+        val ayanamsaCalculator = AyanamsaCalculator.forConvention(config.ayanamsa)
+        val ayanamsaDegrees = ayanamsaCalculator.calculate(jd)
+
+        // Celestial body calculations
+        val positions = mutableListOf<BodyPosition>()
+
+        // 1. Sun
+        val sun = SunCalculator.calculate(jd)
+        positions.add(createBodyPosition(BodyId.SUN, sun.apparentLongitude, ayanamsaDegrees, false, sun.dailyMotionDegrees))
+
+        // 2. Moon
+        val moon = MoonCalculator.calculate(jd)
+        positions.add(createBodyPosition(BodyId.MOON, moon.apparentLongitude, ayanamsaDegrees, false, moon.dailyMotionDegrees))
+
+        // 3. Mercury
+        val mercury = PlanetaryCalculator.calculate(Planet.MERCURY, jd)
+        positions.add(createBodyPosition(BodyId.MERCURY, mercury.apparentLongitude, ayanamsaDegrees, mercury.isRetrograde, mercury.dailyMotionDegrees))
+
+        // 4. Venus
+        val venus = PlanetaryCalculator.calculate(Planet.VENUS, jd)
+        positions.add(createBodyPosition(BodyId.VENUS, venus.apparentLongitude, ayanamsaDegrees, venus.isRetrograde, venus.dailyMotionDegrees))
+
+        // 5. Mars
+        val mars = PlanetaryCalculator.calculate(Planet.MARS, jd)
+        positions.add(createBodyPosition(BodyId.MARS, mars.apparentLongitude, ayanamsaDegrees, mars.isRetrograde, mars.dailyMotionDegrees))
+
+        // 6. Jupiter
+        val jupiter = PlanetaryCalculator.calculate(Planet.JUPITER, jd)
+        positions.add(createBodyPosition(BodyId.JUPITER, jupiter.apparentLongitude, ayanamsaDegrees, jupiter.isRetrograde, jupiter.dailyMotionDegrees))
+
+        // 7. Saturn
+        val saturn = PlanetaryCalculator.calculate(Planet.SATURN, jd)
+        positions.add(createBodyPosition(BodyId.SATURN, saturn.apparentLongitude, ayanamsaDegrees, saturn.isRetrograde, saturn.dailyMotionDegrees))
+
+        // 8. Rahu & 9. Ketu
+        val nodes = LunarNodesCalculator.calculate(jd)
+        positions.add(createBodyPosition(BodyId.RAHU, nodes.rahu.apparentLongitude, ayanamsaDegrees, true, nodes.rahu.dailyMotionDegrees))
+        positions.add(createBodyPosition(BodyId.KETU, nodes.ketu.apparentLongitude, ayanamsaDegrees, true, nodes.ketu.dailyMotionDegrees))
+
+        return CalculationResult(
+            engineVersion = "0.2.0",
+            status = "CALCULATED",
+            calculationModel = "MEEUS_VSOP87",
+            julianDay = jd.value,
+            julianCenturies = jd.julianCenturiesJ2000,
+            ayanamsaDegrees = ayanamsaDegrees,
+            ayanamsaName = config.ayanamsa,
+            positions = positions,
+        )
+    }
+
+    private fun createBodyPosition(
+        bodyId: BodyId,
+        tropicalLongitude: Double,
+        ayanamsaDegrees: Double,
+        isRetrograde: Boolean,
+        dailyMotion: Double,
+    ): BodyPosition {
+        val sidereal = ZodiacCalculator.toSidereal(tropicalLongitude, ayanamsaDegrees)
+        val rashi = ZodiacCalculator.calculateRashi(sidereal)
+        val nakshatra = ZodiacCalculator.calculateNakshatra(sidereal)
+
+        return BodyPosition(
+            bodyId = bodyId,
+            tropicalLongitude = tropicalLongitude,
+            siderealLongitude = sidereal,
+            rashiIndex = rashi.index,
+            rashiName = rashi.name,
+            degreeInRashi = rashi.degreeInRashi,
+            nakshatraIndex = nakshatra.index,
+            nakshatraName = nakshatra.name,
+            degreeInNakshatra = nakshatra.degreeInNakshatra,
+            pada = nakshatra.pada,
+            isRetrograde = isRetrograde,
+            dailyMotionDegrees = dailyMotion,
+        )
+    }
+}

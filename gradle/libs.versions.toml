@@ -1,0 +1,26 @@
+[versions]
+kotlin = "2.4.20"
+compose = "1.12.1"
+androidGradlePlugin = "9.4.1"
+androidCompileSdk = "37"
+androidMinSdk = "23"
+androidTargetSdk = "37"
+activityCompose = "1.12.0"
+coroutines = "1.10.2"
+serialization = "1.9.0"
+cottonsheet = "1.0.1"
+
+[libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+cottonsheet = { module = "io.github.kratos1996:cottonsheet", version.ref = "cottonsheet" }
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "androidGradlePlugin" }
+compose = { id = "org.jetbrains.compose", version.ref = "compose" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
