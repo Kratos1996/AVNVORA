@@ -24,6 +24,8 @@ import com.aynvora.designsystem.components.AynvoraButton
 import com.aynvora.designsystem.components.AynvoraButtonVariant
 import com.aynvora.designsystem.components.AynvoraCard
 import com.aynvora.designsystem.components.AynvoraCardVariant
+import com.aynvora.designsystem.components.dialogs.AynvoraDialogHost
+import com.aynvora.designsystem.components.sheets.AynvoraBottomSheetHost
 
 /**
  * Root Compose Multiplatform entry application for AYNVORA with adaptive multi-device support.
@@ -53,8 +55,8 @@ fun AynvoraApp(darkTheme: Boolean = true) {
 
         val windowInfo = AynvoraTheme.window
 
-        com.aynvora.designsystem.components.sheets.AynvoraBottomSheetHost {
-            com.aynvora.designsystem.components.dialogs.AynvoraDialogHost {
+        AynvoraBottomSheetHost {
+            AynvoraDialogHost {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()

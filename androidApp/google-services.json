@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "7121381722",
+    "project_id": "avnvora",
+    "storage_bucket": "avnvora.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:7121381722:android:ce6f4c431cb9c63e13eb63",
+        "android_client_info": {
+          "package_name": "com.aynvora.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDwn9X0iAgxpxawi3vMWtilf09sISOtcY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:7121381722:android:ce6f4c431cb9c63e13eb63",
+        "android_client_info": {
+          "package_name": "com.aynvora"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDwn9X0iAgxpxawi3vMWtilf09sISOtcY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

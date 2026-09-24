@@ -1,5 +1,17 @@
 package com.aynvora.astro
 
+import com.aynvora.astro.dignity.PlanetaryDignityCalculator
+import com.aynvora.astro.dignity.PlanetaryDignityPosition
+import com.aynvora.astro.ashtakavarga.AshtakavargaCalculator
+import com.aynvora.astro.ashtakavarga.AshtakavargaResult
+import com.aynvora.astro.ashtakavarga.AshtakavargaShodhanaCalculator
+import com.aynvora.astro.ashtakavarga.ShodhitaAshtakavargaResult
+import com.aynvora.astro.ashtakavarga.AshtakavargaPindaCalculator
+import com.aynvora.astro.ashtakavarga.AshtakavargaPindaResult
+import com.aynvora.astro.relationship.PlanetaryRelationshipCalculator
+import com.aynvora.astro.relationship.PlanetaryRelationshipPosition
+import com.aynvora.astro.shadbala.PlanetaryShadbalaPosition
+import com.aynvora.astro.shadbala.ShadbalaCalculator
 import com.aynvora.astro.aspects.AspectCalculator
 import com.aynvora.astro.aspects.AspectPosition
 import com.aynvora.astro.aspects.AspectProfile
@@ -17,6 +29,11 @@ import com.aynvora.astro.planets.SunCalculator
 import com.aynvora.astro.states.PlanetStateCalculator
 import com.aynvora.astro.states.PlanetStatePosition
 import com.aynvora.astro.time.TimeNormalizer
+import com.aynvora.astro.varga.DefaultVargaEngine
+import com.aynvora.astro.varga.DivisionalChart
+import com.aynvora.astro.varga.VargaChartResult
+import com.aynvora.astro.varga.VargaEngine
+import com.aynvora.astro.varga.VargaProfile
 import com.aynvora.astro.zodiac.ZodiacCalculator
 import kotlinx.serialization.Serializable
 
@@ -54,6 +71,9 @@ data class EngineCalculationConfig(
     val ayanamsa: String = "LAHIRI_CHITRAPAKSHA",
     val houseSystem: String = "EQUAL_HOUSE",
     val profile: String = "STANDARD_VEDIC",
+    val vargaRulesetId: String = "PARASHARA_CLASSICAL_V1",
+    val requestedDivisionalCharts: Set<DivisionalChart> = emptySet(),
+    val ashtakavargaRulesetId: String = "PARASHARA_CLASSICAL_V1",
 )
 
 @Serializable
@@ -85,6 +105,13 @@ data class CalculationResult(
     val aspects: List<AspectPosition> = emptyList(),
     val planetStates: List<PlanetStatePosition> = emptyList(),
     val positions: List<BodyPosition> = emptyList(),
+    val divisionalCharts: Map<DivisionalChart, VargaChartResult> = emptyMap(),
+    val planetaryDignities: List<PlanetaryDignityPosition> = emptyList(),
+    val planetaryRelationships: List<PlanetaryRelationshipPosition> = emptyList(),
+    val shadbala: List<PlanetaryShadbalaPosition> = emptyList(),
+    val ashtakavarga: AshtakavargaResult? = null,
+    val shodhitaAshtakavarga: ShodhitaAshtakavargaResult? = null,
+    val ashtakavargaPinda: AshtakavargaPindaResult? = null,
 )
 
 interface AstroEngine {
@@ -94,7 +121,9 @@ interface AstroEngine {
     ): CalculationResult
 }
 
-class AynvoraAstroEngine : AstroEngine {
+class AynvoraAstroEngine(
+    private val vargaEngine: VargaEngine = DefaultVargaEngine(),
+) : AstroEngine {
 
     override suspend fun calculate(
         birthData: BirthData,
@@ -212,6 +241,60 @@ class AynvoraAstroEngine : AstroEngine {
         // Planet states (combustion & motion states)
         val planetStates = PlanetStateCalculator.calculate(positions)
 
+        // Divisional charts calculation
+        val divisionalCharts = if (config.requestedDivisionalCharts.isNotEmpty()) {
+            if (config.vargaRulesetId != VargaProfile.DEFAULT_RULESET_ID) {
+                throw UnsupportedOperationException("Divisional chart ruleset '${config.vargaRulesetId}' is unsupported.")
+            }
+            val vargaProfile = VargaProfile(rulesetId = config.vargaRulesetId)
+            vargaEngine.calculateMultiple(
+                positions = positions,
+                lagna = lagna,
+                charts = config.requestedDivisionalCharts,
+                profile = vargaProfile,
+            )
+        } else {
+            emptyMap()
+        }
+
+        // Planetary dignities and relationships
+        val planetaryDignities = PlanetaryDignityCalculator.calculateDignities(positions)
+        val planetaryRelationships = PlanetaryRelationshipCalculator.calculateRelationships(positions)
+
+        // Shadbala
+        val shadbala = ShadbalaCalculator.calculateShadbala(
+            positions = positions,
+            lagnaLongitude = lagna.siderealLongitude,
+            houseCusps = houseResult.houses.associate { it.houseNumber to it.cuspLongitude },
+            planetHouseOccupancy = houseResult.planetHouseOccupancy,
+            vargas = divisionalCharts,
+            vargaEngine = vargaEngine,
+            julianDay = jd.value,
+            birthHour = birthData.hour ?: 12,
+            obliquityDeg = lagna.obliquityDegrees,
+        )
+
+        val rawAshtakavarga = AshtakavargaCalculator.calculateAshtakavarga(
+            positions = positions,
+            lagna = lagna,
+            rulesetId = config.ashtakavargaRulesetId,
+        )
+
+        val shodhitaAshtakavarga = AshtakavargaShodhanaCalculator.calculateShodhana(
+            ashtakavargaResult = rawAshtakavarga,
+            positions = positions,
+        )
+
+        val ashtakavargaPinda = AshtakavargaPindaCalculator.calculatePindas(
+            shodhitaAshtakavarga = shodhitaAshtakavarga,
+            positions = positions,
+        )
+
+        val ashtakavarga = rawAshtakavarga.copy(
+            shodhana = shodhitaAshtakavarga,
+            pinda = ashtakavargaPinda,
+        )
+
         return CalculationResult(
             engineVersion = "0.3.0",
             status = "CALCULATED",
@@ -226,6 +309,13 @@ class AynvoraAstroEngine : AstroEngine {
             aspects = aspects,
             planetStates = planetStates,
             positions = positions,
+            divisionalCharts = divisionalCharts,
+            planetaryDignities = planetaryDignities,
+            planetaryRelationships = planetaryRelationships,
+            shadbala = shadbala,
+            ashtakavarga = ashtakavarga,
+            shodhitaAshtakavarga = shodhitaAshtakavarga,
+            ashtakavargaPinda = ashtakavargaPinda,
         )
     }
 

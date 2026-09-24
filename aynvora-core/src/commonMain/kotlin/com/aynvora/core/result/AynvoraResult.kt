@@ -83,6 +83,15 @@ sealed interface AynvoraResult<out T> {
         ) : Failure
 
         /**
+         * Raised when content synchronization or signature verification fails.
+         */
+        data class SyncFailure(
+            val code: String,
+            override val message: String,
+            val isRetryable: Boolean = true,
+        ) : Failure
+
+        /**
          * Raised when an unexpected internal error occurs, sanitizing sensitive system details.
          */
         data class InternalFailure(

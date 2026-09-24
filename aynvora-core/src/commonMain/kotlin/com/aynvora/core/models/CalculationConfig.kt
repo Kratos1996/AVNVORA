@@ -42,4 +42,8 @@ data class CalculationConfig(
     val profile: CalculationProfile = CalculationProfile.STANDARD_VEDIC,
     val ayanamsa: AyanamsaConvention = AyanamsaConvention.LAHIRI_CHITRAPAKSHA,
     val houseSystem: HouseSystem = HouseSystem.EQUAL_HOUSE,
+    val requestedDivisionalCharts: Set<DivisionalChart> = emptySet(),
+    val vargaRulesetId: String = "PARASHARA_CLASSICAL_V1",
+    val ashtakavargaRulesetId: String = "PARASHARA_CLASSICAL_V1",
 )
+

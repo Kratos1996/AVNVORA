@@ -20,4 +20,12 @@ data class ChartResult(
     val aspects: List<Aspect> = emptyList(),
     val planetStates: List<PlanetState> = emptyList(),
     val planetaryPositions: List<PlanetaryPosition> = emptyList(),
+    val divisionalCharts: Map<DivisionalChart, DivisionalChartResult> = emptyMap(),
+    val planetaryDignities: List<PlanetaryDignity> = emptyList(),
+    val planetaryRelationships: List<PlanetaryRelationship> = emptyList(),
+    val shadbala: List<PlanetaryShadbala> = emptyList(),
+    val ashtakavarga: AshtakavargaResult? = null,
+    val shodhitaAshtakavarga: ShodhitaAshtakavargaResult? = null,
+    val ashtakavargaPinda: AshtakavargaPinda? = null,
 )
+

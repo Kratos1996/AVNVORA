@@ -199,3 +199,457 @@ data class PlanetaryPosition(
     val motionState: PlanetMotionState = if (isRetrograde) PlanetMotionState.RETROGRADE else PlanetMotionState.DIRECT,
     val combustionState: CombustionState = CombustionState.NORMAL,
 )
+
+/**
+ * Strongly typed enumeration of classical Vedic divisional charts (Vargas).
+ */
+@Serializable
+enum class DivisionalChart(val divisionNumber: Int) {
+    D1(1),
+    D2(2),
+    D3(3),
+    D4(4),
+    D7(7),
+    D9(9),
+    D10(10),
+    D12(12),
+    D16(16),
+    D20(20),
+    D24(24),
+    D27(27),
+    D30(30),
+    D40(40),
+    D45(45),
+    D60(60);
+
+    companion object {
+        fun fromDivisionNumber(number: Int): DivisionalChart? =
+            entries.find { it.divisionNumber == number }
+    }
+}
+
+/**
+ * Factual divisional chart position of a celestial body or Lagna.
+ */
+@Serializable
+data class DivisionalPosition(
+    val body: CelestialBody?,
+    val isLagna: Boolean = false,
+    val sourceLongitude: Double,
+    val sourceRashi: Rashi,
+    val divisionIndex: Int,
+    val resultingRashi: Rashi,
+    val degreeInResultingRashi: Double,
+    val resultingLongitude: Double,
+)
+
+/**
+ * Public factual result of a divisional chart calculation.
+ * Contains no astrological interpretation or prediction.
+ */
+@Serializable
+data class DivisionalChartResult(
+    val chart: DivisionalChart,
+    val rulesetId: String,
+    val isSupported: Boolean,
+    val lagnaPosition: DivisionalPosition?,
+    val positions: List<DivisionalPosition>,
+)
+
+/**
+ * Factual planetary dignity classification according to traditional Vedic astrology.
+ */
+@Serializable
+enum class DignityType {
+    EXALTATION,
+    DEBILITATION,
+    MOOLATRIKONA,
+    OWN_SIGN,
+    GREAT_FRIEND_SIGN,
+    FRIEND_SIGN,
+    NEUTRAL_SIGN,
+    ENEMY_SIGN,
+    GREAT_ENEMY_SIGN,
+    NOT_APPLICABLE,
+}
+
+/**
+ * Factual planetary dignity evaluated in a specific chart position.
+ */
+@Serializable
+data class PlanetaryDignity(
+    val body: CelestialBody,
+    val chart: DivisionalChart = DivisionalChart.D1,
+    val rashi: Rashi,
+    val signLord: CelestialBody?,
+    val dignityType: DignityType,
+    val isExalted: Boolean,
+    val isDebilitated: Boolean,
+    val isMoolatrikona: Boolean,
+    val isOwnSign: Boolean,
+    val deepExaltationDegree: Double? = null,
+    val deepDebilitationDegree: Double? = null,
+    val degreeInSign: Double = 0.0,
+    val ruleId: String = "PARASHARA_CLASSICAL_V1",
+)
+
+/**
+ * Natural planetary relationship (Naisargika Maitri) according to BPHS Ch. 3, Slokas 55-58.
+ */
+@Serializable
+enum class NaturalRelationshipType {
+    FRIEND,
+    NEUTRAL,
+    ENEMY,
+    NOT_APPLICABLE,
+}
+
+/**
+ * Temporary planetary relationship (Tatkalika Maitri) according to BPHS Ch. 3, Sloka 59.
+ */
+@Serializable
+enum class TemporaryRelationshipType {
+    FRIEND,
+    ENEMY,
+    NOT_APPLICABLE,
+}
+
+/**
+ * Five-fold compound planetary relationship (Panchadha Maitri) according to BPHS Ch. 3, Sloka 60.
+ */
+@Serializable
+enum class CompoundRelationshipType {
+    GREAT_FRIEND,
+    FRIEND,
+    NEUTRAL,
+    ENEMY,
+    GREAT_ENEMY,
+    NOT_APPLICABLE,
+}
+
+/**
+ * Factual directional relationship from [sourceBody] to [targetBody].
+ */
+@Serializable
+data class PlanetaryRelationship(
+    val sourceBody: CelestialBody,
+    val targetBody: CelestialBody,
+    val chart: DivisionalChart = DivisionalChart.D1,
+    val naturalRelationship: NaturalRelationshipType,
+    val temporaryRelationship: TemporaryRelationshipType,
+    val compoundRelationship: CompoundRelationshipType,
+    val sourceRashi: Rashi,
+    val targetRashi: Rashi,
+    val relativeHouseDistance: Int,
+)
+
+/**
+ * Auditability state for Shadbala calculations.
+ */
+@Serializable
+enum class ShadbalaCompleteness {
+    COMPLETE,
+    PARTIAL_FOUNDATION,
+    UNSUPPORTED,
+}
+
+/**
+ * Positional strength (Sthana Bala) and its 5 subcomponents.
+ * Source: BPHS Chapter 28, Slokas 2-12 (ASTRO-R34).
+ */
+@Serializable
+data class SthanaBala(
+    val uchchaBalaVirupas: Double,
+    val saptavargajaBalaVirupas: Double,
+    val ojhayugmarasyamsaBalaVirupas: Double,
+    val kendraBalaVirupas: Double,
+    val drekkanaBalaVirupas: Double,
+    val totalVirupas: Double,
+    val totalRupas: Double,
+    val isEvaluated: Boolean = true,
+)
+
+/**
+ * Directional strength (Dig Bala).
+ * Source: BPHS Chapter 28, Slokas 7-8 (ASTRO-R33).
+ */
+@Serializable
+data class DigBala(
+    val powerfulPointDegrees: Double,
+    val zeroPointDegrees: Double,
+    val arcDegrees: Double,
+    val virupas: Double,
+    val rupas: Double,
+    val isEvaluated: Boolean = true,
+)
+
+/**
+ * Natural permanent strength (Naisargika Bala).
+ * Source: BPHS Chapter 28, Slokas 13-14 (ASTRO-R32).
+ */
+@Serializable
+data class NaisargikaBala(
+    val virupas: Double,
+    val rupas: Double,
+    val rank: Int,
+    val isEvaluated: Boolean = true,
+)
+
+/**
+ * Temporal strength (Kala Bala) and its classical subcomponents.
+ * Source: BPHS Chapter 28, Slokas 14-18 (ASTRO-R36).
+ */
+@Serializable
+data class KalaBala(
+    val nathonnathaBalaVirupas: Double = 0.0,
+    val pakshaBalaVirupas: Double = 0.0,
+    val tribhagaBalaVirupas: Double = 0.0,
+    val varaBalaVirupas: Double = 0.0,
+    val horaBalaVirupas: Double = 0.0,
+    val masaBalaVirupas: Double = 0.0,
+    val varshaBalaVirupas: Double = 0.0,
+    val ayanaBalaVirupas: Double = 0.0,
+    val yuddhaBalaVirupas: Double = 0.0,
+    val totalVirupas: Double = 0.0,
+    val totalRupas: Double = 0.0,
+    val isEvaluated: Boolean = true,
+    val deferredSubcomponents: List<String> = emptyList(),
+)
+
+/**
+ * Motional strength (Chesta Bala).
+ * Source: BPHS Chapter 28, Slokas 19-21 (ASTRO-R35).
+ */
+@Serializable
+data class ChestaBala(
+    val isRetrograde: Boolean = false,
+    val dailyMotionDegrees: Double = 0.0,
+    val chestaKendraDegrees: Double = 0.0,
+    val virupas: Double = 0.0,
+    val rupas: Double = 0.0,
+    val motionCategory: String = "DIRECT",
+    val isEvaluated: Boolean = true,
+    val deferredSubcomponents: List<String> = emptyList(),
+)
+
+/**
+ * Aspectual strength (Drik Bala).
+ * Source: BPHS Chapter 28, Slokas 22-24 (ASTRO-R37).
+ */
+@Serializable
+data class DrikBala(
+    val beneficAspectVirupas: Double = 0.0,
+    val maleficAspectVirupas: Double = 0.0,
+    val virupas: Double = 0.0,
+    val rupas: Double = 0.0,
+    val isEvaluated: Boolean = true,
+    val deferredSubcomponents: List<String> = emptyList(),
+)
+
+/**
+ * Comprehensive Shadbala strength breakdown for a single celestial body.
+ * Source: BPHS Chapter 28 (ASTRO-R38).
+ */
+@Serializable
+data class PlanetaryShadbala(
+    val body: CelestialBody,
+    val sthanaBala: SthanaBala,
+    val digBala: DigBala,
+    val naisargikaBala: NaisargikaBala,
+    val kalaBala: KalaBala,
+    val chestaBala: ChestaBala,
+    val drikBala: DrikBala,
+    val completeness: ShadbalaCompleteness,
+    val isComplete: Boolean,
+    val totalVirupas: Double?,
+    val totalRupas: Double?,
+    val deferredComponents: List<String> = emptyList(),
+    val rulesetId: String = "PARASHARA_CLASSICAL_V1",
+)
+
+/**
+ * Contributors in the classical Ashtakavarga system (7 planets + Lagna).
+ * Source: BPHS Ch. 66 (ASTRO-R39).
+ */
+@Serializable
+enum class AshtakavargaContributor {
+    SUN,
+    MOON,
+    MARS,
+    MERCURY,
+    JUPITER,
+    VENUS,
+    SATURN,
+    LAGNA,
+}
+
+/**
+ * Ashtakavarga calculation completeness state.
+ */
+@Serializable
+enum class AshtakavargaCompleteness {
+    COMPLETE,
+    PARTIAL,
+    UNSUPPORTED,
+}
+
+/**
+ * Score of a single zodiac sign in Bhinnashtakavarga (BAV).
+ */
+@Serializable
+data class BhinnashtakavargaSignScore(
+    val rashi: Rashi,
+    val binduCount: Int,
+    val rekhaCount: Int,
+    val contributingBodies: List<AshtakavargaContributor>,
+)
+
+/**
+ * Individual planetary Bhinnashtakavarga (BAV) chart.
+ * Source: BPHS Ch. 66-72 (ASTRO-R39A-G).
+ */
+@Serializable
+data class Bhinnashtakavarga(
+    val targetBody: CelestialBody,
+    val rulesetId: String = "PARASHARA_CLASSICAL_V1",
+    val signScores: List<BhinnashtakavargaSignScore>,
+    val totalBindus: Int,
+    val totalRekhas: Int,
+    val contributorGrid: Map<AshtakavargaContributor, List<Int>>,
+)
+
+/**
+ * Score of a single zodiac sign in Sarvashtakavarga (SAV).
+ */
+@Serializable
+data class SarvashtakavargaSignScore(
+    val rashi: Rashi,
+    val totalBindus: Int,
+    val totalRekhas: Int,
+    val planetBindus: Map<CelestialBody, Int>,
+)
+
+/**
+ * Aggregate Sarvashtakavarga (SAV) chart.
+ * Source: BPHS Ch. 73 (ASTRO-R40).
+ */
+@Serializable
+data class Sarvashtakavarga(
+    val rulesetId: String = "PARASHARA_CLASSICAL_V1",
+    val signScores: List<SarvashtakavargaSignScore>,
+    val grandTotalBindus: Int,
+    val grandTotalRekhas: Int,
+    val isInvariantValid: Boolean,
+)
+
+/**
+ * Top-level Ashtakavarga calculation result.
+ */
+@Serializable
+data class AshtakavargaResult(
+    val rulesetId: String = "PARASHARA_CLASSICAL_V1",
+    val bhinnashtakavarga: Map<CelestialBody, Bhinnashtakavarga>,
+    val sarvashtakavarga: Sarvashtakavarga,
+    val completeness: AshtakavargaCompleteness,
+    val unsupportedBodies: List<CelestialBody> = listOf(CelestialBody.RAHU, CelestialBody.KETU),
+    val shodhana: ShodhitaAshtakavargaResult? = null,
+    val pinda: AshtakavargaPinda? = null,
+)
+
+/**
+ * Score of a single zodiac sign in Shodhita Bhinnashtakavarga (BAV),
+ * tracking raw, Trikona-reduced, and final Ekadhipatya-reduced (Shodhita) figures.
+ */
+@Serializable
+data class ShodhitaBhinnashtakavargaSignScore(
+    val rashi: Rashi,
+    val rawBindus: Int,
+    val trikonaReducedBindus: Int,
+    val ekadhipatyaReducedBindus: Int,
+) {
+    val shodhitaBindus: Int get() = ekadhipatyaReducedBindus
+}
+
+/**
+ * Individual planetary Shodhita Bhinnashtakavarga chart.
+ * Source: BPHS Ch. 73-74; Raman Ch. 4-5.
+ */
+@Serializable
+data class ShodhitaBhinnashtakavarga(
+    val targetBody: CelestialBody,
+    val rulesetId: String = "PARASHARA_CLASSICAL_V1",
+    val signScores: List<ShodhitaBhinnashtakavargaSignScore>,
+    val rawTotalBindus: Int,
+    val trikonaTotalBindus: Int,
+    val shodhitaTotalBindus: Int,
+)
+
+/**
+ * Score of a single zodiac sign in Shodhita Sarvashtakavarga (SAV).
+ */
+@Serializable
+data class ShodhitaSarvashtakavargaSignScore(
+    val rashi: Rashi,
+    val rawTotalBindus: Int,
+    val trikonaTotalBindus: Int,
+    val shodhitaTotalBindus: Int,
+    val planetShodhitaBindus: Map<CelestialBody, Int>,
+)
+
+/**
+ * Aggregate Shodhita Sarvashtakavarga chart derived by summing
+ * the 7 classical planets' Shodhita BAV charts sign by sign.
+ */
+@Serializable
+data class ShodhitaSarvashtakavarga(
+    val rulesetId: String = "PARASHARA_CLASSICAL_V1",
+    val signScores: List<ShodhitaSarvashtakavargaSignScore>,
+    val grandTotalRawBindus: Int,
+    val grandTotalTrikonaBindus: Int,
+    val grandTotalShodhitaBindus: Int,
+)
+
+/**
+ * Top-level Shodhita Ashtakavarga calculation result.
+ */
+@Serializable
+data class ShodhitaAshtakavargaResult(
+    val rulesetId: String = "PARASHARA_CLASSICAL_V1",
+    val shodhitaBhinnashtakavarga: Map<CelestialBody, ShodhitaBhinnashtakavarga>,
+    val shodhitaSarvashtakavarga: ShodhitaSarvashtakavarga,
+    val completeness: AshtakavargaCompleteness,
+    val unsupportedBodies: List<CelestialBody> = listOf(CelestialBody.RAHU, CelestialBody.KETU),
+)
+
+/**
+ * Pinda calculation result for an individual classical planet.
+ * Source: BPHS Ch. 74/75; Raman Ch. 6.
+ */
+@Serializable
+data class PlanetaryPinda(
+    val targetBody: CelestialBody,
+    val rulesetId: String = "PARASHARA_CLASSICAL_V1",
+    val rasiPinda: Int,
+    val grahaPinda: Int,
+    val shodhyaPinda: Int,
+    val rasiContributions: Map<Rashi, Int>,
+    val grahaContributions: Map<CelestialBody, Int>,
+)
+
+/**
+ * Top-level Ashtakavarga Pinda calculation result across all 7 classical planets.
+ */
+@Serializable
+data class AshtakavargaPinda(
+    val rulesetId: String = "PARASHARA_CLASSICAL_V1",
+    val planetaryPindas: Map<CelestialBody, PlanetaryPinda>,
+    val totalRasiPinda: Int,
+    val totalGrahaPinda: Int,
+    val totalShodhyaPinda: Int,
+    val completeness: AshtakavargaCompleteness,
+    val unsupportedBodies: List<CelestialBody> = listOf(CelestialBody.RAHU, CelestialBody.KETU),
+)
+
+
+
+

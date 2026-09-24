@@ -13,7 +13,10 @@ Version: 1.0
 
 ## Locked Engineering Direction
 - Kotlin Multiplatform + Compose Multiplatform
-- Offline-first core
+- Offline-first core (Room KMP local persistence as source of truth for content)
+- Clean Architecture mandatory for every feature: Presentation → Domain ← Data
+- Deterministic astrology engine (:astro-engine) completely decoupled and analytics-independent
+- Firebase Analytics decoupled via domain AnalyticsTracker & AnalyticsConsentManager (AndroidApp implementation, NoOp on Desktop/iOS/tests)
 - Shared business/domain logic
 - Reusable design system
 - Secure SDK licensing and entitlements

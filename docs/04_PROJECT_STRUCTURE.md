@@ -11,8 +11,19 @@ Version: 1.0
 - scripts/: reproducible tooling
 - security/: threat models and security test artifacts where appropriate
 
-## KMP
-Use commonMain/commonTest for shared behavior. Android/iOS/Desktop source sets contain only genuinely platform-specific code.
+## KMP Architecture Layers
+- `:ui`: Compose Multiplatform shared presentation layer
+- `:aynvora-core`: Domain layer (domain models, repository contracts, SDK facade, analytics abstraction). Zero platform or database dependencies.
+- `:astro-engine`: Deterministic calculation engine. Independent of UI, database, network, and analytics.
+- `:aynvora-data`: Data layer (Room KMP entities, DAOs, database, StorageEngine, repository implementations).
+- `:aynvora-localization`: Multiplatform localization tables and locale management.
+- `androidApp`: Android application entry point (Firebase SDK setup, Room platform builder).
+- `desktopApp`: JVM Desktop application entry point (NoOp analytics, file storage).
+- `iosApp`: iOS native application host.
+
+Dependency rule:
+Presentation (`:ui`) → Domain (`:aynvora-core`) ← Data (`:aynvora-data`)
+`:astro-engine` remains pure math/astronomy.
 
 ## Rule
 Do not duplicate domain logic in androidMain, iosMain or desktopMain.
