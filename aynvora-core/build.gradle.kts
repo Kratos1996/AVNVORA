@@ -11,14 +11,16 @@ kotlin {
         minSdk = libs.versions.androidMinSdk.get().toInt()
     }
     jvm()
-    iosArm64()
-    iosSimulatorArm64()
 
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":astro-engine"))
+            api(project(":astro-engine"))
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.koin.core)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

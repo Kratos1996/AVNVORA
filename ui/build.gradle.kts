@@ -13,24 +13,29 @@ kotlin {
     }
     jvm()
 
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "AynvoraUi"
-            isStatic = true
-        }
-    }
-
     sourceSets {
+        androidMain.dependencies {
+            implementation(libs.androidx.core)
+            implementation(libs.koin.android)
+        }
         commonMain.dependencies {
             implementation(project(":design-system"))
             implementation(project(":aynvora-core"))
+            implementation(project(":aynvora-data"))
+            implementation(project(":aynvora-localization"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(libs.cottonsheet)
+            implementation(libs.popbox)
+        }
+        jvmTest.dependencies {
+            implementation(kotlin("test"))
         }
     }
 }

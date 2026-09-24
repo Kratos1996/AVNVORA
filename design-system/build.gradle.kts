@@ -12,8 +12,6 @@ kotlin {
         minSdk = libs.versions.androidMinSdk.get().toInt()
     }
     jvm()
-    iosArm64()
-    iosSimulatorArm64()
 
     sourceSets {
         commonMain.dependencies {
@@ -23,6 +21,8 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.animation)
             implementation(project(":aynvora-localization"))
+            api(libs.cottonsheet)
+            api(libs.popbox)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

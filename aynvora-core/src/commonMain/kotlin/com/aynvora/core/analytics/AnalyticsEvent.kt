@@ -1,5 +1,28 @@
 package com.aynvora.core.analytics
 
+import com.aynvora.core.garudapuran.GarudaPuranTopicId
+
+private val BUILT_IN_REPORT_ANALYTICS_IDS = setOf(
+    "kundali",
+    "gemstone",
+    "numerology",
+    "rudraksha",
+    "jadi",
+    "yantra",
+    "palmistry",
+    "tarot",
+    "gita",
+    "lal_kitab",
+    "garuda_puran",
+    "daily_guidance",
+)
+
+private fun safeReportTypeId(id: String): String =
+    id.takeIf { it in BUILT_IN_REPORT_ANALYTICS_IDS } ?: "custom"
+
+private fun safeReportErrorCode(code: String): String =
+    code.takeIf { it.matches(Regex("[a-z][a-z_]{0,63}")) } ?: "unknown_error"
+
 /**
  * Sealed hierarchy of all analytics events emitted by AYNVORA.
  *
@@ -23,6 +46,29 @@ sealed class AnalyticsEvent(
 
     /** Fired once when the app launches on a given session. */
     object AppOpened : AnalyticsEvent("app_opened")
+
+    // Reports: stable type ids only. Never attach report text, birth data, or chart values.
+    class ReportOpened(reportTypeId: String) :
+        AnalyticsEvent("report_opened", mapOf("report_type" to safeReportTypeId(reportTypeId)))
+
+    class ReportGenerated(reportTypeId: String) :
+        AnalyticsEvent("report_generated", mapOf("report_type" to safeReportTypeId(reportTypeId)))
+
+    class ReportPdfGenerated(reportTypeId: String) : AnalyticsEvent(
+        "report_pdf_generated",
+        mapOf("report_type" to safeReportTypeId(reportTypeId))
+    )
+
+    class ReportShared(reportTypeId: String) :
+        AnalyticsEvent("report_shared", mapOf("report_type" to safeReportTypeId(reportTypeId)))
+
+    class ReportPdfFailed(reportTypeId: String, errorCode: String) : AnalyticsEvent(
+        "report_pdf_failed",
+        mapOf(
+            "report_type" to safeReportTypeId(reportTypeId),
+            "error_code" to safeReportErrorCode(errorCode)
+        ),
+    )
 
     // ──────────────────────────────────────────────────────────────────────────
     // Chart Calculation
@@ -299,6 +345,275 @@ sealed class AnalyticsEvent(
     )
 
     // ──────────────────────────────────────────────────────────────────────────
+    // Tarot Feature Events
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /** User entered the Tarot feature screen. */
+    object TarotOpened : AnalyticsEvent("tarot_opened")
+
+    /** User viewed the Tarot ethical reflection / non-predictive disclaimer. */
+    object TarotDisclaimerViewed : AnalyticsEvent("tarot_disclaimer_viewed")
+
+    /**
+     * User selected a spread for a reading.
+     * @param spreadId Spread identifier (e.g. "single_card", "three_card_timeline").
+     */
+    class TarotSpreadSelected(spreadId: String) : AnalyticsEvent(
+        name = "tarot_spread_selected",
+        params = mapOf(Param.SPREAD_ID to spreadId),
+    )
+
+    /**
+     * Tarot reading draw started.
+     * @param spreadId Spread identifier.
+     * @param cardCount Total cards to be drawn.
+     */
+    class TarotReadingStarted(spreadId: String, cardCount: Int) : AnalyticsEvent(
+        name = "tarot_reading_started",
+        params = mapOf(
+            Param.SPREAD_ID to spreadId,
+            Param.CARD_COUNT to cardCount.toLong(),
+        ),
+    )
+
+    /**
+     * A single card was drawn.
+     * @param spreadId Spread identifier.
+     * @param cardId Identifier of drawn card (e.g. "major_00_fool").
+     * @param orientation "UPRIGHT" or "REVERSED".
+     */
+    class TarotCardDrawn(
+        spreadId: String,
+        cardId: String,
+        orientation: String,
+    ) : AnalyticsEvent(
+        name = "tarot_card_drawn",
+        params = mapOf(
+            Param.SPREAD_ID to spreadId,
+            Param.CARD_ID to cardId,
+            Param.ORIENTATION to orientation,
+        ),
+    )
+
+    /**
+     * Tarot reading completed successfully.
+     * @param spreadId Spread identifier.
+     * @param cardCount Total cards drawn.
+     */
+    class TarotReadingCompleted(spreadId: String, cardCount: Int) : AnalyticsEvent(
+        name = "tarot_reading_completed",
+        params = mapOf(
+            Param.SPREAD_ID to spreadId,
+            Param.CARD_COUNT to cardCount.toLong(),
+        ),
+    )
+
+    /**
+     * Tarot reading failed during execution.
+     * @param spreadId Spread identifier.
+     * @param errorCode Sanitized error code (no PII).
+     */
+    class TarotReadingFailed(spreadId: String, errorCode: String) : AnalyticsEvent(
+        name = "tarot_reading_failed",
+        params = mapOf(
+            Param.SPREAD_ID to spreadId,
+            Param.ERROR_CODE to errorCode,
+        ),
+    )
+
+    /**
+     * User inspected detailed card content / reflective meaning.
+     * @param cardId Card identifier.
+     * @param languageCode Locale code ("en", "hi").
+     */
+    class TarotContentOpened(cardId: String, languageCode: String) : AnalyticsEvent(
+        name = "tarot_content_opened",
+        params = mapOf(
+            Param.CARD_ID to cardId,
+            Param.LANGUAGE_CODE to languageCode,
+        ),
+    )
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Core Product Features (Phase 7.4 Foundation)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /** Feature accessed from Navigation or Home dashboard. */
+    class FeatureOpened(featureId: String) : AnalyticsEvent(
+        name = "feature_opened",
+        params = mapOf(Param.FEATURE_ID to featureId),
+    )
+
+    /** Palmistry session initiated. Zero image data sent. */
+    class PalmScanStarted(handType: String) : AnalyticsEvent(
+        name = "palm_scan_started",
+        params = mapOf(Param.HAND_TYPE to handType),
+    )
+
+    /** Gemstone evaluation opened. Zero PII. */
+    class GemstoneEvaluationStarted(gemstoneType: String) : AnalyticsEvent(
+        name = "gemstone_evaluation_started",
+        params = mapOf(Param.GEMSTONE_TYPE to gemstoneType),
+    )
+
+    /** Gita verse read. */
+    class GitaVerseOpened(chapter: Int, verse: Int) : AnalyticsEvent(
+        name = "gita_verse_opened",
+        params = mapOf(Param.CHAPTER to chapter, Param.VERSE to verse),
+    )
+
+    /** Garuda Puran section viewed. */
+    class GarudaContentOpened(chapter: Int) : AnalyticsEvent(
+        name = "garuda_content_opened",
+        params = mapOf(Param.CHAPTER to chapter),
+    )
+
+    /** Feature usage only; source text, references, and user-entered content are excluded. */
+    object GarudaPuranOpened : AnalyticsEvent("garuda_puran_opened")
+
+    class GarudaPuranTopicOpened(topicId: GarudaPuranTopicId) : AnalyticsEvent(
+        name = "garuda_puran_topic_opened",
+        params = mapOf("topic_id" to topicId.wireId),
+    )
+
+    object GarudaPuranReportGenerated : AnalyticsEvent("garuda_puran_report_generated")
+    object GarudaPuranPdfGenerated : AnalyticsEvent("garuda_puran_pdf_generated")
+    object GarudaPuranShared : AnalyticsEvent("garuda_puran_shared")
+
+    /** Lal Kitab rule explored. */
+    class LalKitabRuleOpened(planet: String, house: Int) : AnalyticsEvent(
+        name = "lal_kitab_rule_opened",
+        params = mapOf(Param.PLANET to planet, Param.HOUSE to house),
+    )
+
+    /** On-Device AI conversation session started. Zero chat content sent. */
+    class AiChatStarted(modelId: String) : AnalyticsEvent(
+        name = "ai_chat_started",
+        params = mapOf(Param.MODEL_ID to modelId),
+    )
+
+    /** Structured tool called by AI assistant. Zero argument PII. */
+    class AiToolUsed(toolName: String, isSuccess: Boolean) : AnalyticsEvent(
+        name = "ai_tool_used",
+        params = mapOf(Param.TOOL_NAME to toolName, Param.IS_SUCCESS to isSuccess),
+    )
+
+    /** Daily guidance viewed. */
+    class DailyGuidanceOpened(timeOfDay: String) : AnalyticsEvent(
+        name = "daily_guidance_opened",
+        params = mapOf(Param.TIME_OF_DAY to timeOfDay),
+    )
+
+    /** Wallpaper prompt constructed. Zero user intention text sent. */
+    class WallpaperPromptGenerated(theme: String, deviceProfile: String) : AnalyticsEvent(
+        name = "wallpaper_prompt_generated",
+        params = mapOf(Param.THEME to theme, Param.DEVICE_PROFILE to deviceProfile),
+    )
+
+    /** Wallpaper prompt shared or copied to external generator. */
+    class WallpaperPromptShared(destination: String) : AnalyticsEvent(
+        name = "wallpaper_prompt_shared",
+        params = mapOf(Param.DESTINATION to destination),
+    )
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Core Intelligence & Orchestration (Phase 7.5)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /** Intelligence query initiated. Zero question text or PII. */
+    class IntelligenceQueryStarted(queryId: String, intentType: String, domainCount: Int) :
+        AnalyticsEvent(
+            name = "intelligence_query_started",
+            params = mapOf(
+                Param.QUERY_ID to queryId,
+                Param.INTENT_TYPE to intentType,
+                Param.DOMAIN_COUNT to domainCount.toLong(),
+            ),
+        )
+
+    /** Specific domain tool selected by orchestrator or AI router. */
+    class IntelligenceToolSelected(queryId: String, domain: String) : AnalyticsEvent(
+        name = "intelligence_tool_selected",
+        params = mapOf(
+            Param.QUERY_ID to queryId,
+            Param.DOMAIN to domain,
+        ),
+    )
+
+    /** Intelligence query completed successfully. */
+    class IntelligenceQueryCompleted(queryId: String, status: String, evidenceCount: Int) :
+        AnalyticsEvent(
+            name = "intelligence_query_completed",
+            params = mapOf(
+                Param.QUERY_ID to queryId,
+                Param.STATUS to status,
+                Param.EVIDENCE_COUNT to evidenceCount.toLong(),
+            ),
+        )
+
+    /** Conflicting rules or traditions detected during multi-domain synthesis. */
+    class ConflictingEvidenceDetected(queryId: String, conflictCount: Int) : AnalyticsEvent(
+        name = "conflicting_evidence_detected",
+        params = mapOf(
+            Param.QUERY_ID to queryId,
+            Param.CONFLICT_COUNT to conflictCount.toLong(),
+        ),
+    )
+
+    /** Required data missing for one or more requested domains. Zero PII. */
+    class InsufficientDataReturned(queryId: String, missingCount: Int) : AnalyticsEvent(
+        name = "insufficient_data_returned",
+        params = mapOf(
+            Param.QUERY_ID to queryId,
+            Param.MISSING_COUNT to missingCount.toLong(),
+        ),
+    )
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Astrology Prediction & Timing Engine (Phase 8.0)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /** Astrology prediction requested for a topic. Zero personal birth data. */
+    class PredictionRequested(predictionId: String, topic: String) : AnalyticsEvent(
+        name = "prediction_requested",
+        params = mapOf(
+            Param.QUERY_ID to predictionId,
+            Param.TOPIC to topic,
+        ),
+    )
+
+    /** Astrology prediction completed successfully. Zero prediction text. */
+    class PredictionCompleted(predictionId: String, topic: String, windowCount: Int) :
+        AnalyticsEvent(
+            name = "prediction_completed",
+            params = mapOf(
+                Param.QUERY_ID to predictionId,
+                Param.TOPIC to topic,
+                Param.EVIDENCE_COUNT to windowCount.toLong(),
+            ),
+        )
+
+    /** Prediction evaluation failed. */
+    class PredictionFailed(predictionId: String, errorCode: String) : AnalyticsEvent(
+        name = "prediction_failed",
+        params = mapOf(
+            Param.QUERY_ID to predictionId,
+            Param.ERROR_CODE to errorCode,
+        ),
+    )
+
+    /** Timing window generated. Zero personal date content. */
+    class TimingWindowGenerated(predictionId: String, topic: String, grade: String) :
+        AnalyticsEvent(
+            name = "timing_window_generated",
+            params = mapOf(
+                Param.QUERY_ID to predictionId,
+                Param.TOPIC to topic,
+                Param.STATUS to grade,
+            ),
+        )
+
+    // ──────────────────────────────────────────────────────────────────────────
     // Stable parameter key constants
     // ──────────────────────────────────────────────────────────────────────────
 
@@ -312,5 +627,101 @@ sealed class AnalyticsEvent(
         const val LANGUAGE_CODE = "language_code"
         const val MODULE_ID = "module_id"
         const val SYNC_REASON = "sync_reason"
+        const val SPREAD_ID = "spread_id"
+        const val CARD_COUNT = "card_count"
+        const val CARD_ID = "card_id"
+        const val ORIENTATION = "orientation"
+        const val FEATURE_ID = "feature_id"
+        const val HAND_TYPE = "hand_type"
+        const val GEMSTONE_TYPE = "gemstone_type"
+        const val CHAPTER = "chapter"
+        const val VERSE = "verse"
+        const val PLANET = "planet"
+        const val HOUSE = "house"
+        const val MODEL_ID = "model_id"
+        const val TOOL_NAME = "tool_name"
+        const val IS_SUCCESS = "is_success"
+        const val TIME_OF_DAY = "time_of_day"
+        const val THEME = "theme"
+        const val DEVICE_PROFILE = "device_profile"
+        const val DESTINATION = "destination"
+        const val QUERY_ID = "query_id"
+        const val INTENT_TYPE = "intent_type"
+        const val DOMAIN_COUNT = "domain_count"
+        const val DOMAIN = "domain"
+        const val STATUS = "status"
+        const val EVIDENCE_COUNT = "evidence_count"
+        const val CONFLICT_COUNT = "conflict_count"
+        const val MISSING_COUNT = "missing_count"
+        const val TOPIC = "topic"
+
+        // Phase 8.1 additions
+        const val RULE_ID = "rule_id"
+        const val MATCH_STATUS = "match_status"
+        const val NUMEROLOGY_SYSTEM = "numerology_system"
+        const val REPORT_TYPE = "report_type"
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Reference Validation (Engineering only — no user-facing tracking)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Engineering event: reference validation run completed.
+     * Only emitted in debug/QA builds. MUST NOT fire in production.
+     * @param referenceId The reference case identifier (e.g. "JKR-117480").
+     * @param passCount Number of passing validations.
+     * @param failCount Number of failing validations.
+     */
+    class ReferenceValidationRun(referenceId: String, passCount: Int, failCount: Int) :
+        AnalyticsEvent(
+            name = "reference_validation_run",
+            params = mapOf(
+                "reference_id" to referenceId,
+                "pass_count" to passCount.toLong(),
+                "fail_count" to failCount.toLong(),
+            ),
+        )
+
+    /**
+     * A classical prediction rule was evaluated.
+     * @param ruleId The rule ID (e.g. "RULE_BPHS_YOGAKARAKA").
+     * @param matchStatus The evaluation status enum name.
+     */
+    class PredictionRuleEvaluated(ruleId: String, matchStatus: String) : AnalyticsEvent(
+        name = "prediction_rule_evaluated",
+        params = mapOf(
+            Param.RULE_ID to ruleId,
+            Param.MATCH_STATUS to matchStatus,
+        ),
+    )
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Numerology Feature Events
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /** User opened the Numerology feature. */
+    object NumerologyOpened : AnalyticsEvent("numerology_opened")
+
+    /**
+     * User triggered a Numerology report.
+     * @param system The numerology system used (e.g. "CHALDEAN", "PYTHAGOREAN").
+     */
+    class NumerologyReportGenerated(system: String) : AnalyticsEvent(
+        name = "numerology_report_generated",
+        params = mapOf(Param.NUMEROLOGY_SYSTEM to system),
+    )
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Practice Domain Events (Rudraksha, Jadi, Yantra)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /** User opened the Rudraksha feature. */
+    object RudrakshaOpened : AnalyticsEvent("rudraksha_opened")
+
+    /** User opened the Jadi / Sacred Roots feature. */
+    object JadiOpened : AnalyticsEvent("jadi_opened")
+
+    /** User opened the Yantra feature. */
+    object YantraOpened : AnalyticsEvent("yantra_opened")
 }

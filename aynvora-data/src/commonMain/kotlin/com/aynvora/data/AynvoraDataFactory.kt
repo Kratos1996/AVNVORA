@@ -1,5 +1,6 @@
 package com.aynvora.data
 
+import com.aynvora.core.garudapuran.GarudaPuranRepository
 import com.aynvora.core.repository.BirthProfileRepository
 import com.aynvora.core.repository.ContentRepository
 import com.aynvora.core.repository.ContentSyncRepository
@@ -8,6 +9,7 @@ import com.aynvora.core.repository.UserPreferencesRepository
 import com.aynvora.core.repository.UserProfileRepository
 import com.aynvora.core.sync.ContentVerifier
 import com.aynvora.core.sync.StubContentVerifier
+import com.aynvora.data.AynvoraDataFactory.createWithRoom
 import com.aynvora.data.database.AynvoraDatabase
 import com.aynvora.data.repository.BirthProfileRepositoryImpl
 import com.aynvora.data.repository.ContentRepositoryImpl
@@ -51,6 +53,8 @@ class AynvoraDataComponents(
     val userPreferences: UserPreferencesRepository,
     val contentRepository: ContentRepository,
     val contentSyncRepository: ContentSyncRepository,
+    val tarotRepository: com.aynvora.core.tarot.TarotRepository,
+    val garudaPuranRepository: GarudaPuranRepository,
     internal val storageEngine: AynvoraStorageEngine,
 )
 
@@ -117,17 +121,24 @@ object AynvoraDataFactory {
             cipher = cipher,
             migrationRunner = migrationRunner,
         )
+        val contentRepository = ContentRepositoryImpl(
+            contentItemDao = database.contentItemDao(),
+            contentPackDao = database.contentPackDao(),
+        )
         return AynvoraDataComponents(
             userProfiles = UserProfileRepositoryImpl(engine),
             birthProfiles = BirthProfileRepositoryImpl(engine),
             savedCharts = SavedChartRepositoryImpl(engine),
             userPreferences = UserPreferencesRepositoryImpl(engine),
-            contentRepository = ContentRepositoryImpl(
-                contentItemDao = database.contentItemDao(),
-                contentPackDao = database.contentPackDao(),
-            ),
+            contentRepository = contentRepository,
             contentSyncRepository = ContentSyncRepositoryImpl(
                 contentSyncMetadataDao = database.contentSyncMetadataDao(),
+            ),
+            tarotRepository = com.aynvora.data.tarot.TarotRepositoryImpl(
+                tarotDao = database.tarotDao(),
+            ),
+            garudaPuranRepository = com.aynvora.data.garudapuran.ContentBackedGarudaPuranRepository(
+                contentRepository
             ),
             storageEngine = engine,
         )

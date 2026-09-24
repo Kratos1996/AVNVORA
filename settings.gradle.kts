@@ -1,5 +1,3 @@
-import org.gradle.api.initialization.resolve.RepositoriesMode
-
 pluginManagement {
     repositories {
         google()
@@ -20,4 +18,14 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "AYNVORA-SDK"
-include(":aynvora-core", ":aynvora-data", ":design-system", ":astro-engine", ":aynvora-localization", ":ui", ":androidApp", ":desktopApp")
+include(
+    ":aynvora-core",
+    ":aynvora-data",
+    ":design-system",
+    ":astro-engine",
+    ":aynvora-localization",
+    ":aynvora-navigation",
+    ":ui",
+    ":androidApp",
+    ":desktopApp"
+)

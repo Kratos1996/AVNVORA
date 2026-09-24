@@ -98,6 +98,37 @@ interface AynvoraSdk {
     ): AynvoraResult<com.aynvora.core.models.AshtakavargaPinda>
 
     /**
+     * Calculates 120-year Vimshottari Dasha timeline from birth Julian Day and Moon's sidereal longitude.
+     */
+    fun calculateDasha(
+        birthJd: Double,
+        moonSiderealLongitude: Double,
+        calculateAntardashas: Boolean = true,
+        calculatePratyantardashas: Boolean = false,
+    ): com.aynvora.astro.dasha.VimshottariDashaTimeline =
+        com.aynvora.astro.dasha.VimshottariDashaCalculator.calculate(
+            birthJd, moonSiderealLongitude, calculateAntardashas, calculatePratyantardashas,
+        )
+
+    /**
+     * Calculates planetary transit snapshot for a specific Julian Day.
+     */
+    fun calculateTransit(
+        jd: Double,
+        ayanamsaConvention: String = "LAHIRI_CHITRAPAKSHA",
+    ): com.aynvora.astro.transit.TransitSnapshot =
+        com.aynvora.astro.transit.TransitCalculator.calculateSnapshot(jd, ayanamsaConvention)
+
+    /**
+     * Calculates 5-limb classical Panchang snapshot for an exact moment.
+     */
+    fun calculatePanchang(
+        jd: Double,
+        ayanamsaConvention: String = "LAHIRI_CHITRAPAKSHA",
+    ): com.aynvora.astro.panchang.PanchangSnapshot =
+        com.aynvora.astro.panchang.PanchangCalculator.calculate(jd, ayanamsaConvention)
+
+    /**
      * Discovers calculation engine version and supported capability domains.
      */
     fun getMetadata(): EngineMetadata
@@ -111,6 +142,30 @@ interface AynvoraSdk {
     val userPreferences: UserPreferencesRepository? get() = null
     val content: com.aynvora.core.repository.ContentRepository? get() = null
     val contentSync: com.aynvora.core.repository.ContentSyncRepository? get() = null
+    val tarot: com.aynvora.core.tarot.TarotRepository? get() = null
+    val tarotUseCases: com.aynvora.core.tarot.PerformTarotReadingUseCase?
+        get() = tarot?.let {
+            com.aynvora.core.tarot.PerformTarotReadingUseCase(
+                it,
+                analyticsTracker = analytics
+            )
+        }
+    val birthProfileUseCases: com.aynvora.core.usecase.SaveBirthProfileUseCase?
+        get() = birthProfiles?.let {
+            com.aynvora.core.usecase.SaveBirthProfileUseCase(
+                it,
+                analyticsTracker = analytics
+            )
+        }
+    val chartUseCases: com.aynvora.core.usecase.SaveChartUseCase?
+        get() = savedCharts?.let {
+            com.aynvora.core.usecase.SaveChartUseCase(
+                it,
+                analyticsTracker = analytics
+            )
+        }
+    val userPreferencesUseCases: com.aynvora.core.usecase.GetUserPreferencesUseCase?
+        get() = userPreferences?.let { com.aynvora.core.usecase.GetUserPreferencesUseCase(it) }
 
     /**
      * Analytics tracker used to report non-PII usage events.
@@ -133,6 +188,7 @@ object Aynvora {
         userPreferences: UserPreferencesRepository? = null,
         content: com.aynvora.core.repository.ContentRepository? = null,
         contentSync: com.aynvora.core.repository.ContentSyncRepository? = null,
+        tarot: com.aynvora.core.tarot.TarotRepository? = null,
         analyticsTracker: AnalyticsTracker = NoOpAnalyticsTracker(),
     ): AynvoraSdk = DefaultAynvoraSdk(
         adapter = AstroEngineAdapter(),
@@ -142,6 +198,7 @@ object Aynvora {
         userPreferences = userPreferences,
         content = content,
         contentSync = contentSync,
+        tarot = tarot,
         analyticsTrackerImpl = analyticsTracker,
     )
 }
@@ -157,6 +214,7 @@ internal class DefaultAynvoraSdk(
     override val userPreferences: UserPreferencesRepository? = null,
     override val content: com.aynvora.core.repository.ContentRepository? = null,
     override val contentSync: com.aynvora.core.repository.ContentSyncRepository? = null,
+    override val tarot: com.aynvora.core.tarot.TarotRepository? = null,
     private val analyticsTrackerImpl: AnalyticsTracker = NoOpAnalyticsTracker(),
 ) : AynvoraSdk {
 
@@ -284,6 +342,5 @@ private fun AynvoraResult.Failure.analyticsErrorCode(): String = when (this) {
     is AynvoraResult.Failure.SyncFailure -> "sync_failure"
     is AynvoraResult.Failure.InternalFailure -> "internal_failure"
 }
-
 
 

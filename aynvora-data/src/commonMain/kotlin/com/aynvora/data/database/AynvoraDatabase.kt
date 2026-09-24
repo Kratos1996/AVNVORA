@@ -34,6 +34,10 @@ import com.aynvora.data.database.entity.UserProfileRoomEntity
         ContentPackRoomEntity::class,
         ContentItemRoomEntity::class,
         ContentSyncMetadataRoomEntity::class,
+        com.aynvora.data.database.entity.TarotDeckRoomEntity::class,
+        com.aynvora.data.database.entity.TarotCardRoomEntity::class,
+        com.aynvora.data.database.entity.TarotCardContentRoomEntity::class,
+        com.aynvora.data.database.entity.TarotReadingHistoryRoomEntity::class,
     ],
     version = 1,
     exportSchema = false,
@@ -47,6 +51,7 @@ abstract class AynvoraDatabase : RoomDatabase() {
     abstract fun contentPackDao(): ContentPackDao
     abstract fun contentItemDao(): ContentItemDao
     abstract fun contentSyncMetadataDao(): ContentSyncMetadataDao
+    abstract fun tarotDao(): com.aynvora.data.database.dao.TarotDao
 
     companion object {
         const val DATABASE_NAME = "aynvora.db"

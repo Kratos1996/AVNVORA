@@ -4,6 +4,7 @@ import com.aynvora.astro.houses.EqualHouseCalculator
 import com.aynvora.astro.houses.HouseCalculationInput
 import com.aynvora.astro.houses.HouseSystemRegistry
 import com.aynvora.astro.houses.PlacidusHouseCalculator
+import com.aynvora.astro.houses.SripatiChalitV1Calculator
 import com.aynvora.astro.houses.WholeSignHouseCalculator
 import com.aynvora.astro.lagna.LagnaPosition
 import com.aynvora.astro.math.AstroMath.normalizeDegrees
@@ -167,6 +168,49 @@ class HouseSystemTest {
 
         assertFailsWith<UnsupportedOperationException> {
             PlacidusHouseCalculator.calculate(input)
+        }
+    }
+
+    @Test
+    fun sripatiProfileNeverAliasesEqualHouse() {
+        val lagna = createSampleLagna(siderealLong = 30.0, rashiIndex = 1, degreeInRashi = 0.0)
+        val input = HouseCalculationInput(
+            lagna.copy(midheavenSiderealLongitude = 285.0),
+            28.0,
+            73.0,
+            24.0,
+            emptyMap()
+        )
+        assertEquals(SripatiChalitV1Calculator, HouseSystemRegistry.forName("SRIPATI_CHALIT_V1"))
+        val sripati = SripatiChalitV1Calculator.calculate(input)
+        assertEquals("SRIPATI_CHALIT_V1", sripati.houseSystem)
+        assertEquals(12, sripati.houses.size)
+        assertEquals(30.0, sripati.houses.first().cuspLongitude)
+        assertTrue(sripati.houses.all { it.startLongitude != it.endLongitude })
+        assertEquals(EqualHouseCalculator, HouseSystemRegistry.forName("EQUAL_HOUSE_V1"))
+    }
+
+    @Test
+    fun sripatiCuspsAndWrappedBoundariesAssignEveryPointOnce() {
+        val lagna = createSampleLagna(30.0, 1, 0.0).copy(midheavenSiderealLongitude = 285.0)
+        val initial = SripatiChalitV1Calculator.calculate(
+            HouseCalculationInput(lagna, 28.0, 73.0, 24.0, emptyMap()),
+        )
+        initial.houses.forEachIndexed { index, house ->
+            val next = initial.houses[(index + 1) % initial.houses.size]
+            assertEquals(house.endLongitude, next.startLongitude, 1e-9)
+        }
+        initial.houses.forEach { house ->
+            val withPoint = SripatiChalitV1Calculator.calculate(
+                HouseCalculationInput(
+                    lagna,
+                    28.0,
+                    73.0,
+                    24.0,
+                    mapOf(BodyId.SUN to house.cuspLongitude)
+                ),
+            )
+            assertEquals(house.houseNumber, withPoint.planetHouseOccupancy[BodyId.SUN])
         }
     }
 

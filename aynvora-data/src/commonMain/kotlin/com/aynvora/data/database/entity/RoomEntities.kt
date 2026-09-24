@@ -138,3 +138,77 @@ data class ContentSyncMetadataRoomEntity(
     val activeManifestVersion: Int,
     val etag: String? = null,
 )
+
+/**
+ * Room entity representing a Tarot Deck.
+ */
+@Entity(tableName = "tarot_decks")
+data class TarotDeckRoomEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val description: String,
+    val cardCount: Int,
+)
+
+/**
+ * Room entity representing a Tarot Card definition.
+ */
+@Entity(
+    tableName = "tarot_cards",
+    indices = [
+        Index("deckId"),
+        Index("arcana"),
+    ],
+)
+data class TarotCardRoomEntity(
+    @PrimaryKey val id: String,
+    val deckId: String,
+    val number: Int,
+    val name: String,
+    val arcana: String,
+    val suit: String? = null,
+)
+
+/**
+ * Room entity representing localized reflective content for a Tarot Card.
+ */
+@Entity(
+    tableName = "tarot_card_content",
+    indices = [
+        Index("cardId"),
+        Index("language"),
+        Index(value = ["cardId", "language"], unique = true),
+    ],
+)
+data class TarotCardContentRoomEntity(
+    @PrimaryKey val id: String, // composite "${cardId}_${language}"
+    val cardId: String,
+    val language: String,
+    val title: String,
+    val shortDescription: String,
+    val keywordsCsv: String,
+    val uprightMeaning: String,
+    val reversedMeaning: String,
+    val sourceAttribution: String,
+    val contentVersion: Int,
+)
+
+/**
+ * Room entity storing local Tarot reading history.
+ *
+ * Privacy rule: strictly stores card IDs, orientations, and spread positions.
+ * Never stores personal user questions, journal entries, or private notes.
+ */
+@Entity(
+    tableName = "tarot_reading_history",
+    indices = [
+        Index("timestampEpochMs"),
+    ],
+)
+data class TarotReadingHistoryRoomEntity(
+    @PrimaryKey val id: String,
+    val spreadId: String,
+    val deckId: String,
+    val serializedDrawsJson: String,
+    val timestampEpochMs: Long,
+)

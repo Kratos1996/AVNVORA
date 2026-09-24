@@ -1,21 +1,16 @@
 package com.aynvora.astro
 
-import com.aynvora.astro.dignity.PlanetaryDignityCalculator
-import com.aynvora.astro.dignity.PlanetaryDignityPosition
 import com.aynvora.astro.ashtakavarga.AshtakavargaCalculator
+import com.aynvora.astro.ashtakavarga.AshtakavargaPindaCalculator
+import com.aynvora.astro.ashtakavarga.AshtakavargaPindaResult
 import com.aynvora.astro.ashtakavarga.AshtakavargaResult
 import com.aynvora.astro.ashtakavarga.AshtakavargaShodhanaCalculator
 import com.aynvora.astro.ashtakavarga.ShodhitaAshtakavargaResult
-import com.aynvora.astro.ashtakavarga.AshtakavargaPindaCalculator
-import com.aynvora.astro.ashtakavarga.AshtakavargaPindaResult
-import com.aynvora.astro.relationship.PlanetaryRelationshipCalculator
-import com.aynvora.astro.relationship.PlanetaryRelationshipPosition
-import com.aynvora.astro.shadbala.PlanetaryShadbalaPosition
-import com.aynvora.astro.shadbala.ShadbalaCalculator
 import com.aynvora.astro.aspects.AspectCalculator
 import com.aynvora.astro.aspects.AspectPosition
-import com.aynvora.astro.aspects.AspectProfile
 import com.aynvora.astro.ayanamsa.AyanamsaCalculator
+import com.aynvora.astro.dignity.PlanetaryDignityCalculator
+import com.aynvora.astro.dignity.PlanetaryDignityPosition
 import com.aynvora.astro.houses.HouseCalculationInput
 import com.aynvora.astro.houses.HousePosition
 import com.aynvora.astro.houses.HouseSystemRegistry
@@ -26,6 +21,10 @@ import com.aynvora.astro.planets.MoonCalculator
 import com.aynvora.astro.planets.PlanetaryCalculator
 import com.aynvora.astro.planets.PlanetaryCalculator.Planet
 import com.aynvora.astro.planets.SunCalculator
+import com.aynvora.astro.relationship.PlanetaryRelationshipCalculator
+import com.aynvora.astro.relationship.PlanetaryRelationshipPosition
+import com.aynvora.astro.shadbala.PlanetaryShadbalaPosition
+import com.aynvora.astro.shadbala.ShadbalaCalculator
 import com.aynvora.astro.states.PlanetStateCalculator
 import com.aynvora.astro.states.PlanetStatePosition
 import com.aynvora.astro.time.TimeNormalizer
@@ -319,30 +318,32 @@ class AynvoraAstroEngine(
         )
     }
 
-    private fun createBodyPosition(
-        bodyId: BodyId,
-        tropicalLongitude: Double,
-        ayanamsaDegrees: Double,
-        isRetrograde: Boolean,
-        dailyMotion: Double,
-    ): BodyPosition {
-        val sidereal = ZodiacCalculator.toSidereal(tropicalLongitude, ayanamsaDegrees)
-        val rashi = ZodiacCalculator.calculateRashi(sidereal)
-        val nakshatra = ZodiacCalculator.calculateNakshatra(sidereal)
+    companion object {
+        internal fun createBodyPosition(
+            bodyId: BodyId,
+            tropicalLongitude: Double,
+            ayanamsaDegrees: Double,
+            isRetrograde: Boolean,
+            dailyMotion: Double,
+        ): BodyPosition {
+            val sidereal = ZodiacCalculator.toSidereal(tropicalLongitude, ayanamsaDegrees)
+            val rashi = ZodiacCalculator.calculateRashi(sidereal)
+            val nakshatra = ZodiacCalculator.calculateNakshatra(sidereal)
 
-        return BodyPosition(
-            bodyId = bodyId,
-            tropicalLongitude = tropicalLongitude,
-            siderealLongitude = sidereal,
-            rashiIndex = rashi.index,
-            rashiName = rashi.name,
-            degreeInRashi = rashi.degreeInRashi,
-            nakshatraIndex = nakshatra.index,
-            nakshatraName = nakshatra.name,
-            degreeInNakshatra = nakshatra.degreeInNakshatra,
-            pada = nakshatra.pada,
-            isRetrograde = isRetrograde,
-            dailyMotionDegrees = dailyMotion,
-        )
+            return BodyPosition(
+                bodyId = bodyId,
+                tropicalLongitude = tropicalLongitude,
+                siderealLongitude = sidereal,
+                rashiIndex = rashi.index,
+                rashiName = rashi.name,
+                degreeInRashi = rashi.degreeInRashi,
+                nakshatraIndex = nakshatra.index,
+                nakshatraName = nakshatra.name,
+                degreeInNakshatra = nakshatra.degreeInNakshatra,
+                pada = nakshatra.pada,
+                isRetrograde = isRetrograde,
+                dailyMotionDegrees = dailyMotion,
+            )
+        }
     }
 }

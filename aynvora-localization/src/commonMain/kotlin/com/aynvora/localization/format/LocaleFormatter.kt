@@ -1,7 +1,6 @@
 package com.aynvora.localization.format
 
 import com.aynvora.localization.locale.SupportedLocale
-import kotlin.math.abs
 import kotlin.math.floor
 
 /**
@@ -115,6 +114,30 @@ object LocaleFormatter {
         val mm = minute.toString().padStart(2, '0')
         val ss = second.toString().padStart(2, '0')
         return "$hh:$mm:$ss"
+    }
+
+    /** Formats an epoch timestamp consistently in UTC, independent of the device time zone. */
+    fun formatUtcTimestamp(epochMillis: Long, locale: SupportedLocale): String {
+        require(epochMillis >= 0L) { "epochMillis must not be negative" }
+        val millisPerDay = 86_400_000L
+        val days = epochMillis / millisPerDay
+        val millisOfDay = epochMillis % millisPerDay
+        val z = days + 719_468L
+        val era = z / 146_097L
+        val dayOfEra = z - era * 146_097L
+        val yearOfEra =
+            (dayOfEra - dayOfEra / 1_460L + dayOfEra / 36_524L - dayOfEra / 146_096L) / 365L
+        var year = yearOfEra + era * 400L
+        val dayOfYear = dayOfEra - (365L * yearOfEra + yearOfEra / 4L - yearOfEra / 100L)
+        val monthPrime = (5L * dayOfYear + 2L) / 153L
+        val day = dayOfYear - (153L * monthPrime + 2L) / 5L + 1L
+        val month = monthPrime + if (monthPrime < 10L) 3L else -9L
+        if (month <= 2L) year += 1L
+        val hour = millisOfDay / 3_600_000L
+        val minute = (millisOfDay % 3_600_000L) / 60_000L
+        return "${day.toString().padStart(2, '0')}/${
+            month.toString().padStart(2, '0')
+        }/$year ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} UTC"
     }
 
     /**

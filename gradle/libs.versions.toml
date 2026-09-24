@@ -3,31 +3,49 @@ kotlin = "2.4.20"
 compose = "1.12.1"
 androidGradlePlugin = "9.4.1"
 androidCompileSdk = "37"
-androidMinSdk = "23"
+androidMinSdk = "24"
 androidTargetSdk = "37"
 activityCompose = "1.13.0"
+androidxCore = "1.18.0"
 coroutines = "1.11.0"
 serialization = "1.11.0"
 cottonsheet = "1.0.1"
+popbox = "1.0.1"
 room = "2.8.5"
 sqlite = "2.7.1"
 ksp = "2.3.12"
 firebaseBom = "34.19.0"
 googleServicesPlugin = "4.5.0"
 firebaseCrashlyticsPlugin = "3.0.8"
+koin = "4.2.2"
+ktor = "3.6.0"
+lifecycleViewModel = "2.11.0"
+nav3 = "1.1.7"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-core = { module = "androidx.core:core", version.ref = "androidxCore" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 cottonsheet = { module = "io.github.kratos1996:cottonsheet", version.ref = "cottonsheet" }
+popbox = { module = "io.github.kratos1996:popbox", version.ref = "popbox" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
+koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewModel" }
+navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3" }
+navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

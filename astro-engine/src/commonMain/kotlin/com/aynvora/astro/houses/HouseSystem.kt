@@ -177,14 +177,70 @@ object PlacidusHouseCalculator : HouseSystemCalculator {
     }
 }
 
+/** Sripati Bhava Madhya profile: trisection of quadrants and midpoint sandhis. */
+object SripatiChalitV1Calculator : HouseSystemCalculator {
+    override val systemName: String = "SRIPATI_CHALIT_V1"
+
+    override fun calculate(input: HouseCalculationInput): HouseCalculationResult {
+        val asc = normalizeDegrees(input.lagna.siderealLongitude)
+        val mc = normalizeDegrees(input.lagna.midheavenSiderealLongitude)
+        val ic = normalizeDegrees(mc + 180.0)
+        val desc = normalizeDegrees(asc + 180.0)
+        val angles = listOf(asc, ic, desc, mc, asc + 360.0)
+        val centers = mutableListOf<Double>()
+        centers += asc
+        for (quadrant in 0..3) {
+            val start = angles[quadrant]
+            val end = angles[quadrant + 1]
+            val span = end - start
+            require(span > 0.0 && span < 180.0) {
+                "SRIPATI_CHALIT_V1 is undefined for degenerate or reversed angular quadrants"
+            }
+            centers += start + span / 3.0
+            centers += start + 2.0 * span / 3.0
+            centers += end
+        }
+        val houseCenters = centers.take(12)
+        val houses = (0 until 12).map { index ->
+            val previous = if (index == 0) houseCenters.last() - 360.0 else houseCenters[index - 1]
+            val center = houseCenters[index]
+            val next = if (index == 11) houseCenters.first() + 360.0 else houseCenters[index + 1]
+            val start = normalizeDegrees((previous + center) / 2.0)
+            val end = normalizeDegrees((center + next) / 2.0)
+            val centerLongitude = normalizeDegrees(center)
+            val rashi = ZodiacCalculator.calculateRashi(centerLongitude)
+            HousePosition(
+                houseNumber = index + 1,
+                cuspLongitude = centerLongitude,
+                startLongitude = start,
+                endLongitude = end,
+                rashiIndex = rashi.index,
+                rashiName = rashi.name,
+                degreeInRashi = rashi.degreeInRashi,
+                houseSystem = systemName,
+            )
+        }
+        val occupancy = input.planetPositions.mapValues { (_, longitude) ->
+            val point = normalizeDegrees(longitude)
+            houses.first { house ->
+                val width = normalizeDegrees(house.endLongitude - house.startLongitude)
+                val offset = normalizeDegrees(point - house.startLongitude)
+                offset < width
+            }.houseNumber
+        }
+        return HouseCalculationResult(systemName, houses, occupancy)
+    }
+}
+
 /**
  * Registry resolving [HouseSystemCalculator] strategies by identifier.
  */
 object HouseSystemRegistry {
 
     fun forName(name: String): HouseSystemCalculator = when (name.uppercase()) {
-        "WHOLE_SIGN", "WHOLE_SIGN_HOUSE", "RASHI_BHAVA" -> WholeSignHouseCalculator
-        "EQUAL_HOUSE", "EQUAL", "SRIPATI_EQUAL" -> EqualHouseCalculator
+        "WHOLE_SIGN", "WHOLE_SIGN_V1", "WHOLE_SIGN_HOUSE", "RASHI_BHAVA" -> WholeSignHouseCalculator
+        "EQUAL_HOUSE", "EQUAL", "EQUAL_HOUSE_V1" -> EqualHouseCalculator
+        "SRIPATI_CHALIT_V1", "SRIPATI_MIDPOINT" -> SripatiChalitV1Calculator
         "PLACIDUS" -> PlacidusHouseCalculator
         else -> throw UnsupportedOperationException(
             "House system '$name' is not supported in the current engine version. " +

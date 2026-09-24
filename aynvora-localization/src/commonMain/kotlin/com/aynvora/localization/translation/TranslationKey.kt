@@ -123,6 +123,228 @@ sealed class TranslationKey {
     }
 
     // -------------------------------------------------------------------------
+    // Tarot domain strings
+    // -------------------------------------------------------------------------
+    object Tarot {
+        object Title : TranslationKey() {
+            override val key = "tarot.title"
+        }
+
+        object Subtitle : TranslationKey() {
+            override val key = "tarot.subtitle"
+        }
+
+        object DisclaimerTitle : TranslationKey() {
+            override val key = "tarot.disclaimer_title"
+        }
+
+        object DisclaimerBody : TranslationKey() {
+            override val key = "tarot.disclaimer_body"
+        }
+
+        object DisclaimerAcknowledge : TranslationKey() {
+            override val key = "tarot.disclaimer_acknowledge"
+        }
+
+        object SelectSpread : TranslationKey() {
+            override val key = "tarot.select_spread"
+        }
+
+        object DrawCards : TranslationKey() {
+            override val key = "tarot.draw_cards"
+        }
+
+        object DrawAgain : TranslationKey() {
+            override val key = "tarot.draw_again"
+        }
+
+        object Upright : TranslationKey() {
+            override val key = "tarot.upright"
+        }
+
+        object Reversed : TranslationKey() {
+            override val key = "tarot.reversed"
+        }
+
+        object SingleCardTitle : TranslationKey() {
+            override val key = "tarot.spread.single_card.title"
+        }
+
+        object SingleCardDesc : TranslationKey() {
+            override val key = "tarot.spread.single_card.desc"
+        }
+
+        object ThreeCardTitle : TranslationKey() {
+            override val key = "tarot.spread.three_card.title"
+        }
+
+        object ThreeCardDesc : TranslationKey() {
+            override val key = "tarot.spread.three_card.desc"
+        }
+
+        object ReflectiveMeaning : TranslationKey() {
+            override val key = "tarot.reflective_meaning"
+        }
+
+        object KeywordsLabel : TranslationKey() {
+            override val key = "tarot.keywords_label"
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Core Product Feature Hub & Titles
+    // -------------------------------------------------------------------------
+    object Features {
+        object Astrology : TranslationKey() {
+            override val key = "feature.astrology"
+        }
+
+        object Palmistry : TranslationKey() {
+            override val key = "feature.palmistry"
+        }
+
+        object Gemstone : TranslationKey() {
+            override val key = "feature.gemstone"
+        }
+
+        object Gita : TranslationKey() {
+            override val key = "feature.gita"
+        }
+
+        object GarudaPuran : TranslationKey() {
+            override val key = "feature.garuda_puran"
+        }
+
+        object LalKitab : TranslationKey() {
+            override val key = "feature.lal_kitab"
+        }
+
+        object Tarot : TranslationKey() {
+            override val key = "feature.tarot"
+        }
+
+        object AiAssistant : TranslationKey() {
+            override val key = "feature.ai_assistant"
+        }
+
+        object DailyGuidance : TranslationKey() {
+            override val key = "feature.daily_guidance"
+        }
+
+        object Wallpaper : TranslationKey() {
+            override val key = "feature.wallpaper"
+        }
+
+        object ComingSoon : TranslationKey() {
+            override val key = "feature.coming_soon"
+        }
+    }
+
+    object Palmistry {
+        object Title : TranslationKey() {
+            override val key = "palmistry.title"
+        }
+
+        object Subtitle : TranslationKey() {
+            override val key = "palmistry.subtitle"
+        }
+
+        object ScanPrompt : TranslationKey() {
+            override val key = "palmistry.scan_prompt"
+        }
+    }
+
+    object Gemstone {
+        object Title : TranslationKey() {
+            override val key = "gemstone.title"
+        }
+
+        object Subtitle : TranslationKey() {
+            override val key = "gemstone.subtitle"
+        }
+
+        object MyInventory : TranslationKey() {
+            override val key = "gemstone.my_inventory"
+        }
+    }
+
+    object Gita {
+        object Title : TranslationKey() {
+            override val key = "gita.title"
+        }
+
+        object Subtitle : TranslationKey() {
+            override val key = "gita.subtitle"
+        }
+    }
+
+    object GarudaPuran {
+        object Title : TranslationKey() {
+            override val key = "garuda.title"
+        }
+
+        object Subtitle : TranslationKey() {
+            override val key = "garuda.subtitle"
+        }
+    }
+
+    object LalKitab {
+        object Title : TranslationKey() {
+            override val key = "lalkitab.title"
+        }
+
+        object Subtitle : TranslationKey() {
+            override val key = "lalkitab.subtitle"
+        }
+    }
+
+    object AiAssistant {
+        object Title : TranslationKey() {
+            override val key = "ai.title"
+        }
+
+        object Subtitle : TranslationKey() {
+            override val key = "ai.subtitle"
+        }
+    }
+
+    object Guidance {
+        object Title : TranslationKey() {
+            override val key = "guidance.title"
+        }
+
+        object Subtitle : TranslationKey() {
+            override val key = "guidance.subtitle"
+        }
+
+        object Morning : TranslationKey() {
+            override val key = "guidance.morning"
+        }
+
+        object Night : TranslationKey() {
+            override val key = "guidance.night"
+        }
+    }
+
+    object Wallpaper {
+        object Title : TranslationKey() {
+            override val key = "wallpaper.title"
+        }
+
+        object Subtitle : TranslationKey() {
+            override val key = "wallpaper.subtitle"
+        }
+
+        object GeneratePrompt : TranslationKey() {
+            override val key = "wallpaper.generate_prompt"
+        }
+
+        object CopyPrompt : TranslationKey() {
+            override val key = "wallpaper.copy_prompt"
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Accessibility strings
     // -------------------------------------------------------------------------
     object Accessibility {
@@ -131,5 +353,8 @@ sealed class TranslationKey {
         object LoadingIndicator : TranslationKey() { override val key = "a11y.loading" }
         object ErrorMessage : TranslationKey() { override val key = "a11y.error_message" }
         object RetrogradeIndicator : TranslationKey() { override val key = "a11y.retrograde" }
+        object TarotCardDrawn : TranslationKey() {
+            override val key = "a11y.tarot_card_drawn"
+        }
     }
 }

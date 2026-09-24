@@ -96,6 +96,52 @@ Tracks synchronization cycles, versions, and validation state.
 - `activeManifestVersion` (INTEGER): Currently active manifest version.
 - `etag` (TEXT, nullable): Remote manifest caching token.
 
+### 3.8 `tarot_decks`
+
+Tarot deck metadata.
+
+- `id` (TEXT, PK): Unique deck ID (`"rider_waite_smith_standard"`).
+- `name` (TEXT): Deck title.
+- `description` (TEXT): Editorial summary.
+- `cardCount` (INTEGER): Total count (78).
+
+### 3.9 `tarot_cards`
+
+Canonical definition of 78 cards.
+
+- `id` (TEXT, PK): e.g. `"major_00_fool"`, `"wands_01_ace"`.
+- `deckId` (TEXT): Foreign deck reference (Indexed).
+- `number` (INTEGER): Numeric sequence rank.
+- `name` (TEXT): English canonical name.
+- `arcana` (TEXT): Arcana type (`"MAJOR"`, `"MINOR"`, Indexed).
+- `suit` (TEXT, nullable): Suit (`"WANDS"`, `"CUPS"`, `"SWORDS"`, `"PENTACLES"`).
+
+### 3.10 `tarot_card_content`
+
+Localized reflective interpretations in English and Hindi.
+
+- `id` (TEXT, PK): Composite key (`"${cardId}_${language}"`).
+- `cardId` (TEXT): Card identifier (Indexed).
+- `language` (TEXT): Locale code (Indexed, unique composite on `[cardId, language]`).
+- `title` (TEXT): Localized card name.
+- `shortDescription` (TEXT): Concise summary.
+- `keywordsCsv` (TEXT): Comma-separated keywords.
+- `uprightMeaning` (TEXT): Reflective upright interpretation.
+- `reversedMeaning` (TEXT): Reflective reversed interpretation.
+- `sourceAttribution` (TEXT): Public domain/tradition attribution.
+- `contentVersion` (INTEGER): Content version number.
+
+### 3.11 `tarot_reading_history`
+
+Local reading history storage.
+
+- `id` (TEXT, PK): Reading ID.
+- `spreadId` (TEXT): Spread identifier.
+- `deckId` (TEXT): Deck identifier.
+- `serializedDrawsJson` (TEXT): JSON array of drawn card IDs, positions, and orientations.
+- `timestampEpochMs` (INTEGER): Timestamp (Indexed).
+- **Privacy Rule**: Never stores user-entered questions, notes, or journal entries.
+
 ---
 
 ## 4. Platform Initialization Contract

@@ -1,11 +1,8 @@
 package com.aynvora.data.database.dao
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import androidx.room.Update
 import androidx.room.Upsert
 import com.aynvora.data.database.entity.BirthProfileRoomEntity
 import com.aynvora.data.database.entity.ContentItemRoomEntity
@@ -158,4 +155,62 @@ interface ContentSyncMetadataDao {
 
     @Upsert
     suspend fun upsert(entity: ContentSyncMetadataRoomEntity)
+}
+
+@Dao
+interface TarotDao {
+    // Tarot Decks
+    @Query("SELECT * FROM tarot_decks WHERE id = :id")
+    suspend fun getDeckById(id: String): com.aynvora.data.database.entity.TarotDeckRoomEntity?
+
+    @Query("SELECT * FROM tarot_decks")
+    suspend fun getAllDecks(): List<com.aynvora.data.database.entity.TarotDeckRoomEntity>
+
+    @Upsert
+    suspend fun upsertDeck(entity: com.aynvora.data.database.entity.TarotDeckRoomEntity)
+
+    // Tarot Cards
+    @Query("SELECT * FROM tarot_cards WHERE deckId = :deckId ORDER BY number ASC")
+    suspend fun getCardsForDeck(deckId: String): List<com.aynvora.data.database.entity.TarotCardRoomEntity>
+
+    @Query("SELECT * FROM tarot_cards WHERE id = :id")
+    suspend fun getCardById(id: String): com.aynvora.data.database.entity.TarotCardRoomEntity?
+
+    @Upsert
+    suspend fun upsertCards(entities: List<com.aynvora.data.database.entity.TarotCardRoomEntity>)
+
+    // Tarot Card Content
+    @Query("SELECT * FROM tarot_card_content WHERE cardId = :cardId AND language = :language LIMIT 1")
+    suspend fun getContentByCardAndLanguage(
+        cardId: String,
+        language: String
+    ): com.aynvora.data.database.entity.TarotCardContentRoomEntity?
+
+    @Query("SELECT * FROM tarot_card_content WHERE language = :language")
+    fun observeContentByLanguage(language: String): Flow<List<com.aynvora.data.database.entity.TarotCardContentRoomEntity>>
+
+    @Upsert
+    suspend fun upsertCardContentList(entities: List<com.aynvora.data.database.entity.TarotCardContentRoomEntity>)
+
+    @Query("SELECT COUNT(*) FROM tarot_cards WHERE deckId = :deckId")
+    suspend fun getCardCount(deckId: String = "rider_waite_smith_standard"): Int
+
+    @Query("SELECT COUNT(*) FROM tarot_card_content WHERE language = :language")
+    suspend fun getContentCount(language: String): Int
+
+    @Query("SELECT * FROM tarot_card_content WHERE language = :language")
+    suspend fun getAllContentForLanguage(language: String): List<com.aynvora.data.database.entity.TarotCardContentRoomEntity>
+
+    // Reading History
+    @Upsert
+    suspend fun insertReading(entity: com.aynvora.data.database.entity.TarotReadingHistoryRoomEntity)
+
+    @Query("SELECT * FROM tarot_reading_history ORDER BY timestampEpochMs DESC LIMIT :limit")
+    fun observeRecentReadings(limit: Int): Flow<List<com.aynvora.data.database.entity.TarotReadingHistoryRoomEntity>>
+
+    @Query("DELETE FROM tarot_reading_history WHERE id = :id")
+    suspend fun deleteReadingById(id: String)
+
+    @Query("DELETE FROM tarot_reading_history")
+    suspend fun clearHistory()
 }
