@@ -17,6 +17,7 @@ internal object HindiTranslations {
         entries = mapOf(
             // App
             "app.app_name" to "AYNVORA",
+            "app.tagline" to "प्राचीन ज्ञान। स्पष्ट निर्णय।",
             "app.loading" to "लोड हो रहा है…",
             "app.error" to "एक त्रुटि हुई",
             "app.retry" to "पुनः प्रयास करें",
@@ -30,6 +31,22 @@ internal object HindiTranslations {
             "app.theme" to "थीम",
             "app.done" to "हो गया",
             "app.back" to "वापस",
+
+            // Feature Detail Sheet
+            "feature_detail.operational_status" to "सक्रिय परिचालन स्थिति",
+            "feature_detail.status_available" to "उपलब्ध (पूर्णतः स्थापित)",
+            "feature_detail.status_offline" to "ऑफ़लाइन उपलब्ध",
+            "feature_detail.status_setup_required" to "कॉन्फ़िगरेशन आवश्यक: {reason}",
+            "feature_detail.status_update_required" to "संस्करण अपडेट आवश्यक",
+            "feature_detail.status_unsupported" to "इस प्लेटफ़ॉर्म पर असमर्थित",
+            "feature_detail.status_in_development" to "विकासशील — {phase}",
+            "feature_detail.status_config_required" to "कॉन्फ़िगरेशन आवश्यक: {reason}",
+            "feature_detail.status_unsupported_platform" to "{platform} पर असमर्थित",
+            "feature_detail.domain_overview" to "डोमेन अवलोकन",
+            "feature_detail.architecture_foundation" to "वास्तुकला एवं आधारभूत संरचना",
+            "feature_detail.privacy_guarantee_title" to "गोपनीयता एवं ऑफ़लाइन गारंटी",
+            "feature_detail.privacy_guarantee_body" to "AYNVORA के सभी घटक 100% ऑन-डिवाइस कार्य करते हैं। कोई भी व्यक्तिगत डेटा, जन्म विवरण या छवि कभी भी किसी रिमोट सर्वर पर नहीं भेजी जाती।",
+            "feature_detail.understood_close" to "समझ गया — बंद करें",
 
             // Rashis — Hindi names (standard Vedic Jyotisha)
             "astro.rashi.aries" to "मेष",

@@ -35,6 +35,9 @@ sealed class TranslationKey {
     // -------------------------------------------------------------------------
     object App {
         object AppName : TranslationKey() { override val key = "app.app_name" }
+        object Tagline : TranslationKey() {
+            override val key = "app.tagline"
+        }
         object Loading : TranslationKey() { override val key = "app.loading" }
         object Error : TranslationKey() { override val key = "app.error" }
         object Retry : TranslationKey() { override val key = "app.retry" }
@@ -48,6 +51,70 @@ sealed class TranslationKey {
         object Theme : TranslationKey() { override val key = "app.theme" }
         object Done : TranslationKey() { override val key = "app.done" }
         object Back : TranslationKey() { override val key = "app.back" }
+    }
+
+    // -------------------------------------------------------------------------
+    // Feature Detail Sheet strings
+    // -------------------------------------------------------------------------
+    object FeatureDetail {
+        object OperationalStatus : TranslationKey() {
+            override val key = "feature_detail.operational_status"
+        }
+
+        object StatusAvailable : TranslationKey() {
+            override val key = "feature_detail.status_available"
+        }
+
+        object StatusOffline : TranslationKey() {
+            override val key = "feature_detail.status_offline"
+        }
+
+        object StatusSetupRequired : TranslationKey() {
+            override val key = "feature_detail.status_setup_required"
+        }
+
+        object StatusUpdateRequired : TranslationKey() {
+            override val key = "feature_detail.status_update_required"
+        }
+
+        object StatusUnsupported : TranslationKey() {
+            override val key = "feature_detail.status_unsupported"
+        }
+
+        object DomainOverview : TranslationKey() {
+            override val key = "feature_detail.domain_overview"
+        }
+
+        object ArchitectureFoundation : TranslationKey() {
+            override val key = "feature_detail.architecture_foundation"
+        }
+
+        object PrivacyGuaranteeTitle : TranslationKey() {
+            override val key = "feature_detail.privacy_guarantee_title"
+        }
+
+        object PrivacyGuaranteeBody : TranslationKey() {
+            override val key = "feature_detail.privacy_guarantee_body"
+        }
+
+        object UnderstoodClose : TranslationKey() {
+            override val key = "feature_detail.understood_close"
+        }
+
+        /** For in-development status: expects {phase} arg */
+        object StatusInDevelopment : TranslationKey() {
+            override val key = "feature_detail.status_in_development"
+        }
+
+        /** For setup required: expects {reason} arg */
+        object StatusConfigRequired : TranslationKey() {
+            override val key = "feature_detail.status_config_required"
+        }
+
+        /** For unsupported: expects {platform} arg */
+        object StatusUnsupportedPlatform : TranslationKey() {
+            override val key = "feature_detail.status_unsupported_platform"
+        }
     }
 
     // -------------------------------------------------------------------------

@@ -16,6 +16,7 @@ internal object EnglishTranslations {
         entries = mapOf(
             // App
             "app.app_name" to "AYNVORA",
+            "app.tagline" to "Ancient Wisdom. Clearer Choices.",
             "app.loading" to "Loading…",
             "app.error" to "An error occurred",
             "app.retry" to "Retry",
@@ -29,6 +30,22 @@ internal object EnglishTranslations {
             "app.theme" to "Theme",
             "app.done" to "Done",
             "app.back" to "Back",
+
+            // Feature Detail Sheet
+            "feature_detail.operational_status" to "Operational Status",
+            "feature_detail.status_available" to "Available (Fully Installed)",
+            "feature_detail.status_offline" to "Offline Available",
+            "feature_detail.status_setup_required" to "Setup Required: {reason}",
+            "feature_detail.status_update_required" to "Update Required",
+            "feature_detail.status_unsupported" to "Unsupported on this platform",
+            "feature_detail.status_in_development" to "In Development — {phase}",
+            "feature_detail.status_config_required" to "Setup Required: {reason}",
+            "feature_detail.status_unsupported_platform" to "Unsupported on {platform}",
+            "feature_detail.domain_overview" to "Domain Overview",
+            "feature_detail.architecture_foundation" to "Architecture & Foundation",
+            "feature_detail.privacy_guarantee_title" to "Privacy & Local Execution Guarantee",
+            "feature_detail.privacy_guarantee_body" to "All AYNVORA domains execute 100% on-device. Zero telemetry, zero cloud telemetry, and zero birth or biometric data ever leave this device.",
+            "feature_detail.understood_close" to "Understood — Close",
 
             // Rashis — English display names
             "astro.rashi.aries" to "Aries",
