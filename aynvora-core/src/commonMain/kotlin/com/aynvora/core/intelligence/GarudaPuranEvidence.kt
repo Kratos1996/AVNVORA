@@ -34,6 +34,7 @@ object GarudaPuranEvidenceGraphFactory {
                     referenceId = item.reference.canonicalReferenceId,
                     contentVersion = "v${item.contentVersion}",
                     contentType = contentType,
+                    sourceReference = item.reference.sourceProvenance,
                 )
 
                 val sourceId = "${baseId}_source"

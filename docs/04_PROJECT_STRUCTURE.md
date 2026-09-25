@@ -73,8 +73,10 @@ Version: 1.0
     - `com.aynvora.data.database.dao`: Room DAOs
     - `com.aynvora.data.tarot`: Tarot Room repository implementation, starter content, and content
       pack
-    - `com.aynvora.data.garudapuran`: approved-package adapter over the generic offline
-      `ContentRepository`; no Garuda source pack is bundled
+  - `com.aynvora.data.garudapuran`: approved-package adapter over generic offline
+    `ContentRepository`; approved English package `GarudaWood1911ContentPackage` (
+    `garuda-content-wood-1911-en-v1`);
+    secondary cross-reference registry `GarudaSourceComparisonRegistry` (Dutt 1908)
     - `com.aynvora.data.storage`: File storage drivers and migrations
     - `com.aynvora.data.security`: Storage cipher abstractions
     - `com.aynvora.data.di`: Koin data DI module (`coreDataModule`)
@@ -107,9 +109,15 @@ Astrology reference audit and validation classifications: `REFERENCE_VALIDATION_
 `PHASE_8_2_ASTROLOGY_REFERENCE_PARITY.md`. The JKR source PDF is in `docs/`; parity is classified by
 calculation and profile.
 
-Garuda Puran source governance, package metadata, provenance, report flow, current no-corpus status,
-and extension procedure: `GARUDA_PURAN_ARCHITECTURE.md`. The repository contains no source-backed
-Garuda Puran content package; the route/catalog/report preparation remain source-gated.
+Garuda Puran source governance, package metadata, provenance, 12-stage pipeline, report flow,
+and comparative verification: `GARUDA_PURAN_ARCHITECTURE.md` and `docs/garuda-puran/` (including
+`SOURCE_CATALOG.md`,
+`LICENSE_MATRIX.md`, `CONTENT_PIPELINE.md`, `CONTENT_VERIFICATION_REPORT.md`, `SOURCE_SELECTION.md`,
+`CONTENT_SCHEMA.md`,
+`CHAPTER_INDEX.md`, and `PROVENANCE_POLICY.md`). Phase 8.4B installs approved package
+`garuda-content-wood-1911-en-v1`
+for English, promoting feature status to `PARTIALLY_IMPLEMENTED`, while Hindi remains
+`CONTENT_UNAVAILABLE` under Option B.
 
 ## Rule
 Do not duplicate domain logic in androidMain, iosMain or desktopMain.

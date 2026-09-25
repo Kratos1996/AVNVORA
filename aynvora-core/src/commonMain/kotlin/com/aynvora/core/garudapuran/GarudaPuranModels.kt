@@ -73,6 +73,33 @@ enum class GarudaPuranTextKey(val key: String) {
     CONTENT_VERSION("garuda.column.content_version"),
     LANGUAGE("garuda.column.language"),
     DISCLAIMER_PREFIX("garuda.scriptural_prefix"),
+    SOURCE_RIGHTS_UNVERIFIED("garuda.source_status.rights_unverified"),
+    SOURCE_RIGHTS_UNCLEAR("garuda.source_status.rights_unclear"),
+    SOURCE_REFERENCE_ONLY("garuda.source_status.reference_only"),
+    SOURCE_RESTRICTED("garuda.source_status.restricted"),
+    SOURCE_APPROVED_FOR_DISTRIBUTION("garuda.source_status.approved_for_distribution"),
+    SOURCE_LICENSE_NOT_STATED("garuda.source_status.license_not_stated"),
+    SOURCE_LICENSE_EXPLICIT("garuda.source_status.license_explicit"),
+    SOURCE_RIGHTS_EXPLICITLY_GRANTED("garuda.source_status.rights_explicitly_granted"),
+    SOURCE_PUBLIC_DOMAIN_CLAIM_EXPLICIT("garuda.source_status.public_domain_claim_explicit"),
+    SOURCE_VERIFICATION_NOT_VERIFIED("garuda.source_status.not_verified"),
+    SOURCE_VERIFICATION_FILE_IDENTITY("garuda.source_status.file_identity_verified"),
+    SOURCE_VERIFICATION_INDEX("garuda.source_status.index_visually_verified"),
+    SOURCE_VERIFICATION_CONTENT("garuda.source_status.content_visually_verified"),
+    SOURCE_VERIFICATION_PARTIAL("garuda.source_status.partially_verified"),
+    SOURCE_RIGHTS_LICENSE_UNCERTAIN("garuda.source_status.license_uncertain"),
+    SOURCE_REFERENCE_ONLY_NON_DISTRIBUTABLE("garuda.source_status.reference_only_non_distributable"),
+    SOURCE_RIGHTS_PUBLIC_DOMAIN_ELIGIBLE("garuda.source_status.public_domain_eligible"),
+    SOURCE_RIGHTS_VERIFIED("garuda.source_status.rights_verified"),
+    SOURCE_RIGHTS_REVIEW_REQUIRED("garuda.source_status.rights_review_required"),
+    SOURCE_REVIEW_UNREVIEWED("garuda.source_status.review_unreviewed"),
+    SOURCE_REVIEW_AUTO_NORMALIZED("garuda.source_status.review_auto_normalized"),
+    SOURCE_REVIEW_EDITOR_REQUIRED("garuda.source_status.review_editor_required"),
+    SOURCE_REVIEW_PENDING("garuda.source_status.review_pending"),
+    SOURCE_REVIEW_SOURCE_VERIFIED("garuda.source_status.review_source_verified"),
+    SOURCE_REVIEW_LICENSE_VERIFIED("garuda.source_status.review_license_verified"),
+    SOURCE_REVIEW_APPROVED_FOR_APP("garuda.source_status.review_approved_for_app"),
+    SOURCE_REVIEW_REJECTED("garuda.source_status.review_rejected"),
 }
 
 @Serializable
@@ -106,6 +133,8 @@ data class GarudaPuranReference(
     val chapterNumber: Int? = null,
     val verseStart: Int? = null,
     val verseEnd: Int? = null,
+    /** PDF/edition provenance when this citation has been verified to page level. */
+    val sourceProvenance: GarudaSourceReference? = null,
 ) {
     init {
         require(canonicalReferenceId.isNotBlank())
@@ -115,6 +144,10 @@ data class GarudaPuranReference(
         require(verseEnd == null || verseEnd > 0)
         require(verseStart == null || verseEnd == null || verseEnd >= verseStart)
         require(sectionId != null || chapterNumber != null) { "A source location must identify a section or chapter" }
+        require(
+            sourceProvenance == null || sourceProvenance.canonicalReferenceId == null ||
+                    sourceProvenance.canonicalReferenceId == canonicalReferenceId
+        )
     }
 }
 
@@ -211,6 +244,8 @@ data class GarudaPuranCatalog(
     val contentVersion: String?,
     val topics: List<GarudaPuranTopicAvailability>,
     val sourceEditions: List<GarudaPuranSourceEdition>,
+    /** Inspected source metadata, including reference-only records; it does not imply an installed corpus. */
+    val sourceManifest: GarudaSourceManifest = GarudaSourceManifest.empty(),
 ) {
     init {
         require(languageCode in SUPPORTED_GARUDA_LANGUAGES)
@@ -232,6 +267,7 @@ data class GarudaPuranCatalog(
                     )
                 },
                 sourceEditions = emptyList(),
+                sourceManifest = GarudaSourceManifest.empty(),
             )
     }
 }
@@ -255,7 +291,18 @@ object GarudaPuranCatalogFactory {
         contentVersion: String?,
         topics: List<GarudaPuranTopicAvailability>,
         sourceEditions: List<GarudaPuranSourceEdition>,
-    ) = GarudaPuranCatalog(languageCode, contentVersion, topics.toList(), sourceEditions.toList())
+        sourceManifest: GarudaSourceManifest = GarudaSourceManifest.empty(),
+    ) = GarudaPuranCatalog(
+        languageCode,
+        contentVersion,
+        topics.toList(),
+        sourceEditions.toList(),
+        GarudaSourceManifestFactory.create(
+            sourceManifest.manifestVersion,
+            sourceManifest.sources,
+            sourceManifest.packages,
+        ),
+    )
 }
 
 object GarudaPuranContentSnapshotFactory {
@@ -270,6 +317,7 @@ object GarudaPuranContentSnapshotFactory {
 
 interface GarudaPuranRepository {
     /** Reads only approved locally installed content. Implementations must not make network requests. */
+    fun getSourceManifest(): GarudaSourceManifest = GarudaSourceManifest.empty()
     suspend fun getCatalog(languageCode: String): AynvoraResult<GarudaPuranCatalog>
     suspend fun getAvailableContent(languageCode: String): AynvoraResult<List<GarudaPuranContentItem>>
     suspend fun getTopic(

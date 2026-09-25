@@ -1,6 +1,7 @@
 package com.aynvora.core.intelligence
 
 import com.aynvora.core.feature.CoreFeatureId
+import com.aynvora.core.garudapuran.GarudaSourceReference
 import kotlinx.serialization.Serializable
 
 /**
@@ -35,6 +36,8 @@ data class EvidenceProvenance(
     val contentVersion: String? = null,
     /** Typed source-content kind, for example SOURCE_PASSAGE or TRADITIONAL_INTERPRETATION. */
     val contentType: String? = null,
+    /** Page-aware source provenance for source-backed Garuda Puran evidence when available. */
+    val sourceReference: GarudaSourceReference? = null,
 )
 
 /**

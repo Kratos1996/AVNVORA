@@ -11,23 +11,23 @@ and future implementation plan for all 14 first-class core product domains in AY
 
 ## 1. Feature Status Summary
 
-| Feature                                   | Foundation Status | Implementation Status | Data Requirements                                                                                   | Analytics Status             | Dedicated Target Phase                                   |
-|-------------------------------------------|-------------------|-----------------------|-----------------------------------------------------------------------------------------------------|------------------------------|----------------------------------------------------------|
-| **1. Vedic Astrology**                    | `IMPLEMENTED`     | `IMPLEMENTED`         | Ephemeris, coordinates, math                                                                        | Consent-gated                | Active Core / Phase 8.2 parity audit; JKR parity partial |
-| **2. Tarot Reflection**                   | `VERIFIED`        | `IMPLEMENTED`         | Room 78-card deck, local readings                                                                   | Consent-gated                | Phase 7.1 / 7.2                                          |
-| **3. Numerology**                         | `VERIFIED`        | `FOUNDATION_ONLY`     | Birth date, full name                                                                               | No PII events                | Phase 8.9                                                |
-| **4. Palmistry / Hastrekha**              | `VERIFIED`        | `FOUNDATION_ONLY`     | Local hand camera image                                                                             | Local-only privacy           | Phase 8.1                                                |
-| **5. Gemstone / Navaratna**               | `VERIFIED`        | `FOUNDATION_ONLY`     | Wearing inventory, Lab OCR                                                                          | No PII events                | Phase 8.2                                                |
-| **6. Bhagavad Gita**                      | `VERIFIED`        | `FOUNDATION_ONLY`     | Sanskrit shlokas, public domain translations                                                        | Content viewed               | Phase 8.3                                                |
-| **7. Garuda Puran**                       | `VERIFIED`        | `FOUNDATION_ONLY`     | Reviewed source-edition package and selected-language translations; none bundled in this repository | Topic viewed (topic ID only) | Phase 8.4 pipeline implemented; corpus pending           |
-| **8. Lal Kitab Tradition**                | `VERIFIED`        | `FOUNDATION_ONLY`     | 1939-1952 traditional rules                                                                         | Rule explored                | Phase 8.5                                                |
-| **9. On-Device AI Assistant**             | `VERIFIED`        | `FOUNDATION_ONLY`     | Local small LLM weights (Qwen3 0.6B/1.7B)                                                           | Tool call metrics            | Phase 8.6                                                |
-| **10. Daily Guidance & Practice**         | `VERIFIED`        | `FOUNDATION_ONLY`     | Sunrise/Panchang, Gita reflection                                                                   | Routine started              | Phase 8.7                                                |
-| **11. Wallpaper Studio**                  | `VERIFIED`        | `FOUNDATION_ONLY`     | Device profiles, Rashi/Nakshatra tokens                                                             | Prompt generated             | Phase 8.8                                                |
-| **12. Rudraksha**                         | `VERIFIED`        | `FOUNDATION_ONLY`     | Mukhi classification, tradition source                                                              | Feature opened               | Phase 8.10                                               |
-| **13. Jadi / Sacred Roots**               | `VERIFIED`        | `FOUNDATION_ONLY`     | Root catalog, source text                                                                           | Feature opened               | Phase 8.11                                               |
-| **14. Yantra**                            | `VERIFIED`        | `FOUNDATION_ONLY`     | Yantra type, tradition source                                                                       | Feature opened               | Phase 8.12                                               |
-| **15. Core Intelligence & Orchestration** | `VERIFIED`        | `IMPLEMENTED`         | Multi-source evidence, sufficiency validator, conflict preservation                                 | Query metrics                | Phase 7.5                                                |
+| Feature                                   | Foundation Status | Implementation Status   | Data Requirements                                                                                                                               | Analytics Status                                 | Dedicated Target Phase                                   |
+|-------------------------------------------|-------------------|-------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|----------------------------------------------------------|
+| **1. Vedic Astrology**                    | `IMPLEMENTED`     | `IMPLEMENTED`           | Ephemeris, coordinates, math                                                                                                                    | Consent-gated                                    | Active Core / Phase 8.2 parity audit; JKR parity partial |
+| **2. Tarot Reflection**                   | `VERIFIED`        | `IMPLEMENTED`           | Room 78-card deck, local readings                                                                                                               | Consent-gated                                    | Phase 7.1 / 7.2                                          |
+| **3. Numerology**                         | `VERIFIED`        | `FOUNDATION_ONLY`       | Birth date, full name                                                                                                                           | No PII events                                    | Phase 8.9                                                |
+| **4. Palmistry / Hastrekha**              | `VERIFIED`        | `FOUNDATION_ONLY`       | Local hand camera image                                                                                                                         | Local-only privacy                               | Phase 8.1                                                |
+| **5. Gemstone / Navaratna**               | `VERIFIED`        | `FOUNDATION_ONLY`       | Wearing inventory, Lab OCR                                                                                                                      | No PII events                                    | Phase 8.2                                                |
+| **6. Bhagavad Gita**                      | `VERIFIED`        | `FOUNDATION_ONLY`       | Sanskrit shlokas, public domain translations                                                                                                    | Content viewed                                   | Phase 8.3                                                |
+| **7. Garuda Puran**                       | `VERIFIED`        | `PARTIALLY_IMPLEMENTED` | Reviewed source package `garuda-content-wood-1911-en-v1` (16 chapters) installed for English; Hindi unavailable under Option B                  | Topic viewed (topic ID only)                     | Phase 8.4B complete; English Saroddhara active offline   |
+| **8. Lal Kitab Tradition**                | `VERIFIED`        | `FOUNDATION_ONLY`       | 1939-1952 traditional rules                                                                                                                     | Rule explored                                    | Phase 8.5                                                |
+| **9. On-Device AI Platform & Runtime**    | `VERIFIED`        | `PARTIALLY_IMPLEMENTED` | Native SLM weights (Qwen2.5 0.5B/1.5B GGUF), native runtime driver, 64-bit ABI configuration, staging/rollback lifecycle, dynamic RAM safeguard | Technical lifecycle metrics only (no PII/prompt) | Phase 8.6, 8.7 & 8.8 completed                           |
+| **10. Daily Guidance & Practice**         | `VERIFIED`        | `FOUNDATION_ONLY`       | Sunrise/Panchang, Gita reflection                                                                                                               | Routine started                                  | Phase 8.7                                                |
+| **11. Wallpaper Studio**                  | `VERIFIED`        | `FOUNDATION_ONLY`       | Device profiles, Rashi/Nakshatra tokens                                                                                                         | Prompt generated                                 | Phase 8.8                                                |
+| **12. Rudraksha**                         | `VERIFIED`        | `FOUNDATION_ONLY`       | Mukhi classification, tradition source                                                                                                          | Feature opened                                   | Phase 8.10                                               |
+| **13. Jadi / Sacred Roots**               | `VERIFIED`        | `FOUNDATION_ONLY`       | Root catalog, source text                                                                                                                       | Feature opened                                   | Phase 8.11                                               |
+| **14. Yantra**                            | `VERIFIED`        | `FOUNDATION_ONLY`       | Yantra type, tradition source                                                                                                                   | Feature opened                                   | Phase 8.12                                               |
+| **15. Core Intelligence & Orchestration** | `VERIFIED`        | `IMPLEMENTED`           | Multi-source evidence, sufficiency validator, conflict preservation                                                                             | Query metrics                                    | Phase 7.5                                                |
 
 ---
 
@@ -81,17 +81,26 @@ calculation engine. Future report schemas and localization keys reserve matching
 
 ### 5. Garuda Puran
 
-- **Current Status**: `FOUNDATION_ONLY` (Phase 8.4 source-gated pipeline implemented; no corpus
-  available)
+- **Current Status**: `PARTIALLY_IMPLEMENTED` (Phase 8.4B completed: primary approved package
+  `garuda-content-wood-1911-en-v1`
+  ingested with SHA-256 `4798c1a336c250662211a15fa0f8cf1c565787572c230b82cdaf2872e091bea5`; all 16
+  chapters covered across 10 typed topics;
+  secondary cross-reference with Dutt 1908 in `GarudaSourceComparisonRegistry`; report engine
+  integrated; Hindi handled via Option B as `CONTENT_UNAVAILABLE`).
 - **Domain Contracts**: `GarudaPuranContentItem`, `GarudaPuranSourceEdition`,
-  `GarudaPuranReference`, `GarudaPuranEvidenceGraphFactory`, and `GarudaPuranRepository`.
-- **Source inventory**: There are no source passages, translations, canonical citations, or
-  installed Garuda Puran package in the repository. The roadmap's former Saroddhara reference was a
-  content requirement, not shipped data.
+  `GarudaPuranReference`, `GarudaPuranEvidenceGraphFactory`, `GarudaPuranRepository`,
+  `GarudaSourceManifest`, `GarudaSource`, `GarudaEdition`, `GarudaSourceLicense`,
+  `GarudaChapter`, `GarudaVerse`, `GarudaChecksumVerifier`, and `GarudaContentIngestionPipeline`.
+- **Source Research (Phase 8.4A/B)**: 7 candidate sources cataloged. Ingested Ernest Wood 1911 as
+  primary approved edition for verified jurisdictions (`PUBLIC_DOMAIN_ELIGIBLE_JURISDICTIONS`).
+  Manmatha Nath Dutt 1908 integrated as secondary comparative source. Gita Press Code 1416, MLBD
+  1978,
+  GRETIL, and SanskritDocuments strictly maintained as `REFERENCE_ONLY_NON_DISTRIBUTABLE`.
 - **Ethical lock**: Traditional teachings remain labelled as scriptural/traditional. Never use them
-  for fear-based prognostication or as medical, legal, financial, or scientific claims.
-- **Next dependency**: Supply and review an authorized, versioned source package before marking any
-  topic available. See `GARUDA_PURAN_ARCHITECTURE.md`.
+  for fear-based prognostication or as medical, legal, financial, or scientific claims. Zero
+  AI-generated verses.
+- **Next dependency**: Future independent unencumbered Hindi translation authoring/verification. See
+  `docs/garuda-puran/`.
 
 ### 6. Lal Kitab Tradition
 
@@ -106,15 +115,23 @@ calculation engine. Future report schemas and localization keys reserve matching
 - **Architecture**: 78 canonical cards seeded in Room KMP, offline single/three-card spreads,
   non-predictive ethical disclaimer.
 
-### 8. On-Device AI Assistant
+### 8. On-Device AI Platform & Runtime
 
-- **Current Status**: `FOUNDATION_ONLY` (Target: Phase 8.6)
-- **Domain Contracts**: `AiAssistant`, `AiTool`, `AiToolCall`, `AiToolResult`, `AiProvenance`,
-  `AiModelInfo`, `AiToolRegistry`.
-- **Tool Implementations**: `CalculateBirthChartTool` (wired to `AynvoraSdk`), `SearchGitaTool` (
-  wired to `GitaRepository`).
+- **Current Status**: `PARTIALLY_IMPLEMENTED` (Phase 8.6, 8.7 & 8.8 completed)
+- **Domain Contracts**: `AiDeviceCapabilityDetector`, `AiModelSelector`, `AiModelLifecycleManager`,
+  `AiInferenceEngine`, `LocalNativeInferenceEngine`, `LlamaNativeRuntimeDriver`, `NativeAiRuntime`,
+  `TarotFeatureDataConnector`, `AiContextBuilder`, `AiOutputValidator`,
+  `GroundedSlmTarotExplanationEngine`.
+- **Runtime Features**: Real GGUF model download/verification (SHA-256), atomic install, rollback on
+  failed
+  checksum, dynamic RAM checking, context token overflow protection, native request timeout and
+  cancellation,
+  native resource cleanup, 64-bit Android ABI configuration, offline-only inference (zero network
+  calls),
+  zero-configuration consumer UX, developer diagnostics screen.
 - **Authority Lock**: Explainer and tool orchestrator only; never calculation authority. Zero direct
-  Room or Astro Engine internal access.
+  Room or Astro Engine internal access. Authoritative Tarot readings and EvidenceGraph are
+  immutable.
 
 ### 9. Daily Guidance & Practice
 

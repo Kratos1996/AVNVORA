@@ -1,0 +1,25 @@
+{
+  "deckId": "soimoi_tarot",
+  "name": "Soimoi Tarot Deck",
+  "alternativeNames": [
+    "Soimoi"
+  ],
+  "artist": "Mike Koz (koz.tv)",
+  "designer": "Mike Koz",
+  "publisher": "mixvlad/TarotCards",
+  "publicationYear": 2025,
+  "deckType": "Contemporary Generative Tarot",
+  "cardCount": 78,
+  "majorArcanaCount": 22,
+  "minorArcanaCount": 56,
+  "suits": [
+    "Wands",
+    "Cups",
+    "Swords",
+    "Pentacles"
+  ],
+  "sourceUrl": "https://github.com/mixvlad/TarotCards",
+  "sourceRestoration": "Original creation for mixvlad/TarotCards",
+  "license": "CC BY 4.0",
+  "description": "Original 78-card contemporary tarot deck created by Mike Koz (koz.tv) licensed under Creative Commons Attribution 4.0 International."
+}

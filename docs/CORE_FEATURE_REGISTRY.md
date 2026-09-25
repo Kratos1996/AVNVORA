@@ -13,22 +13,22 @@ data dependencies.
 
 ## 1. Feature Registry & Status Overview
 
-| #  | Domain ID        | Domain Title                  | Architectural Tier / Primary Package                                                         | Status            | Primary Responsibility                                                                                                                                                |
-|----|------------------|-------------------------------|----------------------------------------------------------------------------------------------|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1  | `ASTROLOGY`      | Vedic Astrology               | `:astro-engine`, `com.aynvora.core.models`, `:aynvora-data`                                  | `IMPLEMENTED`     | Pure deterministic astronomical calculations, Vargas, Shadbala, Ashtakavarga, Pinda.                                                                                  |
-| 2  | `PALMISTRY`      | Hastrekha / Palmistry         | `com.aynvora.core.palmistry`, `com.aynvora.data.palmistry`                                   | `FOUNDATION_ONLY` | Camera/hand image capture reference, palm lines/mounts domain model, traditional rule contracts. On-device default.                                                   |
-| 3  | `GEMSTONE`       | Gemstone / Ratna              | `com.aynvora.core.gemstone`, `com.aynvora.data.gemstone`                                     | `FOUNDATION_ONLY` | Gemstone catalog, user wearing inventory, certificate OCR/scale evidence provenance, ethical recommendation contracts.                                                |
-| 4  | `GITA`           | Bhagavad Gita                 | `com.aynvora.core.gita`, `com.aynvora.data.gita`                                             | `FOUNDATION_ONLY` | Edition-aware Sanskrit shloka text, transliteration, authentic translations, and commentary provenance.                                                               |
-| 5  | `GARUDA_PURAN`   | Garuda Puran                  | `com.aynvora.core.garudapuran`, `com.aynvora.data.garudapuran`, `com.aynvora.ui.garudapuran` | `FOUNDATION_ONLY` | Typed, source-gated offline content/report pipeline. No scripture corpus or content pack is bundled; topics remain unavailable until a reviewed package is installed. |
-| 6  | `LAL_KITAB`      | Lal Kitab                     | `com.aynvora.core.lalkitab`, `com.aynvora.data.lalkitab`                                     | `FOUNDATION_ONLY` | Separate traditional ruleset with explicit conditions, non-fear-based traditional remedies, and rule provenance.                                                      |
-| 7  | `TAROT`          | Tarot Reflection              | `com.aynvora.core.tarot`, `com.aynvora.data.tarot`, `com.aynvora.ui.tarot`                   | `IMPLEMENTED`     | Contemplative reflection tool, 78-card standard deck, offline Room storage, random draw engine, non-predictive framing.                                               |
-| 8  | `AI_ASSISTANT`   | On-Device AI Chat             | `com.aynvora.core.ai`, `com.aynvora.data.ai`                                                 | `FOUNDATION_ONLY` | Local small-model assistant orchestrator, structured domain tool calling router, strict provenance, non-hallucination guardrails.                                     |
-| 9  | `DAILY_GUIDANCE` | Daily Practice & Guidance     | `com.aynvora.core.guidance`, `com.aynvora.data.guidance`                                     | `FOUNDATION_ONLY` | Personalized morning routine, daytime focus, evening reflection, night relaxation, multiplatform scheduling.                                                          |
-| 10 | `WALLPAPER`      | Personalized Wallpaper Studio | `com.aynvora.core.wallpaper`, `com.aynvora.data.wallpaper`                                   | `FOUNDATION_ONLY` | Device-aware visual prompt builder incorporating user Rashi/Nakshatra, copy/share handoff to user-authorized external generator.                                      |
-| 11 | `NUMEROLOGY`     | Numerology                    | `com.aynvora.core.numerology`                                                                | `FOUNDATION_ONLY` | First-class domain; model contracts only, no calculation engine.                                                                                                      |
-| 12 | `RUDRAKSHA`      | Rudraksha                     | `com.aynvora.core.rudraksha`                                                                 | `FOUNDATION_ONLY` | First-class domain; provenance-aware contracts only, no recommendation engine.                                                                                        |
-| 13 | `JADI`           | Jadi / Sacred Roots           | `com.aynvora.core.jadi`                                                                      | `FOUNDATION_ONLY` | First-class domain; source and catalog contracts only, no recommendation engine.                                                                                      |
-| 14 | `YANTRA`         | Yantra                        | `com.aynvora.core.yantra`                                                                    | `FOUNDATION_ONLY` | First-class domain; tradition/source contracts only, no recommendation engine.                                                                                        |
+| #  | Domain ID        | Domain Title                         | Architectural Tier / Primary Package                                                         | Status                  | Primary Responsibility                                                                                                                                                                                                            |
+|----|------------------|--------------------------------------|----------------------------------------------------------------------------------------------|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1  | `ASTROLOGY`      | Vedic Astrology                      | `:astro-engine`, `com.aynvora.core.models`, `:aynvora-data`                                  | `IMPLEMENTED`           | Pure deterministic astronomical calculations, Vargas, Shadbala, Ashtakavarga, Pinda.                                                                                                                                              |
+| 2  | `PALMISTRY`      | Hastrekha / Palmistry                | `com.aynvora.core.palmistry`, `com.aynvora.data.palmistry`                                   | `FOUNDATION_ONLY`       | Camera/hand image capture reference, palm lines/mounts domain model, traditional rule contracts. On-device default.                                                                                                               |
+| 3  | `GEMSTONE`       | Gemstone / Ratna                     | `com.aynvora.core.gemstone`, `com.aynvora.data.gemstone`                                     | `FOUNDATION_ONLY`       | Gemstone catalog, user wearing inventory, certificate OCR/scale evidence provenance, ethical recommendation contracts.                                                                                                            |
+| 4  | `GITA`           | Bhagavad Gita                        | `com.aynvora.core.gita`, `com.aynvora.data.gita`                                             | `FOUNDATION_ONLY`       | Edition-aware Sanskrit shloka text, transliteration, authentic translations, and commentary provenance.                                                                                                                           |
+| 5  | `GARUDA_PURAN`   | Garuda Puran                         | `com.aynvora.core.garudapuran`, `com.aynvora.data.garudapuran`, `com.aynvora.ui.garudapuran` | `PARTIALLY_IMPLEMENTED` | Typed, source-gated offline content/report pipeline. Approved English package `garuda-content-wood-1911-en-v1` (16 chapters, 23 passages) installed. Hindi content remains unavailable under Option B.                            |
+| 6  | `LAL_KITAB`      | Lal Kitab                            | `com.aynvora.core.lalkitab`, `com.aynvora.data.lalkitab`                                     | `FOUNDATION_ONLY`       | Separate traditional ruleset with explicit conditions, non-fear-based traditional remedies, and rule provenance.                                                                                                                  |
+| 7  | `TAROT`          | Tarot Reflection                     | `com.aynvora.core.tarot`, `com.aynvora.data.tarot`, `com.aynvora.ui.tarot`                   | `IMPLEMENTED`           | Contemplative reflection tool, 78-card standard deck, offline Room storage, random draw engine, non-predictive framing.                                                                                                           |
+| 8  | `AI_ASSISTANT`   | On-Device AI Platform \u0026 Runtime | `com.aynvora.core.ai`, `com.aynvora.data.ai`, `com.aynvora.ui.ai`                            | `PARTIALLY_IMPLEMENTED` | Native SLM runtime (`LocalNativeInferenceEngine`, `LlamaNativeRuntimeDriver`, Qwen2.5 0.5B/1.5B GGUF), 64-bit ABI configuration, staging/rollback lifecycle, dynamic RAM safeguard, Tarot feature data grounding, zero-config UX. |
+| 9  | `DAILY_GUIDANCE` | Daily Practice & Guidance            | `com.aynvora.core.guidance`, `com.aynvora.data.guidance`                                     | `FOUNDATION_ONLY`       | Personalized morning routine, daytime focus, evening reflection, night relaxation, multiplatform scheduling.                                                                                                                      |
+| 10 | `WALLPAPER`      | Personalized Wallpaper Studio        | `com.aynvora.core.wallpaper`, `com.aynvora.data.wallpaper`                                   | `FOUNDATION_ONLY`       | Device-aware visual prompt builder incorporating user Rashi/Nakshatra, copy/share handoff to user-authorized external generator.                                                                                                  |
+| 11 | `NUMEROLOGY`     | Numerology                           | `com.aynvora.core.numerology`                                                                | `FOUNDATION_ONLY`       | First-class domain; model contracts only, no calculation engine.                                                                                                                                                                  |
+| 12 | `RUDRAKSHA`      | Rudraksha                            | `com.aynvora.core.rudraksha`                                                                 | `FOUNDATION_ONLY`       | First-class domain; provenance-aware contracts only, no recommendation engine.                                                                                                                                                    |
+| 13 | `JADI`           | Jadi / Sacred Roots                  | `com.aynvora.core.jadi`                                                                      | `FOUNDATION_ONLY`       | First-class domain; source and catalog contracts only, no recommendation engine.                                                                                                                                                  |
+| 14 | `YANTRA`         | Yantra                               | `com.aynvora.core.yantra`                                                                    | `FOUNDATION_ONLY`       | First-class domain; tradition/source contracts only, no recommendation engine.                                                                                                                                                    |
 
 ### Future report, localization, capability and analytics taxonomy
 
@@ -80,14 +80,28 @@ statuses `FOUNDATION_ONLY` until their engines exist.
 
 - **Domain Models**: `GarudaPuranTopicId`, `GarudaPuranSection`, `GarudaPuranReference`,
   `GarudaPuranSourceEdition`, `GarudaPuranText`, `GarudaPuranInterpretation`, `GarudaPuranPractice`,
-  `GarudaPuranContentItem`, and typed availability reasons.
-- **Source status**: No Garuda scripture, translation, citation set, or installed content pack is
-  present in the repository. Topic IDs are taxonomy only; available content is empty until an
-  authorized, reviewed package is supplied.
-- **Corpus isolation**: Separate from astrology and Lal Kitab. Only explicit within-source
-  references are represented in the EvidenceGraph; no cross-feature rule is inferred.
-- **Product status**: `FOUNDATION_ONLY`; the content/report pipeline does not promote the product to
-  available.
+  `GarudaPuranContentItem`, and typed availability reasons. Phase 8.4A/B adds
+  `GarudaSourceManifest`,
+  `GarudaSource`, `GarudaEdition`, `GarudaSourceLicense`, `GarudaChapter`, `GarudaVerse`,
+  `GarudaChecksumVerifier`,
+  and `GarudaContentIngestionPipeline`.
+- **Source status**: 7 candidate sources cataloged. Primary approved package
+  `garuda-content-wood-1911-en-v1`
+  (Wood & Subrahmanyam 1911) ingested under `PUBLIC_DOMAIN_ELIGIBLE_JURISDICTIONS` (US 17 U.S.C. §
+  305, Indian §22 Life+60
+  expired Jan 1, 2026). Secondary cross-reference: Manmatha Nath Dutt (1908) maintained in
+  `GarudaSourceComparisonRegistry`.
+  Modern editions (Gita Press Code 1416, MLBD 1978) and copyleft/restricted corpora (GRETIL,
+  SanskritDocuments) are
+  strictly `REFERENCE_ONLY_NON_DISTRIBUTABLE`.
+- **Corpus isolation**: Completely separate from astrology and Lal Kitab. Only explicit
+  within-source
+  references are represented in the EvidenceGraph; no cross-feature rule is inferred. Zero
+  AI-generated verses.
+- **Product status**: `PARTIALLY_IMPLEMENTED` (Honest status: English Saroddhara content available
+  offline across
+  all 16 chapters; Hindi scripture content unavailable under Option B; report generation and PDF
+  export active).
 
 ### 6. Lal Kitab (`LAL_KITAB`)
 
@@ -98,9 +112,15 @@ statuses `FOUNDATION_ONLY` until their engines exist.
 ### 7. Tarot (`TAROT`)
 
 - **Domain Models**: `TarotCard`, `TarotDeck`, `TarotSpread`, `TarotReading`, `TarotCardContent`,
-  `TarotCardDraw`.
+  `TarotCardDraw`, `TarotAssetDeck`, `TarotAssetCard`, `TarotAssetManifest`, `TarotReportInput`.
+- **Engines & Use Cases**: `TarotExplanationEngine`, `DeterministicTarotExplanationEngine`,
+  `PerformTarotReadingUseCase`, `PrepareTarotReportUseCase`, `TarotReportGenerator`.
+- **Assets & Decks**: 78 real Rider-Waite-Smith cards (Public Domain) packaged with SHA-256
+  integrity.
 - **Boundary**: Completely decoupled from `:astro-engine` and planetary positions. Employs
-  abstracted `TarotRandomSource`.
+  abstracted `TarotRandomSource`. AI is strictly explanation layer, never card selector.
+- **Report & UI**: `TarotRoute` complete production UI flow, `ReportDocument` generation, PDF/Share
+  export.
 
 ### 8. On-Device AI Chat / Local Assistant (`AI_ASSISTANT`)
 

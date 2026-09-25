@@ -18,7 +18,8 @@ interface ReportGenerator {
 class ReportGeneratorRegistry(
     generators: List<ReportGenerator> = listOf(
         KundaliReportGenerator(),
-        GarudaPuranReportGenerator()
+        GarudaPuranReportGenerator(),
+        TarotReportGenerator(),
     )
 ) {
     private val entries = generators.toList()

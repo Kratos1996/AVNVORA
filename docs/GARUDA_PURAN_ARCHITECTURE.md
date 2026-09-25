@@ -141,3 +141,76 @@ Phase 8.4 JVM tests cover typed invariants and defensive copies, empty/offline p
 approval/language/schema/reference validation, report section order and provenance, localization,
 orchestrator isolation, and privacy-safe analytics contracts. Build verification is reported
 separately in the Phase 8.4 implementation summary and is not described as a test pass.
+
+---
+
+## Phase 8.4A — Source Acquisition, License Verification & Content Foundation
+
+Phase 8.4A establishes the legal and structural foundation for Garuda Purana source acquisition:
+
+1. **Source Discovery & Legal Matrix**: Researched and cataloged 7 candidate editions (User Summary
+   PDF, Gita Press Code 1416, GRETIL 1906, SanskritDocuments, Wood & Subrahmanyam 1911, Manmatha
+   Nath Dutt 1908, and Motilal Banarsidass 1978).
+2. **Rights Verification**:
+    - **Approved for Future Ingestion**: Ernest Wood & S.V. Subrahmanyam (1911) and Manmatha Nath
+      Dutt (1908) are verified as Public Domain worldwide.
+    - **Reference-Only Non-Distributable**: Gita Press Code 1416 and Motilal Banarsidass (1978) are
+      modern copyrighted editions. GRETIL has non-commercial (CC BY-NC-SA) restrictions;
+      SanskritDocuments restricts use to personal study.
+    - **License Uncertain**: Anonymous summary PDF has no author or rights statement.
+3. **Strongly Typed Source Manifest & Content Models**:
+    - `GarudaSourceManifest`, `GarudaSource`, `GarudaEdition`, `GarudaSourceLicense`,
+      `GarudaSourceRights`, `GarudaSourceStatus`, `GarudaPackageIntegrity`.
+    - Normalized content models: `GarudaChapter`, `GarudaSection`, `GarudaVerse`, `GarudaParagraph`,
+      `GarudaContentItem`.
+    - Multiplatform FIPS 180-4 SHA-256 verifier (`GarudaChecksumVerifier`).
+    - Text category separation (`ORIGINAL_SOURCE_TEXT`, `TRANSLITERATION`, `ENGLISH_TRANSLATION`,
+      `HINDI_TRANSLATION`, `AYNVORA_EXPLANATION`).
+4. **Content Availability**:
+    - Feature content status in Phase 8.4A was strictly `CONTENT_UNAVAILABLE`.
+
+---
+
+## Phase 8.4B — Targeted Public-Domain Content Ingestion, Editorial Verification & Real Report Integration
+
+Phase 8.4B transitions the Garuda Puran feature from foundation-only to real approved content for
+verified jurisdictions:
+
+1. **Primary Ingested Content Package**:
+    - Package ID: `garuda-content-wood-1911-en-v1` (Version 1.0.0, English `en`).
+    - Source: Ernest Wood & S.V. Subrahmanyam (1911), *The Garuda Purana (Saroddhara)*, Panini
+      Office, Allahabad.
+    - Checksum: SHA-256 `4798c1a336c250662211a15fa0f8cf1c565787572c230b82cdaf2872e091bea5`.
+    - Rights Status: `PUBLIC_DOMAIN_ELIGIBLE_JURISDICTIONS` (US 17 U.S.C. § 305; Indian Copyright
+      Act §22 Life+60 expired Jan 1, 2026).
+    - Coverage: 23 curated, visually verified passages spanning all 16 chapters of the Saroddhara
+      recension, mapped across all 10 typed domain topics (`GarudaPuranTopicId`).
+
+2. **Secondary Cross-Reference Registry**:
+    - Source: Manmatha Nath Dutt (1908), *The Garuda Puranam*, Elysium Press, Calcutta.
+    - Checksum: SHA-256 `2313f4e0472e3ec9a97b46cb47e6d74a675ba4d7da150214d4759da94960319e`.
+    - Maintained in `GarudaSourceComparisonRegistry` to document textual variants (`SOURCE_VARIANT`,
+      `EDITION_VARIANT`, `TEXT_UNCERTAIN`) without merging texts.
+
+3. **Deterministic 12-Stage Ingestion Pipeline**:
+    - Implemented in `GarudaContentIngestionPipeline.kt`: Source File -> Text Extraction ->
+      Normalization -> Chapter Detection -> Section Detection -> Verse Detection -> Editorial
+      Validation -> Provenance Attachment -> Review Lifecycle (`APPROVED_FOR_APP`) -> License
+      Check -> Package Assembly -> Local Installation.
+
+4. **Hindi Language Handling (Option B)**:
+    - Option B selected: Hindi scripture content remains `CONTENT_UNAVAILABLE` with status
+      `NO_APPROVED_CONTENT_FOR_LANGUAGE`.
+    - Zero silent fallback to copyrighted Gita Press text or English passages.
+
+5. **End-to-End Report Engine & Viewer Integration**:
+    - Clean unidirectional flow: UI -> `PrepareGarudaPuranReportUseCase` ->
+      `ContentBackedGarudaPuranRepository` -> `GarudaPuranReportGenerator` -> `ReportDocument` ->
+      `ReportViewer` -> `ReportPdfGenerator`.
+    - Generates 6 structured sections: Introduction, Source Information, Available Topics, Topic
+      Details, Traditional Teachings, and Source References.
+    - 100% offline readability with zero network calls and zero AI generation.
+
+6. **Feature Capability Status**:
+    - Promoted to `PARTIALLY_IMPLEMENTED` (reflects authentic English Saroddhara availability while
+      Hindi remains unavailable under Option B).

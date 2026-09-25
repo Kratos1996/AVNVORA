@@ -201,6 +201,14 @@ object FeatureCapabilityRegistry {
             true,
             false
         ),
+        FeatureCapability(
+            "garuda_inspected_source_catalog",
+            CoreFeatureId.GARUDA_PURAN,
+            "Exposes inspected PDF identity, edition metadata, page references, and rights status; does not install source text",
+            CapabilityStatus.FOUNDATION_ONLY,
+            true,
+            false
+        ),
 
         // Lal Kitab Capabilities
         FeatureCapability(

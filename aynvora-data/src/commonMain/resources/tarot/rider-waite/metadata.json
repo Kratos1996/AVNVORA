@@ -1,0 +1,27 @@
+{
+  "deckId": "rider_waite_smith_standard",
+  "name": "Rider-Waite-Smith Standard Deck",
+  "alternativeNames": [
+    "Rider-Waite Tarot",
+    "Rider-Waite-Smith (RWS)",
+    "Pamela Colman Smith Tarot"
+  ],
+  "artist": "Pamela Colman Smith (1878\u20131951)",
+  "designer": "Arthur Edward Waite (1857\u20131942)",
+  "publisher": "William Rider & Son, London",
+  "publicationYear": 1909,
+  "deckType": "Traditional Contemplative Tarot",
+  "cardCount": 78,
+  "majorArcanaCount": 22,
+  "minorArcanaCount": 56,
+  "suits": [
+    "Wands",
+    "Cups",
+    "Swords",
+    "Pentacles"
+  ],
+  "sourceUrl": "https://github.com/mixvlad/TarotCards",
+  "sourceRestoration": "Steve-P.org Tarot Collection (https://steve-p.org/cards/RWSa.html)",
+  "license": "Public Domain",
+  "description": "The quintessential 78-card Tarot deck illustrated by Pamela Colman Smith under the direction of Arthur Edward Waite, originally published in December 1909. Cleaned and restored from an original 1909 'Pam-A' printing."
+}

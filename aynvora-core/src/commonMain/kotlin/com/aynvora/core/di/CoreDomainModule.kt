@@ -58,11 +58,23 @@ val coreDomainModule: Module = module {
     single { TarotDrawEngine(get()) }
     factory { PerformTarotReadingUseCase(get(), get(), get()) }
     factory { GetTarotCardContentUseCase(get()) }
+    single<com.aynvora.core.tarot.TarotExplanationEngine> {
+        com.aynvora.core.tarot.GroundedSlmTarotExplanationEngine(
+            aiInferenceEngine = get(),
+            deterministicEngine = com.aynvora.core.tarot.DeterministicTarotExplanationEngine(),
+        )
+    }
+
+    // On-Device AI Core Services (Phase 8.6 & 8.8 Native Runtime)
+    single { com.aynvora.core.ai.AiModelSelector() }
+    single<com.aynvora.core.ai.AiInferenceEngine> { com.aynvora.core.ai.LocalNativeInferenceEngine() }
+    single { com.aynvora.core.ai.AiModelLifecycleManager(get()) }
 
     // Unified Report Domain (calculation and document generation only; platform renderers stay in UI hosts)
     single { ReportGeneratorRegistry() }
     factory { GenerateReportUseCase(get(), get(), get()) }
     factory { PrepareGarudaPuranReportUseCase(get()) }
+    factory { com.aynvora.core.report.PrepareTarotReportUseCase(get(), get()) }
     factory { GetGarudaPuranCatalogUseCase(get()) }
     factory { GetGarudaPuranContentUseCase(get()) }
     factory { GetGarudaPuranTopicUseCase(get()) }

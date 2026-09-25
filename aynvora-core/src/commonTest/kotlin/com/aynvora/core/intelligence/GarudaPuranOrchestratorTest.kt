@@ -3,6 +3,7 @@ package com.aynvora.core.intelligence
 import com.aynvora.core.Aynvora
 import com.aynvora.core.ai.DefaultAiToolRegistry
 import com.aynvora.core.feature.CoreFeatureId
+import com.aynvora.core.garudapuran.GarudaPageRange
 import com.aynvora.core.garudapuran.GarudaPuranCatalog
 import com.aynvora.core.garudapuran.GarudaPuranContentItem
 import com.aynvora.core.garudapuran.GarudaPuranContentStatus
@@ -15,6 +16,9 @@ import com.aynvora.core.garudapuran.GarudaPuranText
 import com.aynvora.core.garudapuran.GarudaPuranTopicAvailability
 import com.aynvora.core.garudapuran.GarudaPuranTopicContent
 import com.aynvora.core.garudapuran.GarudaPuranTopicId
+import com.aynvora.core.garudapuran.GarudaRightsStatus
+import com.aynvora.core.garudapuran.GarudaSourceReference
+import com.aynvora.core.garudapuran.GarudaVerificationStatus
 import com.aynvora.core.result.AynvoraResult
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -74,6 +78,10 @@ class GarudaPuranOrchestratorTest {
             assertEquals(2, response.evidenceBundle.items.size)
             assertTrue(response.evidenceBundle.items.all { it.domain == CoreFeatureId.GARUDA_PURAN })
             assertTrue(response.evidenceBundle.items.all { it.provenance.referenceId == "GP_TEST_CHAPTER_1_V2" })
+            assertTrue(response.evidenceBundle.items.all {
+                it.provenance.sourceReference?.sourceId == "test-source" &&
+                        it.provenance.sourceReference.pageRange?.printedPageStart == 20
+            })
             assertEquals(1, response.evidenceGraph.edges.size)
             assertTrue(response.evidenceGraph.edges.none { edge ->
                 response.evidenceGraph.nodes[edge.sourceEvidenceId]?.domain == CoreFeatureId.ASTROLOGY ||
@@ -110,7 +118,19 @@ class GarudaPuranOrchestratorTest {
             "test-section",
             chapterNumber = 1,
             verseStart = 2,
-            verseEnd = 2
+            verseEnd = 2,
+            sourceProvenance = GarudaSourceReference(
+                sourceId = "test-source",
+                editionId = "fixture",
+                chapter = "1",
+                section = "test-section",
+                pageRange = GarudaPageRange(pdfPageStart = 21, printedPageStart = 20),
+                language = "sa",
+                contentVersion = "v3",
+                rightsStatus = GarudaRightsStatus.APPROVED_FOR_DISTRIBUTION,
+                verificationStatus = GarudaVerificationStatus.CONTENT_VISUALLY_VERIFIED,
+                canonicalReferenceId = "GP_TEST_CHAPTER_1_V2",
+            ),
         ),
         sourceEdition = GarudaPuranSourceEdition(
             "fixture",

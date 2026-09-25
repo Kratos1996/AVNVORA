@@ -235,6 +235,22 @@ sealed class TranslationKey {
             override val key = "feature.wallpaper"
         }
 
+        object Numerology : TranslationKey() {
+            override val key = "feature.numerology"
+        }
+
+        object Rudraksha : TranslationKey() {
+            override val key = "feature.rudraksha"
+        }
+
+        object Jadi : TranslationKey() {
+            override val key = "feature.jadi"
+        }
+
+        object Yantra : TranslationKey() {
+            override val key = "feature.yantra"
+        }
+
         object ComingSoon : TranslationKey() {
             override val key = "feature.coming_soon"
         }

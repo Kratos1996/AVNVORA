@@ -434,6 +434,12 @@ sealed class AnalyticsEvent(
         ),
     )
 
+    /** User opened the Tarot reading history screen. */
+    object TarotHistoryOpened : AnalyticsEvent("tarot_history_opened")
+
+    /** User opened the Tarot 78-card browser to browse all archetypes. */
+    object TarotCardBrowserOpened : AnalyticsEvent("tarot_card_browser_opened")
+
     // ──────────────────────────────────────────────────────────────────────────
     // Core Product Features (Phase 7.4 Foundation)
     // ──────────────────────────────────────────────────────────────────────────
@@ -496,6 +502,59 @@ sealed class AnalyticsEvent(
     class AiToolUsed(toolName: String, isSuccess: Boolean) : AnalyticsEvent(
         name = "ai_tool_used",
         params = mapOf(Param.TOOL_NAME to toolName, Param.IS_SUCCESS to isSuccess),
+    )
+
+    /** AI model download initiated. */
+    class AiDownloadStarted(modelId: String) : AnalyticsEvent(
+        name = "ai_download_started",
+        params = mapOf(Param.MODEL_ID to modelId),
+    )
+
+    /** AI model download completed successfully. */
+    class AiDownloadCompleted(modelId: String, durationMs: Long) : AnalyticsEvent(
+        name = "ai_download_completed",
+        params = mapOf(Param.MODEL_ID to modelId, Param.DURATION_MS to durationMs),
+    )
+
+    /** AI model loaded into memory. */
+    class AiModelLoaded(modelId: String, durationMs: Long) : AnalyticsEvent(
+        name = "ai_model_loaded",
+        params = mapOf(Param.MODEL_ID to modelId, Param.DURATION_MS to durationMs),
+    )
+
+    /** AI model load failed (e.g. insufficient RAM). */
+    class AiModelLoadFailed(modelId: String, failureCode: String) : AnalyticsEvent(
+        name = "ai_model_load_failed",
+        params = mapOf(Param.MODEL_ID to modelId, Param.FAILURE_CODE to failureCode),
+    )
+
+    /** Local on-device inference initiated. Strictly zero prompt or user question sent. */
+    class AiInferenceStarted(modelId: String, language: String) : AnalyticsEvent(
+        name = "ai_inference_started",
+        params = mapOf(Param.MODEL_ID to modelId, Param.LANGUAGE_CODE to language),
+    )
+
+    /** Local on-device inference completed. Strictly zero response or output sent. */
+    class AiInferenceCompleted(modelId: String, durationBucket: String, tokensGenerated: Int) :
+        AnalyticsEvent(
+            name = "ai_inference_completed",
+            params = mapOf(
+                Param.MODEL_ID to modelId,
+                Param.DURATION_BUCKET to durationBucket,
+                Param.TOKENS_GENERATED to tokensGenerated.toLong(),
+            ),
+        )
+
+    /** Local on-device inference failed (e.g. timeout, memory). */
+    class AiInferenceFailed(modelId: String, failureCode: String) : AnalyticsEvent(
+        name = "ai_inference_failed",
+        params = mapOf(Param.MODEL_ID to modelId, Param.FAILURE_CODE to failureCode),
+    )
+
+    /** Deterministic fallback used when AI was unavailable or output invalid. */
+    class AiFallbackUsed(modelId: String, fallbackReason: String) : AnalyticsEvent(
+        name = "ai_fallback_used",
+        params = mapOf(Param.MODEL_ID to modelId, Param.FALLBACK_REASON to fallbackReason),
     )
 
     /** Daily guidance viewed. */
@@ -660,6 +719,12 @@ sealed class AnalyticsEvent(
         const val MATCH_STATUS = "match_status"
         const val NUMEROLOGY_SYSTEM = "numerology_system"
         const val REPORT_TYPE = "report_type"
+
+        // Phase 8.7 additions (AI On-Device Lifecycle)
+        const val FAILURE_CODE = "failure_code"
+        const val FALLBACK_REASON = "fallback_reason"
+        const val DURATION_BUCKET = "duration_bucket"
+        const val TOKENS_GENERATED = "tokens_generated"
     }
 
     // ──────────────────────────────────────────────────────────────────────────

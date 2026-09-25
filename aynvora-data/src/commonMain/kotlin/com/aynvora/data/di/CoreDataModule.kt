@@ -80,4 +80,21 @@ val coreDataModule: Module = module {
     single<com.aynvora.core.gita.GitaRepository> {
         com.aynvora.data.gita.InMemoryGitaRepository()
     }
+
+    single<com.aynvora.core.tarot.TarotAssetVerifier> {
+        com.aynvora.data.tarot.TarotAssetVerifierImpl()
+    }
+
+    single<com.aynvora.core.tarot.TarotAssetRepository> {
+        com.aynvora.data.tarot.TarotAssetRepositoryImpl(verifier = get())
+    }
+
+    // On-Device AI Data & Storage (Phase 8.6)
+    single<com.aynvora.core.ai.AiModelStorageRepository> {
+        com.aynvora.data.ai.AiModelStorageRepositoryImpl()
+    }
+
+    single<com.aynvora.core.ai.AiDeviceCapabilityDetector> {
+        com.aynvora.data.ai.DefaultAiDeviceCapabilityDetector()
+    }
 }

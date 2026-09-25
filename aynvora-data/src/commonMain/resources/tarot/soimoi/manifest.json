@@ -1,0 +1,2301 @@
+{
+  "deckId": "soimoi_tarot",
+  "deckName": "Soimoi Tarot Deck",
+  "version": 1,
+  "cardCount": 78,
+  "majorArcanaCount": 22,
+  "minorArcanaCount": 56,
+  "backAsset": {
+    "deckId": "soimoi_tarot",
+    "cardId": "card_back",
+    "canonicalName": "Card Back",
+    "arcana": "BACK",
+    "suit": null,
+    "rank": -1,
+    "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cover.jpg",
+    "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+    "license": "CC BY 4.0",
+    "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+    "imageReference": "back/back_display.jpg",
+    "thumbnailReference": "back/back_thumbnail.jpg",
+    "originalDimensions": {
+      "width": 720,
+      "height": 1200
+    },
+    "processedDimensions": {
+      "width": 360,
+      "height": 600
+    },
+    "thumbnailDimensions": {
+      "width": 120,
+      "height": 200
+    },
+    "checksum": "535cd52234b888e69355da63c432c9852901bfc515dd424c7b608d8b68eb6935",
+    "thumbnailChecksum": "4ae484c5245f9da7c7c78078c263f61cf534060e91873ba34796c23ca7ccef1e",
+    "assetVersion": 1
+  },
+  "cards": [
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_00_fool",
+      "canonicalName": "The Fool",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 0,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/00_Fool.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_00_fool.jpg",
+      "thumbnailReference": "thumbnail/major_00_fool.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "787cfef14fb089865f3ac0e9f58147502568db3fbb2e77e66d7858a7d0548e9f",
+      "thumbnailChecksum": "e30ffdf34fa888e51876099fbdf1135cd7bc2b9e6633d7912152458160f45912",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_01_magician",
+      "canonicalName": "The Magician",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 1,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/01_Magician.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_01_magician.jpg",
+      "thumbnailReference": "thumbnail/major_01_magician.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "ab057f8d6baa4f584eb3cc84cceb827353a3c1a35deac61a0cb61abbc564692e",
+      "thumbnailChecksum": "cd23008abb506226ab08ef0db98c0d4c7b755f48e89bfb7aeb620267a172ae72",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_02_high_priestess",
+      "canonicalName": "The High Priestess",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 2,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/02_High_Priestess.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_02_high_priestess.jpg",
+      "thumbnailReference": "thumbnail/major_02_high_priestess.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "7ac228c8f66e322203c491c2a244c98a233aaa58c9b05fe8227ffab769e2db29",
+      "thumbnailChecksum": "3288ef589ae521e67359919f4c9977d28448c897e8936d577de083d273bf784d",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_03_empress",
+      "canonicalName": "The Empress",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 3,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/03_Empress.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_03_empress.jpg",
+      "thumbnailReference": "thumbnail/major_03_empress.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "9641759bf264d387d5deb2e2c40979f3c0f1a1ba70496b0317455c6a8b66a680",
+      "thumbnailChecksum": "9995c50e3670be48c01a4eb965f1c8672742f5119c6ac1cd0b142da9bce7c51b",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_04_emperor",
+      "canonicalName": "The Emperor",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 4,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/04_Emperor.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_04_emperor.jpg",
+      "thumbnailReference": "thumbnail/major_04_emperor.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "f1e5302083ca6e23234030a8d7682e6e9b2da969d5002d8fe5fcf505f7fa183d",
+      "thumbnailChecksum": "2cd89dacee1b25d25f0ce40c32693fd91bf224589819ba47209158ac0aafc79a",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_05_hierophant",
+      "canonicalName": "The Hierophant",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 5,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/05_Hierophant.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_05_hierophant.jpg",
+      "thumbnailReference": "thumbnail/major_05_hierophant.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "89aed0e8ff1285c54484205cb2ee3457959c29208d3b1b4efe75c62a07468bf6",
+      "thumbnailChecksum": "e6efd838ee7e792e629789f459c3ccc640069846f2953c8cb5922e5afa2d033c",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_06_lovers",
+      "canonicalName": "The Lovers",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 6,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/06_Lovers.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_06_lovers.jpg",
+      "thumbnailReference": "thumbnail/major_06_lovers.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "c463499c637102a7ae45f1004c7554c5aaa6291de54f2942a5bcadbfc7181e17",
+      "thumbnailChecksum": "4786000e18b681073697f56bb35109bc6ab9743ba42929f13ba54603827c637c",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_07_chariot",
+      "canonicalName": "The Chariot",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 7,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/07_Chariot.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_07_chariot.jpg",
+      "thumbnailReference": "thumbnail/major_07_chariot.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "24409e2cb5bcfc4b6c5ac41a91bd384a26f04723b8010a345ae95d522d94210a",
+      "thumbnailChecksum": "4714c8824d7e0b9d0406922718554362a1989f9a1ba3f4701a82cbbe922af671",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_08_strength",
+      "canonicalName": "Strength",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 8,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/08_Strength.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_08_strength.jpg",
+      "thumbnailReference": "thumbnail/major_08_strength.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "052bd5a398b71b0e622a34448512695beb8728bba56db22ef3b3057c2a3ed206",
+      "thumbnailChecksum": "93d0e58760347e27d34f8021fce4763de228927f5f3a1fbcb63bf7eaf5df53b9",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_09_hermit",
+      "canonicalName": "The Hermit",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 9,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/09_Hermit.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_09_hermit.jpg",
+      "thumbnailReference": "thumbnail/major_09_hermit.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "192cd49de5969740f223fa92be18edaeaa345627ee3adbcb11746454cb701054",
+      "thumbnailChecksum": "cc8c6d0775dc0b4587ba5871d3d07c3dcfb1a0170e571ca49932aa092cb58523",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_10_wheel_of_fortune",
+      "canonicalName": "Wheel of Fortune",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 10,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/10_Wheel_of_Fortune.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_10_wheel_of_fortune.jpg",
+      "thumbnailReference": "thumbnail/major_10_wheel_of_fortune.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "78cbe00e435bb1a2dce31e2dd254f13d65e8f318348f434709fe70178ef895e8",
+      "thumbnailChecksum": "4802bb31cd08f7fb3078288d34e2bb22b3ace4617428516b2ee8d9a64eb3cec4",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_11_justice",
+      "canonicalName": "Justice",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 11,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/11_Justice.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_11_justice.jpg",
+      "thumbnailReference": "thumbnail/major_11_justice.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "583df835d3f2e1113b7c0c230b96560ab14af4a38e7834025da9c9d24b90d380",
+      "thumbnailChecksum": "742c145d762c48225147bd575ecc5213389a92bbfa5606f416262f41fc97b412",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_12_hanged_man",
+      "canonicalName": "The Hanged Man",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 12,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/12_Hanged_Man.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_12_hanged_man.jpg",
+      "thumbnailReference": "thumbnail/major_12_hanged_man.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "7d620b749c08b938eda9e1136cb548190ecdfdc761512c190536c3a618b959eb",
+      "thumbnailChecksum": "fc3e6c5292a97f6b792d50f649998d38faa0a2b6f7179bf1a4ac2d342b946046",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_13_death",
+      "canonicalName": "Transformation",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 13,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/13_Death.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_13_death.jpg",
+      "thumbnailReference": "thumbnail/major_13_death.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "70026412508104867fb8817607c9febe6427d7e0355d906fe73bcc5f5edc4b13",
+      "thumbnailChecksum": "0b14805f19f3255725a29a3a5811a234571ef07cdd534bfcd7e8c89e78e99cef",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_14_temperance",
+      "canonicalName": "Temperance",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 14,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/14_Temperance.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_14_temperance.jpg",
+      "thumbnailReference": "thumbnail/major_14_temperance.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "22545df86cab53ea207071ce4deec8dc07d21915ed8b4988bd5716cebdcb454d",
+      "thumbnailChecksum": "df429ed299036dfc6051e2e377cc03a554cdc03353a2d634dc43eb9995a7efc5",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_15_devil",
+      "canonicalName": "Shadow / Attachment",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 15,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/15_Devil.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_15_devil.jpg",
+      "thumbnailReference": "thumbnail/major_15_devil.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "e8fdf1d62cb871125fedfce9ab2a3b5ec16c4b1a9759c56e871194efad8ffd3f",
+      "thumbnailChecksum": "f565c765f7fff0f5a52b3686f438531350a664fc75416efb5b8a325b9ed48cc3",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_16_tower",
+      "canonicalName": "Sudden Awakening",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 16,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/16_Tower.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_16_tower.jpg",
+      "thumbnailReference": "thumbnail/major_16_tower.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "4dbb34819e1f64311e399d03335add00888196fcce1aa4dfed4180fcfc564b4c",
+      "thumbnailChecksum": "20804fa14d3e2d3feb315d13bb96733761b58070d656bd13af02400b25b756f8",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_17_star",
+      "canonicalName": "The Star",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 17,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/17_Star.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_17_star.jpg",
+      "thumbnailReference": "thumbnail/major_17_star.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "1cd15861ed0e05ccb57e86d0b2259da024d1df0566400f326f88457f21c0f73c",
+      "thumbnailChecksum": "015a222ea283d631746a8f3b1db47172a533d5c925a990b90a22ae2d34e05232",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_18_moon",
+      "canonicalName": "The Moon",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 18,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/18_Moon.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_18_moon.jpg",
+      "thumbnailReference": "thumbnail/major_18_moon.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "ddb4c5facd138c94be2a235b9046acb4a313335b175b65fe081e8dd79e2cb274",
+      "thumbnailChecksum": "3044f9e66236ce33f547e8b27b423b0b8767df06929c9932d94426c6b98cdc78",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_19_sun",
+      "canonicalName": "The Sun",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 19,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/19_Sun.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_19_sun.jpg",
+      "thumbnailReference": "thumbnail/major_19_sun.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "f7094c2dd1099ed3fab02b4b56d3bd2ed89bf5740dc67426a9b1aa9a5419f3c6",
+      "thumbnailChecksum": "1c1516669ad01311421cc5c6574001b1aa81312b932b140e57b58014f37f2bd7",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_20_judgement",
+      "canonicalName": "Reckoning & Calling",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 20,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/20_Judgement.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_20_judgement.jpg",
+      "thumbnailReference": "thumbnail/major_20_judgement.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "bc16ce52ad4d489b6b6986b991895cf55266e5034da6d5bc2dab3d38a606999e",
+      "thumbnailChecksum": "150f2acaacc6ed2c87f6bad69cf9ba1a02e7865d8abb3a0d68a681916fe0d50f",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "major_21_world",
+      "canonicalName": "The World",
+      "arcana": "MAJOR",
+      "suit": null,
+      "rank": 21,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/21_World.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/major_21_world.jpg",
+      "thumbnailReference": "thumbnail/major_21_world.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "f11e474ad3279368d337acd2a040509e9ee1f36b0a6efba9eb0e43a72c197b0d",
+      "thumbnailChecksum": "d33c24724c699155ce82c93e602520526ac17e0e90ba7649f4b7854134932808",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_01",
+      "canonicalName": "Ace of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 1,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands01.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_01.jpg",
+      "thumbnailReference": "thumbnail/wands_01.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "71fbad075ccd9f5d949939c183cbfa1d8cfe0fe8c5636432ca84ed03ac06b075",
+      "thumbnailChecksum": "88e344324705627e8d62b81d29b34b642607c995b0ebb605188bbaef010bdcc5",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_02",
+      "canonicalName": "2 of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 2,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands02.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_02.jpg",
+      "thumbnailReference": "thumbnail/wands_02.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "61be0c761f91511a6d47be12841e5f9b3bb68ff4c9fbd2e6c3d0bf8584ea0410",
+      "thumbnailChecksum": "349e5082f79e2f5a160b9f8ad46cb7e34fedcc5683f46a945201cb3a35fc78e7",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_03",
+      "canonicalName": "3 of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 3,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands03.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_03.jpg",
+      "thumbnailReference": "thumbnail/wands_03.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "4d983072f5370636fc011bde73d7cf00e981fbd33a675cc71da3d1c090b17f2c",
+      "thumbnailChecksum": "09d8a2055f9d541623505cfbec3a3bde5215d8f6aa953ddfd60f19c4a68f0c83",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_04",
+      "canonicalName": "4 of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 4,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands04.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_04.jpg",
+      "thumbnailReference": "thumbnail/wands_04.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "cc015988799c16eae005c993d4a340ecef215f4728a3758e420dbf3e97207835",
+      "thumbnailChecksum": "79dcb0ed80a991b67fe5deb88e5184d343dc0325a2279cdcf86b9e7fd4c89a8d",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_05",
+      "canonicalName": "5 of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 5,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands05.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_05.jpg",
+      "thumbnailReference": "thumbnail/wands_05.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "1ba4d2032e823883724f5ad1605fe55e449bfa351007d5793899807a82420ea1",
+      "thumbnailChecksum": "26bb265d7583e254ab7c8a5dd9e209b521e82cd13109796777ce015ff7e9749f",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_06",
+      "canonicalName": "6 of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 6,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands06.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_06.jpg",
+      "thumbnailReference": "thumbnail/wands_06.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "62b3c27ad43269f5aacc13b9d49dc441ff17262fb1621eab9c3775529434b3f0",
+      "thumbnailChecksum": "a3965178f041ee77e308353601ba16a1fc346608df09a7837a9fef9f5d615179",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_07",
+      "canonicalName": "7 of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 7,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands07.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_07.jpg",
+      "thumbnailReference": "thumbnail/wands_07.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "a0fa6b9cb18669caea29b9ecc3f75c6aceca5406684802b73e50b8b493a119b7",
+      "thumbnailChecksum": "fe51a34a68a3bc11bd7f8861c8a806a6b59094b009b78a3dc50ec3efe4bcf591",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_08",
+      "canonicalName": "8 of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 8,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands08.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_08.jpg",
+      "thumbnailReference": "thumbnail/wands_08.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "50f7d6ee3f153ca6bd6e92139c553d403141d5ba41b287bf8d43e1cf512624a1",
+      "thumbnailChecksum": "313191db21b8a09af7bfaf589e36396345a7781c212fbf18758cac36add7ec14",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_09",
+      "canonicalName": "9 of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 9,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands09.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_09.jpg",
+      "thumbnailReference": "thumbnail/wands_09.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "7ed821a81a9a184b493d2a821a5ce699879c067f0d7e5b5f937aa2832b129d00",
+      "thumbnailChecksum": "0b97f1ad653ca266b11fb260295dcc6d03eaee3ace2d46055c44aef7643abc9c",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_10",
+      "canonicalName": "10 of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 10,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands10.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_10.jpg",
+      "thumbnailReference": "thumbnail/wands_10.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "27d96f212c963b9cb69544adf0f6ee6efd953bfa59d423ad6ebdd4b45e5199a0",
+      "thumbnailChecksum": "ef143cfd9ba636eb756fb2fc4171757796750852d61ade58da0f95675978a6e6",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_11",
+      "canonicalName": "Page of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 11,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands11.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_11.jpg",
+      "thumbnailReference": "thumbnail/wands_11.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "a1c5fe3a0061f181fc9d7650246e11762bc0bc66a112a3da044cd700041a0e75",
+      "thumbnailChecksum": "2a3d707ebd02b6d86051582c118d736a956135101fbd4a8da408d6efc0f0e6b2",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_12",
+      "canonicalName": "Knight of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 12,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands12.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_12.jpg",
+      "thumbnailReference": "thumbnail/wands_12.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "b8aab339d3eda921a96f21ad753892b5646ff8833bb98706dfd632e3c6ee6277",
+      "thumbnailChecksum": "f783311ea2f3905c6a9639d802481b27ab05518ade312d37b397de03723dfc32",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_13",
+      "canonicalName": "Queen of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 13,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands13.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_13.jpg",
+      "thumbnailReference": "thumbnail/wands_13.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "dd7e3482539fe4197a577135b184ad1f23987965d12f6c4d6f52464cea80891c",
+      "thumbnailChecksum": "87cc9cd7da68249f9bb4842f3f592f1e6d47a50297f3db07bc566997837f7a92",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "wands_14",
+      "canonicalName": "King of Wands",
+      "arcana": "MINOR",
+      "suit": "WANDS",
+      "rank": 14,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Wands14.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/wands_14.jpg",
+      "thumbnailReference": "thumbnail/wands_14.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "a03bc5bf6bacfd93fa5fb01f294f432ca440b8f4f35929d76456fc3db6f40c83",
+      "thumbnailChecksum": "8f5d87aceb0a9b191400a3359a4f08c828cdfd5e1bd832a8d438bbaa730e88cb",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_01",
+      "canonicalName": "Ace of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 1,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups01.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_01.jpg",
+      "thumbnailReference": "thumbnail/cups_01.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "7b6ea15a8f06d1d332cdb17d24cb37f5cbb622001cc584115380462a362d2a9b",
+      "thumbnailChecksum": "97a1e58951e491462c8d1dc3db355fee6d06c5469d0882de162329ab7dc43aa5",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_02",
+      "canonicalName": "2 of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 2,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups02.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_02.jpg",
+      "thumbnailReference": "thumbnail/cups_02.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "388dac35e45eee5ce318e46e7f296d326d28b65472fd0efadb460f2d714f09a8",
+      "thumbnailChecksum": "1bd08ccd6b4a96a1781f956677a05503f8d264d0cb36c715491c5f24f4fa0619",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_03",
+      "canonicalName": "3 of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 3,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups03.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_03.jpg",
+      "thumbnailReference": "thumbnail/cups_03.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "c344e91277a8984ecd6db98749a0f0ed98ee6ee00cb00f6c09df39d70277b2f2",
+      "thumbnailChecksum": "8b6fac14ecbd2cc46ff2928fd214ef84c52d19f38a6472baef7a5dc03b95359c",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_04",
+      "canonicalName": "4 of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 4,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups04.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_04.jpg",
+      "thumbnailReference": "thumbnail/cups_04.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "443e31bffcebc54e4bffb4d2c486ccace9a843a81f6abace7d74f52c6367499c",
+      "thumbnailChecksum": "968833d850a5086ad4685db623e1af0e343111d14a465f9169ad7d5a625282d2",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_05",
+      "canonicalName": "5 of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 5,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups05.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_05.jpg",
+      "thumbnailReference": "thumbnail/cups_05.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "ae78407313dee42e4020b6d0f47f871da879b92fb89fafcad28c3280c30b8d05",
+      "thumbnailChecksum": "3b8456263c148979504584b9625efa091ce3975b384d9b9b3d642dbf0131d1d6",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_06",
+      "canonicalName": "6 of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 6,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups06.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_06.jpg",
+      "thumbnailReference": "thumbnail/cups_06.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "ddddb77394bac975892e70499c6e25b875c85bb762dd0f2ea3d395a8afb92fb0",
+      "thumbnailChecksum": "b5036e471b7e24a65c448fcd26df74a7458549827d7663709594ffdfa9a77b5b",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_07",
+      "canonicalName": "7 of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 7,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups07.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_07.jpg",
+      "thumbnailReference": "thumbnail/cups_07.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "b1f6ef601a87fcfa05a995f986f7418f3a1bfd6cfa73d869c14286f4c0b1bd7f",
+      "thumbnailChecksum": "0e41e317ea2bf5c1c6240657bb71455602f8b7322accc0a57de817304850979e",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_08",
+      "canonicalName": "8 of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 8,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups08.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_08.jpg",
+      "thumbnailReference": "thumbnail/cups_08.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "b1910466ad60b6fd84d393d770be85c0bede9dad1164a40ec409405a58d8a789",
+      "thumbnailChecksum": "8583354a7e6d8d14e5ed16522267630e189dd1e8b986e91c5820f30172ae1b41",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_09",
+      "canonicalName": "9 of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 9,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups09.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_09.jpg",
+      "thumbnailReference": "thumbnail/cups_09.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "32147d662f20b62b0e5a88c89968ff46a9f40daa9ad9bc5c62496ac98305fb6b",
+      "thumbnailChecksum": "42affdf876ed350e0dd0dc2facdf275ae27bdb2d5027fe2ff020600ffb906baf",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_10",
+      "canonicalName": "10 of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 10,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups10.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_10.jpg",
+      "thumbnailReference": "thumbnail/cups_10.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "e79f2a81f92cad157345399dde596aaa2c6282a2605b263c63bdaf9e48c801ed",
+      "thumbnailChecksum": "49389d3d86b34658c10b85c4d4ca94705f9f6f691a6afccb4e277565ad92b964",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_11",
+      "canonicalName": "Page of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 11,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups11.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_11.jpg",
+      "thumbnailReference": "thumbnail/cups_11.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "d4e9b4fc70bee90d5edaa5768a2e9ecda0ed8f22e169eb2f16291a11b115cd15",
+      "thumbnailChecksum": "6d1fb89e2b4728f639d9c2e24f5180e0593b219ea2f70a6b40c974f64e7adf21",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_12",
+      "canonicalName": "Knight of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 12,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups12.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_12.jpg",
+      "thumbnailReference": "thumbnail/cups_12.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "12a921735a28bcdcdf4db6c3637b0464c0f8056fedbb6464ecd1287affe2ba16",
+      "thumbnailChecksum": "2877f786833a41bf0e432fcffeb4bd8060edef82bfc3dc7f3ee2de1fab5dac8c",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_13",
+      "canonicalName": "Queen of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 13,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups13.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_13.jpg",
+      "thumbnailReference": "thumbnail/cups_13.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "73b18a07cc7992371ef61844d56a455647d3b61b26671fb1c7a0a6f2508a04d4",
+      "thumbnailChecksum": "e54b14793997a8b0f2cfc69658634178a098defac765616862b2780176951e5d",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "cups_14",
+      "canonicalName": "King of Cups",
+      "arcana": "MINOR",
+      "suit": "CUPS",
+      "rank": 14,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Cups14.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/cups_14.jpg",
+      "thumbnailReference": "thumbnail/cups_14.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "8703d9c85bbf5090d6c445521953d7cff3c45bbd43473aa46d74d04d869447ca",
+      "thumbnailChecksum": "161ac1a49962aa04522cc5e1f7631b4e3679af0a42d58c54d9b3cc9fde6e5a7f",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_01",
+      "canonicalName": "Ace of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 1,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords01.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_01.jpg",
+      "thumbnailReference": "thumbnail/swords_01.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "6a1079e78ec6cdf6d595c355e0041ba846d8b13e3e73bec807d7a1f4c5df61fb",
+      "thumbnailChecksum": "bf61ede305a0383c80f284489df31ac8fb4a6d8a644fd08899fe50339aad0009",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_02",
+      "canonicalName": "2 of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 2,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords02.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_02.jpg",
+      "thumbnailReference": "thumbnail/swords_02.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "ef164f5a67a30baba2a8afd2d2c4d6e5a95cf31245ad55d1b9efc1a2e69bac44",
+      "thumbnailChecksum": "2e198a099e61251317520b001eb34656d1ecba2ea2f4866047f630f198e389bc",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_03",
+      "canonicalName": "3 of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 3,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords03.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_03.jpg",
+      "thumbnailReference": "thumbnail/swords_03.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "84451e546b24910d92cd242c9fd213340263507a6dc02c87540e7071e8a9ba59",
+      "thumbnailChecksum": "7b43960f8197553ebed51e46126ff22ccd43f43968ed4976fb811e0ba144df2d",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_04",
+      "canonicalName": "4 of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 4,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords04.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_04.jpg",
+      "thumbnailReference": "thumbnail/swords_04.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "b6b12bbc2d0e4421be21a086e2bb70e146d5656cd279b070a711d01d3b58bd63",
+      "thumbnailChecksum": "e4d167cca0750f5024a7b1f612f683b52f47c0f7e0df367c40c813faf2dfdb20",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_05",
+      "canonicalName": "5 of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 5,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords05.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_05.jpg",
+      "thumbnailReference": "thumbnail/swords_05.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "acd7585852150c871429357f98e08816d17860ec06f3ef1e6a5bb3d640c088e9",
+      "thumbnailChecksum": "7e43c3d2e0a53bdaf9f7ed7a5b5c81487a0482a20b762ff0e6c93a86dc461f0d",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_06",
+      "canonicalName": "6 of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 6,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords06.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_06.jpg",
+      "thumbnailReference": "thumbnail/swords_06.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "0d0735142d49ab419136df3dc721a683e108150dc45cc2a6fdbf2c22ad4f2252",
+      "thumbnailChecksum": "eed0dc78efd16a59f419ff08b3dd648dff829757211ea7fbe5ee2e85a7405633",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_07",
+      "canonicalName": "7 of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 7,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords07.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_07.jpg",
+      "thumbnailReference": "thumbnail/swords_07.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "9ec5ac947be0ffa7c11e9fda2488d42a1b22fcd57e96e511204bc2dbc6ac800a",
+      "thumbnailChecksum": "1a4b8bcaf3c6969bb5109f1496d38a98c8c497bd26e5254dc0237ce975a497bb",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_08",
+      "canonicalName": "8 of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 8,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords08.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_08.jpg",
+      "thumbnailReference": "thumbnail/swords_08.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "2a657a51dddcd47fa49903e7be58dff614e1bba29f2546df3635cd6c57437dc8",
+      "thumbnailChecksum": "98eb1c7b90e3055552af85f76982c26012d8e3940e0cbb79333c525123dad7c4",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_09",
+      "canonicalName": "9 of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 9,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords09.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_09.jpg",
+      "thumbnailReference": "thumbnail/swords_09.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "e16406c5c8dd1adfdaa27a2e54d58f3a3e24f3901c99e37a207f72a16787c32f",
+      "thumbnailChecksum": "8c6aa3b8dfe53d1f57d0149f6d56a15f93b6782fe7388190b97d30a826b54e53",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_10",
+      "canonicalName": "10 of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 10,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords10.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_10.jpg",
+      "thumbnailReference": "thumbnail/swords_10.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "a96a15f10b31d60fc6cdce20c400c93bbd3403193875a19d231bae705e40c351",
+      "thumbnailChecksum": "ca22c0a796a9afff870fa6782eee9746d2cf94ea48b4388b1612c9b2629f40be",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_11",
+      "canonicalName": "Page of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 11,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords11.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_11.jpg",
+      "thumbnailReference": "thumbnail/swords_11.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "47a3824a4b7f6d4b62779805044c215e280af5b02352aab58e5089e4f214ebc3",
+      "thumbnailChecksum": "d77d8a5bad490f3a1b54843613f8034890935c5d949a29717427eef3ee3eb9b8",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_12",
+      "canonicalName": "Knight of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 12,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords12.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_12.jpg",
+      "thumbnailReference": "thumbnail/swords_12.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "9a94421a899c6707dbde8777a91fa2379fb6c44be9dedc89f4f1e72b81880c88",
+      "thumbnailChecksum": "e8e408658632c55c018c2c4c8a44c19feded9a077a2a1492fc88aeaa272dc535",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_13",
+      "canonicalName": "Queen of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 13,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords13.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_13.jpg",
+      "thumbnailReference": "thumbnail/swords_13.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "e07caedfc2f8b35bed8c9afdfcff83e4d90f489e0ec1f82065b442f4d99bec2b",
+      "thumbnailChecksum": "5868d5ec62909b199d7aead48c6903ed7bccfcd14fd1ecca0eb78469ce9c0154",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "swords_14",
+      "canonicalName": "King of Swords",
+      "arcana": "MINOR",
+      "suit": "SWORDS",
+      "rank": 14,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Swords14.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/swords_14.jpg",
+      "thumbnailReference": "thumbnail/swords_14.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "906c622ae646a44f6ce09fb0d62ea6295a3744f43fe464afe40cd6d30b4d45ac",
+      "thumbnailChecksum": "8c209917d4c1e6a77cdf3764889418005b0ba21fd705e2272c31be1cf367eb9a",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_01",
+      "canonicalName": "Ace of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 1,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents01.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_01.jpg",
+      "thumbnailReference": "thumbnail/pentacles_01.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "7011d6bbb2f1a9c55eb3bc978650063e0fb58779e2c51f4322cb6e55e48a74c3",
+      "thumbnailChecksum": "0fa1cdb584fed551b3cd192387e4841846fb9f5c1e2c2ed59551b453b6e96dc2",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_02",
+      "canonicalName": "2 of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 2,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents02.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_02.jpg",
+      "thumbnailReference": "thumbnail/pentacles_02.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "99e4a191b0c0c549c80316618d8a9aa3cefd06eede20d2e802d3d1722a106625",
+      "thumbnailChecksum": "4672d2d40b3b4490bdd554f4546dba387144f4793f8b9579310e8c7af2f780ea",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_03",
+      "canonicalName": "3 of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 3,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents03.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_03.jpg",
+      "thumbnailReference": "thumbnail/pentacles_03.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "61605a39b07929217a467e26b0535bfba4127388502537a705900a612ef3677c",
+      "thumbnailChecksum": "8ba94787a108def9c704b886c12d87f12dde7bff71a50bd0546c11a7bd1da562",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_04",
+      "canonicalName": "4 of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 4,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents04.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_04.jpg",
+      "thumbnailReference": "thumbnail/pentacles_04.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "45045bd501a6c94707fb70cd85c33ee6a5633231621949d622ee3e1e77a24278",
+      "thumbnailChecksum": "5522d7ead9ea4c75b162002b727aaac052b53a8959309cdea568a3eaa1e891ff",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_05",
+      "canonicalName": "5 of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 5,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents05.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_05.jpg",
+      "thumbnailReference": "thumbnail/pentacles_05.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "19c1ae404347b37c7d43515d5bdc82d18d91d326e488322ca26c8e956f09b718",
+      "thumbnailChecksum": "f76fc632506d25f9d32ec2bc3163526cc5b75bbbfa5544c015f063451a604b23",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_06",
+      "canonicalName": "6 of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 6,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents06.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_06.jpg",
+      "thumbnailReference": "thumbnail/pentacles_06.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "43753b9577f212fc805f57b8789f80a1c038a80a863b88a132c1283e53298805",
+      "thumbnailChecksum": "7758c1d7423f17af316a16a113b436845da8f61066640e9bd0565be066886df2",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_07",
+      "canonicalName": "7 of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 7,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents07.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_07.jpg",
+      "thumbnailReference": "thumbnail/pentacles_07.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "d29853ab735a98eb0b66ad0d54ec6db4ecea3fd1ef0bbdb966e28742e0002bd3",
+      "thumbnailChecksum": "64796b6fe0d8e5b7efd9d2a32cb79abe776aa8c78d6b32ecaabe3669d7311cf3",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_08",
+      "canonicalName": "8 of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 8,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents08.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_08.jpg",
+      "thumbnailReference": "thumbnail/pentacles_08.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "5753e55d0a417665af9c72284a6710fdbb59dd6b1e0f49f43dc41582e78edda2",
+      "thumbnailChecksum": "dbe1d76cfe3eb7cffa6b2967547bd6ca387443520e3b8d457a4a9969e81bc51d",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_09",
+      "canonicalName": "9 of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 9,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents09.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_09.jpg",
+      "thumbnailReference": "thumbnail/pentacles_09.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "4b0976ce27763f41c80f338a4eb183125c857575e89ab005f07b33dfe78ff5ca",
+      "thumbnailChecksum": "253420cb9b035c36558d65778cbb8fe43cbe46b24ca16ffbad90e6d2aebb6fd2",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_10",
+      "canonicalName": "10 of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 10,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents10.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_10.jpg",
+      "thumbnailReference": "thumbnail/pentacles_10.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "c4e4debf801c77091c253bb87f24f7e4cf8f8472ccbe05c7c1a1d621faff2d18",
+      "thumbnailChecksum": "f8a9472d1f0501af75742589da86bcc33095a777b6a81b8d2caa2cb699088c2e",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_11",
+      "canonicalName": "Page of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 11,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents11.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_11.jpg",
+      "thumbnailReference": "thumbnail/pentacles_11.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "963215ebaf5a2c263b5d9399c3095048b9764bf76c7e69854e53305f4667c34f",
+      "thumbnailChecksum": "4ffcf57869de0c8f14a5ea4005dd18b1f79742d0df02dde1acf18ed69a5bd831",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_12",
+      "canonicalName": "Knight of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 12,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents12.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_12.jpg",
+      "thumbnailReference": "thumbnail/pentacles_12.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "50ef274741dcee27406664e539152d233d84da8a65ebb7c12cd172d4e02ef21e",
+      "thumbnailChecksum": "5508d834a343a51e24b2a5177fe713e8682733bb0ec5b354e84b218b1fa151ac",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_13",
+      "canonicalName": "Queen of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 13,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents13.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_13.jpg",
+      "thumbnailReference": "thumbnail/pentacles_13.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "1b7c871ac4fc5c3ac901178947649970b30375c5f0564ebf796a6eb182189c24",
+      "thumbnailChecksum": "84d5a31c7e0c95ce4fe466ad1560516e47954c98f63f4ed832fb0696afde401d",
+      "assetVersion": 1
+    },
+    {
+      "deckId": "soimoi_tarot",
+      "cardId": "pentacles_14",
+      "canonicalName": "King of Pentacles",
+      "arcana": "MINOR",
+      "suit": "PENTACLES",
+      "rank": 14,
+      "sourceUrl": "https://raw.githubusercontent.com/mixvlad/TarotCards/main/tarot/soimoi/720px/Pents14.jpg",
+      "sourceProvider": "mixvlad/TarotCards (Mike Koz, koz.tv)",
+      "license": "CC BY 4.0",
+      "attribution": "\"Soimoi Tarot\" by Mike Koz (https://koz.tv/), licensed under CC BY 4.0",
+      "imageReference": "display/pentacles_14.jpg",
+      "thumbnailReference": "thumbnail/pentacles_14.jpg",
+      "originalDimensions": {
+        "width": 720,
+        "height": 1200
+      },
+      "processedDimensions": {
+        "width": 360,
+        "height": 600
+      },
+      "thumbnailDimensions": {
+        "width": 120,
+        "height": 200
+      },
+      "checksum": "788458236ba73b55e1071e532e7bfbfce2199176ba98161a3acf99065dbba703",
+      "thumbnailChecksum": "b5d765f6dfbd8ad695609b9f5c2cd291030414da1285e54a1538f8ba3065c68c",
+      "assetVersion": 1
+    }
+  ]
+}

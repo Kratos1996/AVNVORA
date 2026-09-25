@@ -20,6 +20,7 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.animation)
+            api(compose.components.resources)
             implementation(project(":aynvora-localization"))
             api(libs.cottonsheet)
             api(libs.popbox)
@@ -28,4 +29,10 @@ kotlin {
             implementation(kotlin("test"))
         }
     }
+}
+
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.aynvora.designsystem.generated.resources"
+    generateResClass = always
 }

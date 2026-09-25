@@ -51,7 +51,8 @@ internal object GarudaPuranReportInputFactory {
             catalog.languageCode,
             catalog.contentVersion,
             catalog.topics,
-            catalog.sourceEditions
+            catalog.sourceEditions,
+            catalog.sourceManifest,
         )
         return GarudaPuranReportInput(
             language = language,

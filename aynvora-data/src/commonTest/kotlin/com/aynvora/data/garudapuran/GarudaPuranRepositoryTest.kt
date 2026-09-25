@@ -1,10 +1,12 @@
 package com.aynvora.data.garudapuran
 
+import com.aynvora.core.garudapuran.GarudaLicenseStatus
 import com.aynvora.core.garudapuran.GarudaPuranContentItem
 import com.aynvora.core.garudapuran.GarudaPuranContentStatus
 import com.aynvora.core.garudapuran.GarudaPuranRepository
 import com.aynvora.core.garudapuran.GarudaPuranTopicId
 import com.aynvora.core.garudapuran.GarudaPuranUnavailableReason
+import com.aynvora.core.garudapuran.GarudaRightsStatus
 import com.aynvora.core.models.ContentItem
 import com.aynvora.core.models.ContentModuleId
 import com.aynvora.core.models.ContentPack
@@ -44,6 +46,53 @@ class GarudaPuranRepositoryTest {
             topic.availability.unavailableReason
         )
         assertTrue(topic.items.isEmpty())
+        assertEquals(7, catalog.sourceManifest.sources.size)
+        assertTrue(catalog.sourceManifest.packages.isEmpty())
+    }
+
+    @Test
+    fun inspectedSourcesPreservesIndependentIdentitiesAndRightsStatus() = runBlocking {
+        val repository =
+            ContentBackedGarudaPuranRepository(FakeContentRepository(emptyList(), emptyList()))
+        val sources = repository.getSourceManifest().sources
+
+        assertEquals(7, sources.size)
+        assertEquals(7, sources.map { it.sourceId }.distinct().size)
+        assertEquals(7, sources.map { it.editionId }.distinct().size)
+        assertEquals(
+            10,
+            sources.single { it.sourceId == InspectedGarudaPuranSources.SOURCE_1_ID }.pageCount
+        )
+        assertEquals(
+            275,
+            sources.single { it.sourceId == InspectedGarudaPuranSources.SOURCE_2_ID }.pageCount
+        )
+        assertEquals(
+            GarudaRightsStatus.LICENSE_UNCERTAIN,
+            sources.single { it.sourceId == InspectedGarudaPuranSources.SOURCE_1_ID }.rights.rightsStatus,
+        )
+        assertEquals(
+            GarudaRightsStatus.REFERENCE_ONLY_NON_DISTRIBUTABLE,
+            sources.single { it.sourceId == InspectedGarudaPuranSources.SOURCE_2_ID }.rights.rightsStatus,
+        )
+        val approvedSources =
+            sources.filter { it.rightsStatus == GarudaRightsStatus.APPROVED_FOR_DISTRIBUTION }
+        assertEquals(2, approvedSources.size)
+        assertTrue(approvedSources.any { it.sourceId == InspectedGarudaPuranSources.SOURCE_WOOD_1911_ID })
+        assertTrue(approvedSources.all { it.license.licenseStatus.isPermittedForRedistribution })
+        assertEquals(
+            GarudaLicenseStatus.PUBLIC_DOMAIN_ELIGIBLE_JURISDICTIONS,
+            sources.single { it.sourceId == InspectedGarudaPuranSources.SOURCE_WOOD_1911_ID }.license.licenseStatus
+        )
+        assertEquals(
+            GarudaLicenseStatus.RIGHTS_VERIFIED,
+            sources.single { it.sourceId == InspectedGarudaPuranSources.SOURCE_DUTT_1908_ID }.license.licenseStatus
+        )
+
+        val referenceOnly =
+            sources.filter { it.rightsStatus != GarudaRightsStatus.APPROVED_FOR_DISTRIBUTION }
+        assertEquals(5, referenceOnly.size)
+        assertTrue(referenceOnly.all { it.rightsStatus.isReferenceOnly })
     }
 
     @Test
@@ -67,6 +116,8 @@ class GarudaPuranRepositoryTest {
         assertEquals("v3", content.contentVersion.toString().let { "v$it" })
         assertEquals("en", content.languageCode)
         assertEquals("TEST SOURCE TEXT", content.text.originalSourceText)
+        assertEquals("test-source", content.reference.sourceProvenance?.sourceId)
+        assertEquals(2, content.reference.sourceProvenance?.pageRange?.printedPageStart)
     }
 
     @Test
@@ -165,6 +216,18 @@ class GarudaPuranRepositoryTest {
           "sourceEditionId": "test-edition",
           "sourceLanguage": "sa",
           "sourcePublisherOrEditor": "AYNVORA test fixture",
+          "sourceProvenance": {
+            "sourceId": "test-source",
+            "editionId": "test-edition",
+            "chapter": "1",
+            "section": "test-section",
+            "pageRange": { "pdfPageStart": 3, "printedPageStart": 2 },
+            "language": "sa",
+            "contentVersion": "v3",
+            "rightsStatus": "APPROVED_FOR_DISTRIBUTION",
+            "verificationStatus": "CONTENT_VISUALLY_VERIFIED",
+            "canonicalReferenceId": "GP_TEST_CHAPTER_1_V2"
+          },
           "originalSourceText": "TEST SOURCE TEXT",
           "transliteration": "TEST TRANSLITERATION",
           "sourceMeaning": "Approved test meaning.",

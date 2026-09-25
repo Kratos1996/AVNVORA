@@ -15,6 +15,8 @@ import com.aynvora.core.garudapuran.GarudaPuranTopicAvailability
 import com.aynvora.core.garudapuran.GarudaPuranTopicContent
 import com.aynvora.core.garudapuran.GarudaPuranTopicId
 import com.aynvora.core.garudapuran.GarudaPuranUnavailableReason
+import com.aynvora.core.garudapuran.GarudaSourceManifest
+import com.aynvora.core.garudapuran.GarudaSourceReference
 import com.aynvora.core.garudapuran.SUPPORTED_GARUDA_LANGUAGES
 import com.aynvora.core.models.ContentItem
 import com.aynvora.core.models.ContentModuleId
@@ -34,6 +36,8 @@ class ContentBackedGarudaPuranRepository(
     private val contentRepository: ContentRepository,
     private val json: Json = Json { ignoreUnknownKeys = true },
 ) : GarudaPuranRepository {
+
+    override fun getSourceManifest(): GarudaSourceManifest = InspectedGarudaPuranSources.manifest
 
     override suspend fun getCatalog(languageCode: String): AynvoraResult<GarudaPuranCatalog> {
         validateLanguage(languageCode)?.let { return it }
@@ -140,7 +144,7 @@ class ContentBackedGarudaPuranRepository(
                 )
             val sourceEdition = GarudaPuranSourceEdition(
                 editionId = stored.sourceEditionId,
-                title = pack.sourceAttribution,
+                title = pack.title,
                 publisherOrEditor = stored.sourcePublisherOrEditor,
                 sourceLanguage = stored.sourceLanguage,
             )
@@ -150,6 +154,7 @@ class ContentBackedGarudaPuranRepository(
                 chapterNumber = stored.chapterNumber,
                 verseStart = stored.verseStart,
                 verseEnd = stored.verseEnd,
+                sourceProvenance = stored.sourceProvenance,
             )
             val interpretations = stored.interpretations.map {
                 GarudaPuranInterpretation(
@@ -246,7 +251,13 @@ class ContentBackedGarudaPuranRepository(
             1 -> "v${versions.single()}"
             else -> versions.joinToString(prefix = "mixed:", separator = "+") { "v$it" }
         }
-        return GarudaPuranCatalog(languageCode, contentVersion, topics, editions)
+        return GarudaPuranCatalog(
+            languageCode,
+            contentVersion,
+            topics,
+            editions,
+            InspectedGarudaPuranSources.manifest,
+        )
     }
 
     private data class LoadedGarudaContent(
@@ -274,6 +285,7 @@ class ContentBackedGarudaPuranRepository(
         val sourceEditionId: String,
         val sourceLanguage: String,
         val sourcePublisherOrEditor: String,
+        val sourceProvenance: GarudaSourceReference? = null,
         val originalSourceText: String? = null,
         val transliteration: String? = null,
         val sourceMeaning: String,
