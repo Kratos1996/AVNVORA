@@ -3,6 +3,7 @@ package com.aynvora.core.intelligence
 import com.aynvora.core.Aynvora
 import com.aynvora.core.ai.DefaultAiToolRegistry
 import com.aynvora.core.feature.CoreFeatureId
+import com.aynvora.core.gita.GitaAuthor
 import com.aynvora.core.gita.GitaChapter
 import com.aynvora.core.gita.GitaRepository
 import com.aynvora.core.gita.GitaSourceEdition
@@ -23,6 +24,16 @@ class MultiFeatureOrchestratorTest {
     private val fakeGitaRepository = object : GitaRepository {
         override suspend fun getChapters(): AynvoraResult<List<GitaChapter>> {
             return AynvoraResult.Success(emptyList())
+        }
+
+        override suspend fun getChapter(chapterNumber: Int): AynvoraResult<GitaChapter> {
+            return AynvoraResult.Success(
+                GitaChapter(
+                    chapterNumber = chapterNumber,
+                    nameSanskrit = "साङ्ख्ययोग",
+                    nameTranslation = "Sankhya Yoga",
+                )
+            )
         }
 
         override suspend fun getVerse(
@@ -56,6 +67,10 @@ class MultiFeatureOrchestratorTest {
             return AynvoraResult.Success(listOf(verse.value))
         }
 
+        override suspend fun searchVerses(query: String): AynvoraResult<List<GitaVerse>> {
+            return searchVersesByTheme(query, "en")
+        }
+
         override suspend fun searchVersesByTheme(
             themeTag: String,
             language: String
@@ -63,6 +78,14 @@ class MultiFeatureOrchestratorTest {
             val verse = getVerse(2, 47, language) as AynvoraResult.Success
             return AynvoraResult.Success(listOf(verse.value))
         }
+
+        override suspend fun getAuthors(): AynvoraResult<List<GitaAuthor>> {
+            return AynvoraResult.Success(emptyList())
+        }
+
+        override suspend fun isSeeded(): Boolean = true
+
+        override suspend fun getSeededVerseCount(): Int = 1
     }
 
     private val orchestrator = MultiFeatureOrchestrator(
