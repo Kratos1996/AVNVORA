@@ -212,3 +212,125 @@ data class TarotReadingHistoryRoomEntity(
     val serializedDrawsJson: String,
     val timestampEpochMs: Long,
 )
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bhagavad Gita — Phase 8.3
+// Source: https://github.com/gita/gita (Public Domain)
+// Commit: c6fce39595445768876ddbb8d1268a9c935e1d2b
+// INVARIANT: These entities store ONLY canonical source text. Never AI-generated.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Room entity for a Bhagavad Gita chapter.
+ * Maps to chapters.json from the gita/gita dataset.
+ */
+@Entity(tableName = "gita_chapters")
+data class GitaChapterRoomEntity(
+    @PrimaryKey val chapterId: Int,
+    val chapterNumber: Int,
+    val nameSanskrit: String,
+    val nameTranslation: String,
+    val nameTransliterated: String,
+    val nameMeaning: String,
+    val chapterSummaryEnglish: String,
+    val chapterSummaryHindi: String,
+    val versesCount: Int,
+    val imageName: String,
+)
+
+/**
+ * Room entity for a Bhagavad Gita verse (Sanskrit text + transliteration).
+ * Maps to verse.json from the gita/gita dataset.
+ *
+ * INVARIANT: [sanskritDevanagari] and [transliteration] are immutable source text.
+ */
+@Entity(
+    tableName = "gita_verses",
+    indices = [
+        Index("chapterNumber"),
+        Index(value = ["chapterNumber", "verseNumber"], unique = true),
+    ],
+)
+data class GitaVerseRoomEntity(
+    @PrimaryKey val verseId: Int,
+    val chapterNumber: Int,
+    val verseNumber: Int,
+    val verseOrder: Int,
+    val title: String,
+    val sanskritDevanagari: String,
+    val transliteration: String,
+    val wordMeanings: String,
+)
+
+/**
+ * Room entity for a single translation of one verse.
+ * Maps to translation.json from the gita/gita dataset.
+ *
+ * INVARIANT: [description] is canonical published translation text. Never AI-generated.
+ */
+@Entity(
+    tableName = "gita_translations",
+    indices = [
+        Index("verseId"),
+        Index("authorId"),
+        Index("language"),
+        Index(value = ["verseId", "authorId", "language"], unique = true),
+    ],
+)
+data class GitaTranslationRoomEntity(
+    @PrimaryKey val translationId: Int,
+    val verseId: Int,
+    val authorId: Int,
+    val authorName: String,
+    val language: String,
+    val description: String,
+)
+
+/**
+ * Room entity for a single commentary on one verse.
+ * Maps to commentary.json from the gita/gita dataset.
+ *
+ * INVARIANT: [description] is canonical commentary text. Never AI-generated.
+ */
+@Entity(
+    tableName = "gita_commentaries",
+    indices = [
+        Index("verseId"),
+        Index("authorId"),
+        Index("language"),
+        Index(value = ["verseId", "authorId", "language"], unique = true),
+    ],
+)
+data class GitaCommentaryRoomEntity(
+    @PrimaryKey val commentaryId: Int,
+    val verseId: Int,
+    val authorId: Int,
+    val authorName: String,
+    val language: String,
+    val description: String,
+)
+
+/**
+ * Room entity for a Gita author/translator.
+ * Maps to authors.json from the gita/gita dataset.
+ */
+@Entity(tableName = "gita_authors")
+data class GitaAuthorRoomEntity(
+    @PrimaryKey val authorId: Int,
+    val name: String,
+)
+
+/**
+ * Room entity tracking Gita seeding state for offline-first integrity.
+ */
+@Entity(tableName = "gita_seed_state")
+data class GitaSeedStateRoomEntity(
+    @PrimaryKey val id: String = "gita_seed_v1",
+    val isSeeded: Boolean,
+    val seededVerseCount: Int,
+    val seededTranslationCount: Int,
+    val seededCommentaryCount: Int,
+    val sourceCommitSha: String,
+    val schemaVersion: Int,
+    val seededAtEpochMs: Long,
+)

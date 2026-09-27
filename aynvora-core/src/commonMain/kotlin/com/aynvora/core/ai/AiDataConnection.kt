@@ -116,18 +116,7 @@ class TarotFeatureDataConnector : AiFeatureDataConnector<TarotReading> {
 object AiPromptTemplate {
 
     fun buildSystemPrompt(context: AiContext): String {
-        val isHindi = context.language.lowercase().startsWith("hi")
-        return if (isHindi) {
-            """
-            आप AYNVORA के ऑन-डिवाइस ज्ञान सहायक हैं।
-            नियम:
-            1. आप केवल नीचे दिए गए आधिकारिक साक्ष्यों के आधार पर चिंतन और सारांश प्रस्तुत करेंगे।
-            2. कोई भी मनगढ़ंत या असत्यापित भविष्यवाणी न करें।
-            3. कभी भी पूर्ण भाग्यवादी, चिकित्सीय या वित्तीय सलाह न दें।
-            4. केवल साक्ष्य में दी गई जानकारी पर आधारित सौम्य, ज्ञानवर्धक व्याख्या दें।
-            """.trimIndent()
-        } else {
-            """
+        return """
             You are the on-device contemplative intelligence engine of AYNVORA.
             Strict Rules:
             1. You explain and synthesize ONLY the verified evidence provided below.
@@ -135,7 +124,6 @@ object AiPromptTemplate {
             3. Never provide medical, financial, legal, or deterministic absolute fatalistic claims.
             4. Offer reflective, balanced wisdom grounded strictly in the provided facts.
             """.trimIndent()
-        }
     }
 
     fun buildUserPrompt(context: AiContext): String {

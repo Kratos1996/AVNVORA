@@ -14,11 +14,16 @@ Version: 1.0
 ## KMP Architecture Layers & Canonical Package Structure
 
 - **Presentation (`:ui`)**:
-    - `com.aynvora.ui`: Core app scaffold and navigation host
+    - `com.aynvora.ui`: Core app scaffold and navigation host (`AynvoraApp`, `AynvoraAppViewModel`)
+    - `com.aynvora.ui.base`: Reusable base ViewModel and effect pipeline (`AynvoraBaseViewModel`)
     - `com.aynvora.ui.tarot`: Tarot presentation screen, state, and UI components
     - `com.aynvora.ui.report`: Shared ReportDocument viewer/route/PDF line layout; Android and JVM
       PDF/share adapters
 - **Domain (`:aynvora-core`)**:
+    - `com.aynvora.core.event`: Unified Event-Driven App SDK (`AynvoraEvent`, `AynvoraClickEvent`,
+      `AynvoraEventPayload`, `AynvoraEventMetadata`, `AynvoraEffect`, `AynvoraNavigationTarget`,
+      `AynvoraEventGuard`, `AynvoraEventDeduplicator`, `AynvoraEventDispatcher`,
+      `AynvoraEventAnalyticsBridge`, `AynvoraEventAnalyticsMapper`, `EventTrace`)
     - `com.aynvora.core`: Primary public SDK facade (`AynvoraSdk`, `Aynvora`)
     - `com.aynvora.core.models`: Public domain models (immutable, validated, platform-independent)
     - `com.aynvora.core.repository`: Domain repository contracts (`UserProfileRepository`,
@@ -31,7 +36,9 @@ Version: 1.0
       cases
     - `com.aynvora.core.feature`: Core Feature Registry and typed feature availability (
       `CoreFeatureRegistry.kt`)
-    - `com.aynvora.core.palmistry`: Hastrekha/Palmistry domain models and contracts
+    - `com.aynvora.core.palmistry`: Hastrekha/Palmistry domain models, computer vision analysis
+      engine,
+      classical Samudrika Shastra content package, grounded SLM explanation engine, and Q&A engine
     - `com.aynvora.core.gemstone`: Navaratna gemstone models, inventory context, and recommendations
     - `com.aynvora.core.gita`: Bhagavad Gita Sanskrit shloka models, editions, and repository
       interface
@@ -73,6 +80,8 @@ Version: 1.0
     - `com.aynvora.data.database.dao`: Room DAOs
     - `com.aynvora.data.tarot`: Tarot Room repository implementation, starter content, and content
       pack
+  - `com.aynvora.data.palmistry`: Palmistry session storage and repository implementation (
+    `PalmSessionRepositoryImpl`, `DriverPalmSessionStorage`)
   - `com.aynvora.data.garudapuran`: approved-package adapter over generic offline
     `ContentRepository`; approved English package `GarudaWood1911ContentPackage` (
     `garuda-content-wood-1911-en-v1`);
@@ -83,6 +92,8 @@ Version: 1.0
 - **Presentation (`:ui`)**:
     - `com.aynvora.ui`: Core app scaffold and navigation host
     - `com.aynvora.ui.tarot`: Tarot presentation screen, state, and UI components
+  - `com.aynvora.ui.palmistry`: Palmistry (Hastrekha) 10-screen presentation flow, UDF state, and UI
+    components
     - `com.aynvora.ui.garudapuran`: reusable Garuda Puran content/catalog entry route; delegates
       reports to `com.aynvora.ui.report`
     - `com.aynvora.ui.di`: Koin presentation module & full app aggregator (`uiModule`,

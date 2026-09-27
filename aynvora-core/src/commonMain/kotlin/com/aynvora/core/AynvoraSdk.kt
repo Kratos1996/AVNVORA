@@ -143,6 +143,7 @@ interface AynvoraSdk {
     val content: com.aynvora.core.repository.ContentRepository? get() = null
     val contentSync: com.aynvora.core.repository.ContentSyncRepository? get() = null
     val tarot: com.aynvora.core.tarot.TarotRepository? get() = null
+    val numerology: com.aynvora.core.numerology.NumerologyRepository? get() = null
     val tarotUseCases: com.aynvora.core.tarot.PerformTarotReadingUseCase?
         get() = tarot?.let {
             com.aynvora.core.tarot.PerformTarotReadingUseCase(
@@ -168,6 +169,35 @@ interface AynvoraSdk {
         get() = userPreferences?.let { com.aynvora.core.usecase.GetUserPreferencesUseCase(it) }
 
     /**
+     * Calculates a complete, deterministic Numerology profile from a structured request.
+     */
+    suspend fun calculateNumerology(
+        request: com.aynvora.core.numerology.NumerologyRequest
+    ): AynvoraResult<com.aynvora.core.numerology.NumerologyResult> =
+        numerology?.calculate(request)
+            ?: com.aynvora.core.numerology.NumerologyCalculationEngine.calculate(request)
+
+    /**
+     * Convenience overload calculating numerology directly from birth date and optional full name and ruleset.
+     */
+    suspend fun calculateNumerology(
+        birthDay: Int,
+        birthMonth: Int,
+        birthYear: Int,
+        fullName: String? = null,
+        rulesetId: String = com.aynvora.core.numerology.NumerologyRuleset.CHALDEAN_CHEIRO_V1.id,
+    ): AynvoraResult<com.aynvora.core.numerology.NumerologyResult> =
+        calculateNumerology(
+            com.aynvora.core.numerology.NumerologyRequest(
+                birthDay = birthDay,
+                birthMonth = birthMonth,
+                birthYear = birthYear,
+                fullName = fullName,
+                rulesetId = rulesetId,
+            )
+        )
+
+    /**
      * Analytics tracker used to report non-PII usage events.
      * Defaults to [NoOpAnalyticsTracker] when not provided.
      */
@@ -189,6 +219,7 @@ object Aynvora {
         content: com.aynvora.core.repository.ContentRepository? = null,
         contentSync: com.aynvora.core.repository.ContentSyncRepository? = null,
         tarot: com.aynvora.core.tarot.TarotRepository? = null,
+        numerology: com.aynvora.core.numerology.NumerologyRepository? = null,
         analyticsTracker: AnalyticsTracker = NoOpAnalyticsTracker(),
     ): AynvoraSdk = DefaultAynvoraSdk(
         adapter = AstroEngineAdapter(),
@@ -199,6 +230,7 @@ object Aynvora {
         content = content,
         contentSync = contentSync,
         tarot = tarot,
+        numerology = numerology,
         analyticsTrackerImpl = analyticsTracker,
     )
 }
@@ -215,6 +247,7 @@ internal class DefaultAynvoraSdk(
     override val content: com.aynvora.core.repository.ContentRepository? = null,
     override val contentSync: com.aynvora.core.repository.ContentSyncRepository? = null,
     override val tarot: com.aynvora.core.tarot.TarotRepository? = null,
+    override val numerology: com.aynvora.core.numerology.NumerologyRepository? = null,
     private val analyticsTrackerImpl: AnalyticsTracker = NoOpAnalyticsTracker(),
 ) : AynvoraSdk {
 
@@ -319,6 +352,23 @@ internal class DefaultAynvoraSdk(
         val result = adapter.executeAshtakavargaPinda(request)
         if (result is AynvoraResult.Success) {
             analyticsTrackerImpl.track(AnalyticsEvent.PindaCalculationSucceeded(rulesetId, 0L))
+        }
+        return result
+    }
+
+    override suspend fun calculateNumerology(
+        request: com.aynvora.core.numerology.NumerologyRequest
+    ): AynvoraResult<com.aynvora.core.numerology.NumerologyResult> {
+        val rulesetId = request.rulesetId
+        analyticsTrackerImpl.track(AnalyticsEvent.NumerologyCalculationStarted(rulesetId))
+        val result = numerology?.calculate(request)
+            ?: com.aynvora.core.numerology.NumerologyCalculationEngine.calculate(request)
+        when (result) {
+            is AynvoraResult.Success ->
+                analyticsTrackerImpl.track(AnalyticsEvent.NumerologyCalculationCompleted(rulesetId))
+
+            is AynvoraResult.Failure ->
+                analyticsTrackerImpl.track(AnalyticsEvent.NumerologyCalculationFailed(result.analyticsErrorCode()))
         }
         return result
     }

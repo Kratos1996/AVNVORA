@@ -1,5 +1,6 @@
 package com.aynvora.localization.locale
 
+import com.aynvora.core.localization.AynvoraLocale
 import kotlinx.serialization.Serializable
 
 /**
@@ -26,14 +27,15 @@ enum class TextDirection {
  * Canonical locale IDs:
  *   - "en"  → English   (en-IN)
  *   - "hi"  → Hindi     (hi-IN)
- *
- * Future:
- *   - "sa"  → Sanskrit  (sa-IN)
+ *   - "ar"  → Arabic    (ar) — RTL
+ *   - "bn"  → Bengali   (bn-IN)
+ *   - "gu"  → Gujarati  (gu-IN)
+ *   - "mr"  → Marathi   (mr-IN)
+ *   - "pa"  → Punjabi   (pa-IN)
  *   - "ta"  → Tamil     (ta-IN)
  *   - "te"  → Telugu    (te-IN)
+ *   - "kn"  → Kannada   (kn-IN)
  *   - "ml"  → Malayalam (ml-IN)
- *   - "bn"  → Bengali   (bn-IN)
- *   - "ar"  → Arabic    (ar) — RTL
  *
  * @param localeId       Short canonical identifier. Used as persistence key.
  * @param languageTag    BCP-47 language tag. Used for platform locale APIs.
@@ -62,4 +64,7 @@ data class SupportedLocale(
 
     /** Whether this locale uses right-to-left text direction. */
     val isRtl: Boolean get() = direction == TextDirection.RTL
+
+    /** The canonical [AynvoraLocale] representation. */
+    val aynvoraLocale: AynvoraLocale get() = AynvoraLocale.fromId(localeId)
 }

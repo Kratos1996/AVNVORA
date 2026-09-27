@@ -75,7 +75,7 @@ class TarotReportGenerator : ReportGenerator {
         val sections = mutableListOf<ReportSection>()
 
         // ── Section 1: Disclaimer ────────────────────────────────────────────
-        sections += buildDisclaimerSection(input.language)
+        sections += buildDisclaimerSection(resolver)
 
         // ── Section 2: Spread Overview ───────────────────────────────────────
         sections += buildSpreadOverviewSection(input, cardContentIndex, resolver)
@@ -83,21 +83,20 @@ class TarotReportGenerator : ReportGenerator {
         // ── Section 3: Card-by-Card Reflection ──────────────────────────────
         input.reading.draws.forEachIndexed { index, draw ->
             val content = cardContentIndex[draw.card.id]
-            sections += buildCardReflectionSection(index, draw, content, input.language, resolver)
+            sections += buildCardReflectionSection(index, draw, content, resolver)
         }
 
         // ── Section 4: Attribution & Source Information ──────────────────────
         sections += buildAttributionSection(input, cardContentIndex, resolver)
 
-        val disclaimerTitle = if (input.language == ReportLanguage.HINDI)
-            "चिंतन एवं गैर-भविष्यवाणी प्रकटीकरण"
-        else
+        val disclaimerTitle = resolver.rawText(
+            "tarot.report.disclaimer_title",
             "Reflection & Mindful Use Disclosure"
-
-        val disclaimerBody = if (input.language == ReportLanguage.HINDI)
-            TarotDisclaimer.HINDI_TEXT
-        else
+        )
+        val disclaimerBody = resolver.rawText(
+            "tarot.report.disclaimer_body",
             TarotDisclaimer.ENGLISH_TEXT
+        )
 
         return ReportDocumentFactory.create(
             metadata = ReportMetadata(
@@ -126,16 +125,15 @@ class TarotReportGenerator : ReportGenerator {
         )
     }
 
-    private fun buildDisclaimerSection(language: ReportLanguage): ReportSection {
-        val disclaimerTitle = if (language == ReportLanguage.HINDI)
-            "चिंतन एवं गैर-भविष्यवाणी प्रकटीकरण"
-        else
+    private fun buildDisclaimerSection(resolver: ReportTextResolver): ReportSection {
+        val disclaimerTitle = resolver.rawText(
+            "tarot.report.disclaimer_title",
             "Reflection & Mindful Use Disclosure"
-
-        val disclaimerBody = if (language == ReportLanguage.HINDI)
-            "AYNVORA में टैरो पठन केवल विश्राम, आत्म-चिंतन और व्यक्तिगत मनन के उद्देश्य से प्रस्तुत किया गया है। यह कोई वैज्ञानिक भविष्यवाणी, चिकित्सा, कानूनी या वित्तीय सलाह नहीं है। सभी व्याख्याएँ चिंतनशील दृष्टिकोण हैं, निश्चित परिणाम नहीं।"
-        else
+        )
+        val disclaimerBody = resolver.rawText(
+            "tarot.report.disclaimer_body",
             "Tarot readings in AYNVORA are offered strictly for relaxation, introspection, and personal reflection. They do not constitute scientific prediction, medical, legal, or financial advice, nor guarantee future events. All interpretations are contemplative perspectives, not absolute outcomes."
+        )
 
         return ReportSection(
             id = "tarot_disclaimer",
@@ -154,21 +152,20 @@ class TarotReportGenerator : ReportGenerator {
         cardContentIndex: Map<String, TarotCardContent>,
         resolver: ReportTextResolver,
     ): ReportSection {
-        val sectionTitle = if (input.language == ReportLanguage.HINDI)
-            "स्प्रेड अवलोकन" else "Spread Overview"
+        val sectionTitle = resolver.rawText("tarot.report.spread_overview", "Spread Overview")
         val spreadName = input.spread.name
         val spreadDesc = input.spread.description
 
-        val deckLabel = if (input.language == ReportLanguage.HINDI) "डेक" else "Deck"
-        val spreadLabel = if (input.language == ReportLanguage.HINDI) "स्प्रेड" else "Spread"
-        val cardsLabel = if (input.language == ReportLanguage.HINDI) "कार्ड" else "Cards Drawn"
+        val deckLabel = resolver.rawText("tarot.report.label.deck", "Deck")
+        val spreadLabel = resolver.rawText("tarot.report.label.spread", "Spread")
+        val cardsLabel = resolver.rawText("tarot.report.label.cards_drawn", "Cards Drawn")
 
         val tableRows = input.reading.draws.map { draw ->
             val content = cardContentIndex[draw.card.id]
             val orientationLabel = if (draw.orientation == TarotCardOrientation.UPRIGHT) {
-                if (input.language == ReportLanguage.HINDI) "सीधा" else "Upright"
+                resolver.rawText("tarot.report.orientation.upright", "Upright")
             } else {
-                if (input.language == ReportLanguage.HINDI) "उल्टा" else "Reversed"
+                resolver.rawText("tarot.report.orientation.reversed", "Reversed")
             }
             listOf(
                 draw.position.name,
@@ -177,10 +174,9 @@ class TarotReportGenerator : ReportGenerator {
             )
         }
 
-        val positionHeader = if (input.language == ReportLanguage.HINDI) "स्थिति" else "Position"
-        val cardHeader = if (input.language == ReportLanguage.HINDI) "पत्ता" else "Card"
-        val orientationHeader =
-            if (input.language == ReportLanguage.HINDI) "अभिमुखता" else "Orientation"
+        val positionHeader = resolver.rawText("tarot.report.column.position", "Position")
+        val cardHeader = resolver.rawText("tarot.report.column.card", "Card")
+        val orientationHeader = resolver.rawText("tarot.report.column.orientation", "Orientation")
 
         return ReportSection(
             id = "tarot_spread_overview",
@@ -223,21 +219,18 @@ class TarotReportGenerator : ReportGenerator {
         index: Int,
         draw: TarotCardDraw,
         content: TarotCardContent?,
-        language: ReportLanguage,
         resolver: ReportTextResolver,
     ): ReportSection {
         val cardTitle = content?.title ?: draw.card.name
         val orientationLabel = if (draw.orientation == TarotCardOrientation.UPRIGHT) {
-            if (language == ReportLanguage.HINDI) "सीधा" else "Upright"
+            resolver.rawText("tarot.report.orientation.upright", "Upright")
         } else {
-            if (language == ReportLanguage.HINDI) "उल्टा" else "Reversed"
+            resolver.rawText("tarot.report.orientation.reversed", "Reversed")
         }
 
         val sectionTitle = "$cardTitle ($orientationLabel)"
-        val positionLabel = if (language == ReportLanguage.HINDI) "स्थिति" else "Position"
-        val keywordsLabel = if (language == ReportLanguage.HINDI) "मुख्य शब्द" else "Keywords"
-        val perspectiveLabel = if (language == ReportLanguage.HINDI)
-            "चिंतनशील दृष्टिकोण" else "Reflective Perspective"
+        val positionLabel = resolver.rawText("tarot.report.label.position", "Position")
+        val keywordsLabel = resolver.rawText("tarot.report.label.keywords", "Keywords")
 
         val blocks = mutableListOf<ReportBlock>()
 
@@ -281,10 +274,10 @@ class TarotReportGenerator : ReportGenerator {
                 kind = ReportContentKind.DISCLAIMER,
                 text = ReportText(
                     "tarot.report.content_unavailable",
-                    if (language == ReportLanguage.HINDI)
-                        "इस पत्ते की व्याख्या उपलब्ध नहीं है।"
-                    else
-                        "Reflective content not available for this card.",
+                    resolver.rawText(
+                        "tarot.report.content_unavailable",
+                        "Reflective content not available for this card."
+                    ),
                 ),
             )
         }
@@ -301,16 +294,18 @@ class TarotReportGenerator : ReportGenerator {
         cardContentIndex: Map<String, TarotCardContent>,
         resolver: ReportTextResolver,
     ): ReportSection {
-        val sectionTitle = if (input.language == ReportLanguage.HINDI)
-            "सामग्री स्रोत एवं प्रमाण" else "Content Attribution & Provenance"
+        val sectionTitle = resolver.rawText(
+            "tarot.report.attribution",
+            "Content Attribution & Provenance"
+        )
 
         val attributions = input.reading.draws
             .mapNotNull { draw -> cardContentIndex[draw.card.id] }
             .distinctBy { it.sourceAttribution }
 
-        val sourceLabel = if (input.language == ReportLanguage.HINDI) "स्रोत" else "Source"
-        val versionLabel = if (input.language == ReportLanguage.HINDI) "संस्करण" else "Version"
-        val languageLabel = if (input.language == ReportLanguage.HINDI) "भाषा" else "Language"
+        val sourceLabel = resolver.rawText("tarot.report.column.source", "Source")
+        val versionLabel = resolver.rawText("tarot.report.column.version", "Version")
+        val languageLabel = resolver.rawText("tarot.report.column.language", "Language")
 
         val tableRows = attributions.map { content ->
             listOf(
@@ -320,10 +315,10 @@ class TarotReportGenerator : ReportGenerator {
             )
         }
 
-        val nonPredictiveNotice = if (input.language == ReportLanguage.HINDI)
-            "यह रिपोर्ट केवल चिंतनशील मनन हेतु है। इसमें भविष्यवाणी नहीं है।"
-        else
+        val nonPredictiveNotice = resolver.rawText(
+            "tarot.report.non_predictive_notice",
             "This report is for reflective contemplation only. No predictive claims are made."
+        )
 
         return ReportSection(
             id = "tarot_attribution",

@@ -20,6 +20,9 @@ class ReportGeneratorRegistry(
         KundaliReportGenerator(),
         GarudaPuranReportGenerator(),
         TarotReportGenerator(),
+        PalmistryReportGenerator(),
+        NumerologyReportGenerator(),
+        GemstoneReportGenerator(),
     )
 ) {
     private val entries = generators.toList()
@@ -190,7 +193,7 @@ class GenerateReportUseCase(
             ReportErrorCode.INVALID_REPORT_REQUEST,
             resolver.text(ReportTextKey.INVALID_INPUT)
         )
-        if (resolver.language != ReportLanguage.ENGLISH && resolver.language != ReportLanguage.HINDI) {
+        if (resolver.language !in ReportLanguage.entries) {
             return unavailable(
                 type,
                 ReportErrorCode.LOCALIZATION_MISSING,

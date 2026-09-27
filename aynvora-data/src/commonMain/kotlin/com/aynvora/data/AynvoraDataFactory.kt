@@ -1,6 +1,7 @@
 package com.aynvora.data
 
 import com.aynvora.core.garudapuran.GarudaPuranRepository
+import com.aynvora.core.gita.GitaRepository
 import com.aynvora.core.repository.BirthProfileRepository
 import com.aynvora.core.repository.ContentRepository
 import com.aynvora.core.repository.ContentSyncRepository
@@ -11,6 +12,7 @@ import com.aynvora.core.sync.ContentVerifier
 import com.aynvora.core.sync.StubContentVerifier
 import com.aynvora.data.AynvoraDataFactory.createWithRoom
 import com.aynvora.data.database.AynvoraDatabase
+import com.aynvora.data.gita.RoomGitaRepository
 import com.aynvora.data.repository.BirthProfileRepositoryImpl
 import com.aynvora.data.repository.ContentRepositoryImpl
 import com.aynvora.data.repository.ContentSyncRepositoryImpl
@@ -55,6 +57,8 @@ class AynvoraDataComponents(
     val contentSyncRepository: ContentSyncRepository,
     val tarotRepository: com.aynvora.core.tarot.TarotRepository,
     val garudaPuranRepository: GarudaPuranRepository,
+    /** Phase 8.3 — Bhagavad Gita offline-first repository backed by Room + gita/gita dataset. */
+    val gitaRepository: GitaRepository,
     internal val storageEngine: AynvoraStorageEngine,
 )
 
@@ -139,6 +143,9 @@ object AynvoraDataFactory {
             ),
             garudaPuranRepository = com.aynvora.data.garudapuran.ContentBackedGarudaPuranRepository(
                 contentRepository
+            ),
+            gitaRepository = RoomGitaRepository(
+                dao = database.gitaDao(),
             ),
             storageEngine = engine,
         )

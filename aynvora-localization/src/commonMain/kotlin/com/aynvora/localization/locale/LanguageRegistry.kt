@@ -24,12 +24,111 @@ object LanguageRegistry {
         fallbackLocaleId = null,
     )
 
-    /** Hindi — first regional language. */
+    /** Hindi — regional language. */
     val HINDI = SupportedLocale(
         localeId = "hi",
         languageTag = "hi-IN",
         nativeName = "हिन्दी",
         englishName = "Hindi",
+        direction = TextDirection.LTR,
+        isSupported = true,
+        fallbackLocaleId = "en",
+    )
+
+    /** Arabic — international language (RTL layout). */
+    val ARABIC = SupportedLocale(
+        localeId = "ar",
+        languageTag = "ar",
+        nativeName = "العربية",
+        englishName = "Arabic",
+        direction = TextDirection.RTL,
+        isSupported = true,
+        fallbackLocaleId = "en",
+    )
+
+    /** Bengali — Indian regional language. */
+    val BENGALI = SupportedLocale(
+        localeId = "bn",
+        languageTag = "bn-IN",
+        nativeName = "বাংলা",
+        englishName = "Bengali",
+        direction = TextDirection.LTR,
+        isSupported = true,
+        fallbackLocaleId = "en",
+    )
+
+    /** Gujarati — Indian regional language. */
+    val GUJARATI = SupportedLocale(
+        localeId = "gu",
+        languageTag = "gu-IN",
+        nativeName = "ગુજરાતી",
+        englishName = "Gujarati",
+        direction = TextDirection.LTR,
+        isSupported = true,
+        fallbackLocaleId = "en",
+    )
+
+    /** Marathi — Indian regional language. */
+    val MARATHI = SupportedLocale(
+        localeId = "mr",
+        languageTag = "mr-IN",
+        nativeName = "मराठी",
+        englishName = "Marathi",
+        direction = TextDirection.LTR,
+        isSupported = true,
+        fallbackLocaleId = "en",
+    )
+
+    /** Punjabi — Indian regional language. */
+    val PUNJABI = SupportedLocale(
+        localeId = "pa",
+        languageTag = "pa-IN",
+        nativeName = "ਪੰਜਾਬੀ",
+        englishName = "Punjabi",
+        direction = TextDirection.LTR,
+        isSupported = true,
+        fallbackLocaleId = "en",
+    )
+
+    /** Tamil — Indian regional language. */
+    val TAMIL = SupportedLocale(
+        localeId = "ta",
+        languageTag = "ta-IN",
+        nativeName = "தமிழ்",
+        englishName = "Tamil",
+        direction = TextDirection.LTR,
+        isSupported = true,
+        fallbackLocaleId = "en",
+    )
+
+    /** Telugu — Indian regional language. */
+    val TELUGU = SupportedLocale(
+        localeId = "te",
+        languageTag = "te-IN",
+        nativeName = "తెలుగు",
+        englishName = "Telugu",
+        direction = TextDirection.LTR,
+        isSupported = true,
+        fallbackLocaleId = "en",
+    )
+
+    /** Kannada — Indian regional language. */
+    val KANNADA = SupportedLocale(
+        localeId = "kn",
+        languageTag = "kn-IN",
+        nativeName = "ಕನ್ನಡ",
+        englishName = "Kannada",
+        direction = TextDirection.LTR,
+        isSupported = true,
+        fallbackLocaleId = "en",
+    )
+
+    /** Malayalam — Indian regional language. */
+    val MALAYALAM = SupportedLocale(
+        localeId = "ml",
+        languageTag = "ml-IN",
+        nativeName = "മലയാളം",
+        englishName = "Malayalam",
         direction = TextDirection.LTR,
         isSupported = true,
         fallbackLocaleId = "en",
@@ -42,7 +141,17 @@ object LanguageRegistry {
     private val allLocales: List<SupportedLocale> = listOf(
         ENGLISH,
         HINDI,
+        ARABIC,
+        BENGALI,
+        GUJARATI,
+        MARATHI,
+        PUNJABI,
+        TAMIL,
+        TELUGU,
+        KANNADA,
+        MALAYALAM,
     )
+
 
     /**
      * Returns all fully supported locales available for user selection.

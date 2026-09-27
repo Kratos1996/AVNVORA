@@ -41,14 +41,28 @@ fun AynvoraCard(
     modifier: Modifier = Modifier,
     variant: AynvoraCardVariant = AynvoraCardVariant.Filled,
     shape: Shape = AynvoraShapes.shape12,
+    event: com.aynvora.core.event.AynvoraClickEvent? = null,
     onClick: (() -> Unit)? = null,
     containerColor: Color = AynvoraColors.CosmicNavy,
     contentColor: Color = AynvoraColors.TextLight,
     contentPadding: PaddingValues = PaddingValues(AynvoraSpacing.space16),
     content: @Composable () -> Unit,
 ) {
-    val clickableModifier = if (onClick != null) {
-        modifier.clickable(onClick = onClick)
+    val ambientDispatcher = com.aynvora.designsystem.event.LocalAynvoraEventDispatcher.current
+    val effectiveOnClick: (() -> Unit)? = when {
+        event != null -> {
+            {
+                ambientDispatcher?.invoke(event)
+                onClick?.invoke()
+            }
+        }
+
+        onClick != null -> onClick
+        else -> null
+    }
+
+    val clickableModifier = if (effectiveOnClick != null) {
+        modifier.clickable(onClick = effectiveOnClick)
     } else {
         modifier
     }

@@ -134,4 +134,65 @@ class AiModelSelectorTest {
         assertFalse(result.userSummary.isActionable)
         assertEquals("Installed", result.userSummary.actionLabel)
     }
+
+    @Test
+    fun unsupportedRuntimeIsRejectedGracefully() {
+        val profile = AiDeviceProfile(
+            totalRamBytes = 8L * 1024L * 1024L * 1024L,
+            availableRamBytes = 4L * 1024L * 1024L * 1024L,
+            freeStorageBytes = 64L * 1024L * 1024L * 1024L,
+            cpuArchitecture = CpuArchitecture.X86_64,
+            osPlatform = OsPlatform.ANDROID,
+            osVersion = "14",
+            supportedRuntimes = emptySet(), // No supported runtimes
+        )
+
+        val result = selector.selectOptimalModel(profile)
+        assertEquals(AiModelSelectionStatus.UNSUPPORTED_PLATFORM, result.status)
+        assertNull(result.selectedModel)
+        assertFalse(result.userSummary.isActionable)
+    }
+
+    @Test
+    fun selectionIsDeterministicForEquivalentProfiles() {
+        val profile1 = AiDeviceProfile(
+            totalRamBytes = 4L * 1024L * 1024L * 1024L,
+            availableRamBytes = 2L * 1024L * 1024L * 1024L,
+            freeStorageBytes = 32L * 1024L * 1024L * 1024L,
+            cpuArchitecture = CpuArchitecture.ARM64,
+            osPlatform = OsPlatform.ANDROID,
+            osVersion = "14",
+            supportedRuntimes = setOf(AiRuntimeType.GGUF),
+        )
+        val profile2 = profile1.copy()
+
+        val result1 = selector.selectOptimalModel(profile1)
+        val result2 = selector.selectOptimalModel(profile2)
+
+        assertEquals(result1.status, result2.status)
+        assertEquals(result1.selectedModel?.modelId, result2.selectedModel?.modelId)
+    }
+
+    @Test
+    fun connectedPhysicalDeviceProfile_SamsungS23Ultra_SelectsOptimalModel() {
+        // Factual physical device values read via ADB from connected SM-S918B:
+        // MemTotal: 11,309,736 kB (~11.3 GB), MemAvailable: 3,602,812 kB (~3.6 GB), freeStorage: 31 GB
+        val physicalDeviceProfile = AiDeviceProfile(
+            totalRamBytes = 11_309_736L * 1024L,
+            availableRamBytes = 3_602_812L * 1024L,
+            freeStorageBytes = 31L * 1024L * 1024L * 1024L,
+            cpuArchitecture = CpuArchitecture.ARM64,
+            osPlatform = OsPlatform.ANDROID,
+            osVersion = "16",
+            supportedRuntimes = setOf(AiRuntimeType.GGUF),
+        )
+
+        val result = selector.selectOptimalModel(physicalDeviceProfile)
+        assertEquals(AiModelSelectionStatus.READY_TO_DOWNLOAD, result.status)
+        assertNotNull(result.selectedModel)
+        assertEquals("qwen2.5-1.5b-instruct-q5_k_m", result.selectedModel?.modelId)
+        assertTrue(result.userSummary.isActionable)
+        assertEquals("Download AYNVORA AI", result.userSummary.actionLabel)
+        assertEquals("qwen2.5-1.5b-instruct-q5_k_m", result.diagnostics.selectedModelId)
+    }
 }

@@ -11,9 +11,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,22 +25,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.aynvora.core.ai.AiDeviceCapabilityDetector
-import com.aynvora.core.ai.AiDeviceProfile
 import com.aynvora.core.ai.AiModelLifecycleManager
-import com.aynvora.core.ai.AiModelLifecycleState
-import com.aynvora.core.ai.AiModelSelectionResult
 import com.aynvora.core.ai.AiModelSelector
-import com.aynvora.core.feature.CanonicalCoreFeatures
-import com.aynvora.core.feature.CoreFeatureId
 import com.aynvora.core.feature.FeatureAvailability
+import com.aynvora.designsystem.AynvoraColors
+import com.aynvora.designsystem.AynvoraShapes
+import com.aynvora.designsystem.AynvoraSpacing
 import com.aynvora.designsystem.AynvoraTheme
 import com.aynvora.designsystem.adaptive.sdp
 import com.aynvora.designsystem.adaptive.ssp
@@ -53,6 +54,7 @@ import com.aynvora.designsystem.components.dialogs.AynvoraDialogHost
 import com.aynvora.designsystem.components.sheets.AynvoraBottomSheetDefaults
 import com.aynvora.designsystem.components.sheets.AynvoraBottomSheetHeader
 import com.aynvora.designsystem.components.sheets.AynvoraBottomSheetHost
+import com.aynvora.designsystem.event.aynvoraClickable
 import com.aynvora.designsystem.localization.AynvoraLocalizationProvider
 import com.aynvora.designsystem.localization.LocalAynvoraLocale
 import com.aynvora.designsystem.localization.LocalAynvoraTranslator
@@ -61,11 +63,14 @@ import com.aynvora.localization.locale.LanguageRegistry
 import com.aynvora.localization.locale.SupportedLocale
 import com.aynvora.localization.translation.AynvoraTranslator
 import com.aynvora.localization.translation.TranslationKey
+import com.aynvora.qa.android.AndroidInteractionSentinelRuntime
+import com.aynvora.qa.android.qaAction
+import com.aynvora.qa.android.ui.QaSentinelDashboard
+import com.aynvora.qa.core.models.QaActionId
+import com.aynvora.qa.core.models.QaStateSnapshot
 import com.aynvora.ui.features.CoreFeatureDashboard
 import com.aynvora.ui.tarot.TarotRoute
 import dev.ishant.cottonsheet.LocalCottonSheetController
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import org.koin.compose.currentKoinScope
 
 /**
@@ -81,106 +86,57 @@ import org.koin.compose.currentKoinScope
  * one visually highlighted.
  */
 @Composable
-fun AynvoraApp(darkTheme: Boolean = true) {
-    var isDark by remember { mutableStateOf(darkTheme) }
-    var isTarotOpen by remember { mutableStateOf(false) }
-
-    val coroutineScope = rememberCoroutineScope()
+fun AynvoraApp(
+    darkTheme: Boolean = true,
+    viewModel: AynvoraAppViewModel? = null,
+) {
     val koin = currentKoinScope()
-
-    // Locale manager — single source of truth for language
-    val localeManager = remember(koin) { koin.getOrNull<AynvoraLocaleManager>() }
-
-    val aiLifecycleManager = remember(koin) { koin.getOrNull<AiModelLifecycleManager>() }
-    val aiModelSelector = remember(koin) { koin.getOrNull<AiModelSelector>() }
-    val aiCapabilityDetector = remember(koin) { koin.getOrNull<AiDeviceCapabilityDetector>() }
-
-    val aiLifecycleState by (aiLifecycleManager?.state ?: remember {
-        MutableStateFlow(AiModelLifecycleState.NotInstalled)
-    }).collectAsState()
-
-    var deviceProfile by remember { mutableStateOf<AiDeviceProfile?>(null) }
-    var selectionResult by remember { mutableStateOf<AiModelSelectionResult?>(null) }
-
-    LaunchedEffect(aiCapabilityDetector, aiModelSelector) {
-        if (aiCapabilityDetector != null && aiModelSelector != null) {
-            try {
-                val profile = aiCapabilityDetector.detectCapability()
-                deviceProfile = profile
-                selectionResult = aiModelSelector.selectOptimalModel(profile)
-            } catch (_: Exception) {
-                // Keep null on unsupported platforms
-            }
-        }
+    val appViewModel = viewModel ?: remember(koin) {
+        koin.getOrNull<AynvoraAppViewModel>() ?: AynvoraAppViewModel(
+            localeManager = koin.getOrNull<AynvoraLocaleManager>(),
+            aiLifecycleManager = koin.getOrNull<AiModelLifecycleManager>(),
+            aiModelSelector = koin.getOrNull<AiModelSelector>(),
+            aiCapabilityDetector = koin.getOrNull<AiDeviceCapabilityDetector>(),
+            eventDispatcher = koin.getOrNull<com.aynvora.core.event.AynvoraEventDispatcher>(),
+            initialDarkTheme = darkTheme,
+        )
     }
 
-    AynvoraTheme(darkTheme = isDark) {
-        // AynvoraLocalizationProvider observes localeManager.currentLocale StateFlow
-        // and provides LocalAynvoraLocale + LocalAynvoraTranslator to the entire tree.
-        // If no localeManager is available (e.g. preview), the CompositionLocals use
-        // their default English values from LocalLocale.kt.
-        if (localeManager != null) {
-            AynvoraLocalizationProvider(localeManager = localeManager) {
-                AynvoraAppContent(
-                    isDark = isDark,
-                    isTarotOpen = isTarotOpen,
-                    aiLifecycleState = aiLifecycleState,
-                    selectionResult = selectionResult,
-                    deviceProfile = deviceProfile,
-                    onToggleTheme = { isDark = !isDark },
-                    onTarotOpen = { isTarotOpen = true },
-                    onTarotClose = { isTarotOpen = false },
-                    onDownloadAi = {
-                        selectionResult?.selectedModel?.let { model ->
-                            coroutineScope.launch { aiLifecycleManager?.downloadAndInstall(model) }
-                        }
-                    },
-                    onCancelAi = { coroutineScope.launch { aiLifecycleManager?.cancelDownload() } },
-                    onDeleteAi = { coroutineScope.launch { aiLifecycleManager?.deleteInstalledModel() } },
-                    onSelectLocale = { locale ->
-                        coroutineScope.launch { localeManager.setLocale(locale) }
-                    },
-                )
-            }
-        } else {
-            // Fallback: no locale manager — CompositionLocals fall back to English defaults
-            AynvoraAppContent(
-                isDark = isDark,
-                isTarotOpen = isTarotOpen,
-                aiLifecycleState = aiLifecycleState,
-                selectionResult = selectionResult,
-                deviceProfile = deviceProfile,
-                onToggleTheme = { isDark = !isDark },
-                onTarotOpen = { isTarotOpen = true },
-                onTarotClose = { isTarotOpen = false },
-                onDownloadAi = {
-                    selectionResult?.selectedModel?.let { model ->
-                        coroutineScope.launch { aiLifecycleManager?.downloadAndInstall(model) }
+    val state by appViewModel.uiState.collectAsState()
+    val localeManager = remember(koin) { koin.getOrNull<AynvoraLocaleManager>() }
+
+    AynvoraTheme(darkTheme = state.isDark) {
+        val content = @Composable {
+            androidx.compose.runtime.CompositionLocalProvider(
+                com.aynvora.designsystem.event.LocalAynvoraEventDispatcher provides { event ->
+                    if (event is AynvoraAppUiEvent) {
+                        appViewModel.onEvent(event)
                     }
                 },
-                onCancelAi = { coroutineScope.launch { aiLifecycleManager?.cancelDownload() } },
-                onDeleteAi = { coroutineScope.launch { aiLifecycleManager?.deleteInstalledModel() } },
-                onSelectLocale = { /* no-op: no locale manager */ },
-            )
+            ) {
+                AynvoraAppContent(
+                    state = state,
+                    onEvent = { event -> appViewModel.onEvent(event) },
+                )
+            }
+        }
+
+        if (localeManager != null) {
+            AynvoraLocalizationProvider(localeManager = localeManager) {
+                content()
+            }
+        } else {
+            content()
         }
     }
 }
 
 @Composable
 private fun AynvoraAppContent(
-    isDark: Boolean,
-    isTarotOpen: Boolean,
-    aiLifecycleState: AiModelLifecycleState,
-    selectionResult: AiModelSelectionResult?,
-    deviceProfile: AiDeviceProfile?,
-    onToggleTheme: () -> Unit,
-    onTarotOpen: () -> Unit,
-    onTarotClose: () -> Unit,
-    onDownloadAi: () -> Unit,
-    onCancelAi: () -> Unit,
-    onDeleteAi: () -> Unit,
-    onSelectLocale: (SupportedLocale) -> Unit,
+    state: AynvoraAppState,
+    onEvent: (AynvoraAppUiEvent) -> Unit,
 ) {
+    val isDark = state.isDark
     // Reactive locale & translator — automatically updated by AynvoraLocalizationProvider
     val locale = LocalAynvoraLocale.current
     val translator = LocalAynvoraTranslator.current
@@ -195,154 +151,305 @@ private fun AynvoraAppContent(
         AynvoraDialogHost {
             val sheetController = LocalCottonSheetController.current
             val sheetParams = AynvoraBottomSheetDefaults.params()
+            var isQaDashboardOpen by remember { mutableStateOf(false) }
 
-            if (isTarotOpen) {
-                TarotRoute(
-                    language = locale.localeId,
-                    onClose = onTarotClose,
-                )
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(backgroundColor)
-                        .padding(horizontal = 20.sdp, vertical = 16.sdp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    // ── Top Header Bar ────────────────────────────────────────
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        // Brand Identity with Official Drawable Logo
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            AynvoraLogo(
-                                size = 46.dp,
-                                variant = if (isDark) AynvoraLogoVariant.Transparent else AynvoraLogoVariant.Default,
-                            )
-                            Spacer(modifier = Modifier.width(12.sdp))
-                            Column {
-                                Text(
-                                    text = translator.translate(TranslationKey.App.AppName),
-                                    style = AynvoraTheme.typography.display36.copy(fontSize = 24.ssp),
-                                    color = AynvoraTheme.colors.Gold,
-                                )
-                                Text(
-                                    // Resolves via translation catalog — no if/else needed
-                                    text = translator.translate(TranslationKey.App.Tagline),
-                                    style = AynvoraTheme.typography.caption12.copy(fontSize = 11.ssp),
-                                    color = secondaryTextColor,
-                                )
-                            }
-                        }
+            // Sync structural UI state with Interaction Sentinel Runtime
+            LaunchedEffect(state, locale, isDark, isQaDashboardOpen) {
+                AndroidInteractionSentinelRuntime.stateSnapshotProvider = {
+                    QaStateSnapshot(
+                        route = when {
+                            isQaDashboardOpen -> "qa_dashboard"
+                            state.isAstrologyOpen -> "astrology"
+                            state.isTarotOpen -> "tarot"
+                            state.isPalmistryOpen -> "palmistry"
+                            state.isNumerologyOpen -> "numerology"
+                            state.isGemstoneOpen -> "gemstone"
+                            state.isGitaOpen -> "gita"
+                            else -> "dashboard"
+                        },
+                        screen = when {
+                            isQaDashboardOpen -> "QaSentinelDashboard"
+                            state.isAstrologyOpen -> "AstrologyScreen"
+                            state.isTarotOpen -> "TarotScreen"
+                            state.isPalmistryOpen -> "PalmistryScreen"
+                            state.isNumerologyOpen -> "NumerologyScreen"
+                            state.isGemstoneOpen -> "GemstoneScreen"
+                            state.isGitaOpen -> "GitaScreen"
+                            state.isLanguagePickerOpen -> "LanguagePickerSheet"
+                            state.selectedFeatureDetail != null -> "FeatureFoundationDetailSheet"
+                            else -> "CoreFeatureDashboard"
+                        },
+                        isSheetOpen = state.isLanguagePickerOpen || state.selectedFeatureDetail != null,
+                        activeLocale = locale.localeId,
+                        isDarkTheme = isDark,
+                        timestampMs = System.currentTimeMillis(),
+                    )
+                }
+            }
 
-                        // Controls: Language Selector & Theme Toggle
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.sdp),
-                        ) {
-                            // Globe button → opens language picker bottom sheet
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(
-                                        if (isDark) AynvoraTheme.colors.CosmicNavy
-                                        else AynvoraTheme.colors.SoftGold,
-                                    )
-                                    .border(
-                                        width = 1.dp,
-                                        color = AynvoraTheme.colors.Gold.copy(alpha = 0.4f),
-                                        shape = RoundedCornerShape(18.dp),
-                                    )
-                                    .clickable {
-                                        sheetController.show(sheetParams) { dismiss ->
-                                            LanguagePickerSheet(
-                                                currentLocale = locale,
-                                                onLocaleSelected = { selected ->
-                                                    onSelectLocale(selected)
-                                                    dismiss()
-                                                },
-                                                onClose = dismiss,
-                                                translator = translator,
-                                                isDark = isDark,
-                                                primaryTextColor = primaryTextColor,
-                                                secondaryTextColor = secondaryTextColor,
-                                            )
-                                        }
+            // Observe bottom sheet state from ViewModel with explicit bidirectional dismissal
+            LaunchedEffect(state.isLanguagePickerOpen) {
+                if (state.isLanguagePickerOpen) {
+                    sheetController.show(sheetParams) { dismiss ->
+                        LanguagePickerSheet(
+                            currentLocale = locale,
+                            onLocaleSelected = { selected ->
+                                onEvent(AynvoraAppUiEvent.SelectLocale(selected))
+                                dismiss()
+                            },
+                            onClose = {
+                                dismiss()
+                                onEvent(AynvoraAppUiEvent.DismissSheet)
+                            },
+                            translator = translator,
+                            isDark = isDark,
+                            primaryTextColor = primaryTextColor,
+                            secondaryTextColor = secondaryTextColor,
+                        )
+                    }
+                } else {
+                    sheetController.dismiss()
+                }
+            }
+
+            LaunchedEffect(state.selectedFeatureDetail) {
+                val desc = state.selectedFeatureDetail
+                if (desc != null) {
+                    sheetController.show(sheetParams) { dismiss ->
+                        FeatureFoundationDetailSheet(
+                            descriptor = desc,
+                            onOpenFeature = { featureId ->
+                                dismiss()
+                                when (featureId) {
+                                    com.aynvora.core.feature.CoreFeatureId.ASTROLOGY -> {
+                                        onEvent(AynvoraAppUiEvent.OpenAstrology)
                                     }
-                                    .padding(horizontal = 12.sdp, vertical = 8.sdp),
-                                contentAlignment = Alignment.Center,
+
+                                    com.aynvora.core.feature.CoreFeatureId.GEMSTONE -> {
+                                        onEvent(AynvoraAppUiEvent.OpenGemstone)
+                                    }
+
+                                    com.aynvora.core.feature.CoreFeatureId.GITA -> {
+                                        onEvent(AynvoraAppUiEvent.OpenGita)
+                                    }
+
+                                    else -> {
+                                        onEvent(AynvoraAppUiEvent.SelectFeature(featureId))
+                                    }
+                                }
+                            },
+                            onClose = {
+                                dismiss()
+                                onEvent(AynvoraAppUiEvent.DismissSheet)
+                            },
+                        )
+                    }
+                } else {
+                    sheetController.dismiss()
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(backgroundColor)
+                    .statusBarsPadding()
+                    .navigationBarsPadding(),
+            ) {
+                if (isQaDashboardOpen) {
+                    QaSentinelDashboard(
+                        onClose = { isQaDashboardOpen = false },
+                    )
+                } else if (state.isAstrologyOpen) {
+                    com.aynvora.ui.astrology.AstrologyRoute(
+                        onClose = { onEvent(AynvoraAppUiEvent.CloseAstrology) },
+                    )
+                } else if (state.isTarotOpen) {
+                    TarotRoute(
+                        language = locale.localeId,
+                        onClose = { onEvent(AynvoraAppUiEvent.CloseTarot) },
+                    )
+                } else if (state.isPalmistryOpen) {
+                    com.aynvora.ui.palmistry.PalmistryRoute(
+                        onClose = { onEvent(AynvoraAppUiEvent.ClosePalmistry) },
+                    )
+                } else if (state.isNumerologyOpen) {
+                    com.aynvora.ui.numerology.NumerologyRoute(
+                        onClose = { onEvent(AynvoraAppUiEvent.CloseNumerology) },
+                    )
+                } else if (state.isGemstoneOpen) {
+                    com.aynvora.ui.gemstone.GemstoneRoute(
+                        onClose = { onEvent(AynvoraAppUiEvent.CloseGemstone) },
+                    )
+                } else if (state.isGitaOpen) {
+                    com.aynvora.ui.gita.GitaRoute(
+                        onClose = { onEvent(AynvoraAppUiEvent.CloseGita) },
+                    )
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                horizontal = AynvoraSpacing.space16,
+                                vertical = AynvoraSpacing.space12
+                            ),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        // ── Top Header Bar ────────────────────────────────────────
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            // Brand Identity with Official Drawable Logo
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(AynvoraSpacing.space10),
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.sdp),
-                                ) {
+                                AynvoraLogo(
+                                    size = 38.dp,
+                                    variant = if (isDark) AynvoraLogoVariant.Transparent else AynvoraLogoVariant.Default,
+                                )
+                                Column {
                                     Text(
-                                        text = "🌐",
-                                        style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
+                                        text = translator.translate(TranslationKey.App.AppName),
+                                        style = AynvoraTheme.typography.title20.copy(
+                                            fontSize = 20.ssp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            letterSpacing = 0.5.sp,
+                                        ),
+                                        color = AynvoraColors.Gold,
                                     )
                                     Text(
-                                        text = locale.nativeName,
+                                        text = translator.translate(TranslationKey.App.Tagline),
                                         style = AynvoraTheme.typography.caption12.copy(fontSize = 11.ssp),
-                                        color = primaryTextColor,
+                                        color = secondaryTextColor,
                                     )
                                 }
                             }
 
-                            // Theme Switcher Button
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(
-                                        if (isDark) AynvoraTheme.colors.CosmicNavy
-                                        else AynvoraTheme.colors.SoftGold,
-                                    )
-                                    .border(
-                                        width = 1.dp,
-                                        color = AynvoraTheme.colors.Gold.copy(alpha = 0.4f),
-                                        shape = RoundedCornerShape(18.dp),
-                                    )
-                                    .clickable(onClick = onToggleTheme),
-                                contentAlignment = Alignment.Center,
+                            // Unified Control Group: Language Selector, Theme Toggle, Sentinel QA
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(AynvoraSpacing.space6),
                             ) {
-                                Text(
-                                    text = if (isDark) "🌙" else "☀️",
-                                    style = AynvoraTheme.typography.body14.copy(fontSize = 14.ssp),
-                                )
-                            }
-                        }
-                    }
+                                val controlBg =
+                                    if (isDark) AynvoraTheme.colors.CosmicNavy else AynvoraTheme.colors.SoftGold
+                                val controlBorder =
+                                    if (isDark) AynvoraTheme.colors.CosmicIndigo else AynvoraColors.Gold.copy(
+                                        alpha = 0.35f
+                                    )
+                                val controlShape = AynvoraShapes.shape8
 
-                    Spacer(modifier = Modifier.height(18.sdp))
-
-                    // ── Central Feature Dashboard ──────────────────────────────
-                    CoreFeatureDashboard(
-                        language = locale.localeId,
-                        aiLifecycleState = aiLifecycleState,
-                        aiSelectionResult = selectionResult,
-                        aiDeviceProfile = deviceProfile,
-                        onDownloadAiClicked = onDownloadAi,
-                        onCancelAiClicked = onCancelAi,
-                        onDeleteAiClicked = onDeleteAi,
-                        onFeatureSelected = { featureId ->
-                            if (featureId == CoreFeatureId.TAROT) {
-                                onTarotOpen()
-                            } else {
-                                val desc = CanonicalCoreFeatures.firstOrNull { it.id == featureId }
-                                if (desc != null) {
-                                    sheetController.show(sheetParams) { dismiss ->
-                                        FeatureFoundationDetailSheet(
-                                            descriptor = desc,
-                                            onClose = dismiss,
+                                // Language Selector Pill
+                                Box(
+                                    modifier = Modifier
+                                        .height(34.dp)
+                                        .clip(controlShape)
+                                        .background(controlBg)
+                                        .border(
+                                            width = 1.dp,
+                                            color = controlBorder,
+                                            shape = controlShape
+                                        )
+                                        .aynvoraClickable(
+                                            event = AynvoraAppUiEvent.OpenLanguagePicker,
+                                            role = Role.Button,
+                                        )
+                                        .qaAction(QaActionId.DASHBOARD_OPEN_LANGUAGE)
+                                        .padding(horizontal = AynvoraSpacing.space10),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(AynvoraSpacing.space4),
+                                    ) {
+                                        Text(
+                                            text = "🌐",
+                                            style = AynvoraTheme.typography.caption12.copy(fontSize = 12.ssp),
+                                        )
+                                        Text(
+                                            text = locale.nativeName,
+                                            style = AynvoraTheme.typography.caption12.copy(
+                                                fontSize = 11.ssp,
+                                                fontWeight = FontWeight.Medium,
+                                            ),
+                                            color = primaryTextColor,
                                         )
                                     }
                                 }
+
+                                // Theme Switcher Button
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(controlShape)
+                                        .background(controlBg)
+                                        .border(
+                                            width = 1.dp,
+                                            color = controlBorder,
+                                            shape = controlShape
+                                        )
+                                        .aynvoraClickable(
+                                            event = AynvoraAppUiEvent.ToggleTheme,
+                                            role = Role.Button,
+                                        )
+                                        .qaAction(QaActionId.DASHBOARD_TOGGLE_THEME),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = if (isDark) "🌙" else "☀️",
+                                        style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
+                                    )
+                                }
+
+                                // Interaction Sentinel QA Dashboard Button
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(controlShape)
+                                        .background(controlBg)
+                                        .border(
+                                            width = 1.dp,
+                                            color = controlBorder,
+                                            shape = controlShape
+                                        )
+                                        .clickable { isQaDashboardOpen = !isQaDashboardOpen }
+                                        .qaAction(
+                                            QaActionId.of(
+                                                "qa",
+                                                "dashboard",
+                                                "button",
+                                                "toggle"
+                                            )
+                                        ),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = "🛡️",
+                                        style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
+                                    )
+                                }
                             }
-                        },
-                        modifier = Modifier.weight(1f),
-                    )
+                        }
+
+                        Spacer(modifier = Modifier.height(AynvoraSpacing.space12))
+
+                        // ── Central Feature Dashboard ──────────────────────────────
+                        CoreFeatureDashboard(
+                            language = locale.localeId,
+                            aiLifecycleState = state.aiLifecycleState,
+                            aiSelectionResult = state.selectionResult,
+                            aiDeviceProfile = state.deviceProfile,
+                            onDownloadAiClicked = { onEvent(AynvoraAppUiEvent.DownloadAi) },
+                            onCancelAiClicked = { onEvent(AynvoraAppUiEvent.CancelAi) },
+                            onDeleteAiClicked = { onEvent(AynvoraAppUiEvent.DeleteAi) },
+                            onFeatureSelected = { featureId ->
+                                onEvent(AynvoraAppUiEvent.SelectFeature(featureId))
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
         }
@@ -434,7 +541,11 @@ private fun LanguageRow(
                 color = borderColor,
                 shape = RoundedCornerShape(12.dp),
             )
-            .clickable(onClick = onClick)
+            .aynvoraClickable(
+                event = AynvoraAppUiEvent.SelectLocale(locale),
+                role = Role.Button,
+                onDispatch = { onClick() },
+            )
             .padding(horizontal = 16.sdp, vertical = 14.sdp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -473,6 +584,7 @@ private fun LanguageRow(
 fun FeatureFoundationDetailSheet(
     descriptor: com.aynvora.core.feature.CoreFeatureDescriptor,
     onClose: () -> Unit,
+    onOpenFeature: ((com.aynvora.core.feature.CoreFeatureId) -> Unit)? = null,
 ) {
     val isDark = AynvoraTheme.isDark
     val translator = LocalAynvoraTranslator.current
@@ -575,9 +687,32 @@ fun FeatureFoundationDetailSheet(
 
             Spacer(modifier = Modifier.height(20.sdp))
 
+            val isDirectOpenFeature =
+                descriptor.id == com.aynvora.core.feature.CoreFeatureId.ASTROLOGY ||
+                        descriptor.id == com.aynvora.core.feature.CoreFeatureId.GEMSTONE
+            val openActionId = when (descriptor.id) {
+                com.aynvora.core.feature.CoreFeatureId.GEMSTONE -> QaActionId.GEMSTONE_OPEN
+                else -> QaActionId.VEDIC_ASTROLOGY_SELECT
+            }
+
+            if (isDirectOpenFeature) {
+                AynvoraButton(
+                    text = translator.translate(TranslationKey.FeatureDetail.FeatureOpen),
+                    variant = AynvoraButtonVariant.Primary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .qaAction(openActionId),
+                    onClick = {
+                        onClose()
+                        onOpenFeature?.invoke(descriptor.id)
+                    },
+                )
+                Spacer(modifier = Modifier.height(10.sdp))
+            }
+
             AynvoraButton(
                 text = translator.translate(TranslationKey.FeatureDetail.UnderstoodClose),
-                variant = AynvoraButtonVariant.Primary,
+                variant = if (isDirectOpenFeature) AynvoraButtonVariant.Outlined else AynvoraButtonVariant.Primary,
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onClose,
             )

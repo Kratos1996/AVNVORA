@@ -20,14 +20,23 @@ import com.aynvora.localization.translation.AynvoraTranslator
 class AynvoraReportTextResolver(
     override val language: ReportLanguage,
 ) : ReportTextResolver {
-    private val locale: SupportedLocale = when (language) {
-        ReportLanguage.ENGLISH -> LanguageRegistry.ENGLISH
-        ReportLanguage.HINDI -> LanguageRegistry.HINDI
-    }
+    private val locale: SupportedLocale = LanguageRegistry.getLocaleOrDefault(language.code)
     private val translator = AynvoraTranslator(locale)
 
     override fun text(key: ReportTextKey): ReportText =
         ReportText(key.key, translator.resolve(key.key))
+
+    override fun rawText(key: String, defaultText: String): String =
+        translator.resolve(key).takeIf { it != key } ?: defaultText
+
+    override fun rawText(key: String, args: Map<String, Any?>, defaultText: String): String {
+        var str = rawText(key, defaultText)
+        for ((k, v) in args) {
+            str = str.replace("{$k}", v?.toString() ?: "")
+        }
+        return str
+    }
+
 
     override fun bodyName(body: CelestialBody): String =
         translator.resolve("astro.body.${body.name.lowercase()}")

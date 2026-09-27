@@ -1,10 +1,12 @@
 package com.aynvora.core.palmistry
 
 import com.aynvora.core.result.AynvoraResult
+import kotlinx.serialization.Serializable
 
 /**
  * Identified hand for palm analysis.
  */
+@Serializable
 enum class HandType {
     LEFT,
     RIGHT,
@@ -13,6 +15,7 @@ enum class HandType {
 /**
  * Major anatomical regions of the palm.
  */
+@Serializable
 enum class PalmRegion {
     MOUNT_OF_JUPITER,
     MOUNT_OF_SATURN,
@@ -28,6 +31,7 @@ enum class PalmRegion {
 /**
  * Canonical palm lines according to traditional Hastrekha.
  */
+@Serializable
 enum class PalmLineType {
     LIFE_LINE,       // Jeevan Rekha
     HEAD_LINE,       // Mastishk Rekha
@@ -39,9 +43,22 @@ enum class PalmLineType {
 }
 
 /**
+ * Evaluated geometric/anatomical shape of the palm.
+ */
+@Serializable
+enum class PalmShape {
+    SQUARE,
+    RECTANGULAR,
+    LONG,
+    WIDE,
+    UNKNOWN,
+}
+
+/**
  * Physical local reference to a captured hand image.
  * Hand images remain local-only by default and must never be uploaded without explicit user consent.
  */
+@Serializable
 data class HandImageReference(
     val imagePath: String,
     val captureTimestampEpochMs: Long,
@@ -52,36 +69,162 @@ data class HandImageReference(
 )
 
 /**
+ * Origin type for palm image input.
+ */
+@Serializable
+enum class PalmImageSourceType {
+    CAMERA,
+    GALLERY,
+    SAMPLE,
+}
+
+/**
+ * Abstract palm image source decoupling camera/platform APIs from domain logic.
+ */
+data class PalmImageSource(
+    val data: ByteArray? = null,
+    val filePath: String? = null,
+    val widthPx: Int = 0,
+    val heightPx: Int = 0,
+    val sourceType: PalmImageSourceType = PalmImageSourceType.CAMERA,
+    val capturedAtEpochMs: Long = 0L,
+)
+
+/**
+ * Validation state for input palm image quality.
+ */
+@Serializable
+enum class ImageQualityState {
+    GOOD,
+    LOW_RESOLUTION,
+    BLURRY,
+    TOO_DARK,
+    TOO_BRIGHT,
+    HAND_NOT_DETECTED,
+    PALM_NOT_VISIBLE,
+    OBSTRUCTED,
+    WRONG_ORIENTATION,
+    UNSUPPORTED,
+}
+
+/**
+ * Result of image quality pre-validation.
+ */
+@Serializable
+data class ImageQualityAssessment(
+    val state: ImageQualityState,
+    val score: Float, // 0.0 to 1.0
+    val issues: List<String> = emptyList(),
+    val guidanceKey: String = "palmistry.quality.guidance.good",
+    val isAcceptable: Boolean = (state == ImageQualityState.GOOD),
+)
+
+/**
+ * Explicit registry of supported vs unsupported Palmistry analysis capabilities.
+ */
+object PalmistryAnalysisCapabilities {
+    const val ANALYSIS_VERSION = "1.0.0"
+
+    val isHandDetectionSupported: Boolean = true
+    val isPalmSegmentationSupported: Boolean = true
+    val isPalmShapeSupported: Boolean = true
+
+    // Major Lines
+    val isLifeLineSupported: Boolean = true
+    val isHeadLineSupported: Boolean = true
+    val isHeartLineSupported: Boolean = true
+    val isFateLineSupported: Boolean = true
+
+    // Minor Lines (Explicitly Unsupported / Not Detected in Phase 8.10)
+    val isSunLineSupported: Boolean = false
+    val isMercuryLineSupported: Boolean = false
+    val isMarriageLineSupported: Boolean = false
+
+    // Mounts
+    val isMountAnalysisSupported: Boolean = true
+}
+
+/**
  * Structured observation from on-device hand vision.
  */
+@Serializable
 data class PalmLineFinding(
     val lineType: PalmLineType,
     val clarityScore: Float, // 0.0 to 1.0
     val curvatureScore: Float,
     val lengthCategory: String, // Short, Medium, Long
     val breaksDetected: Boolean,
+    val detected: Boolean = true,
+    val continuity: Float = 0.8f,
+    val strength: String = "MODERATE", // STRONG, MODERATE, FAINT, NOT_DETECTED
+    val relativeStartRatio: Float = 0.2f,
+    val relativeEndRatio: Float = 0.8f,
 )
 
+@Serializable
 data class PalmMountFinding(
     val region: PalmRegion,
     val prominenceScore: Float, // 0.0 to 1.0
     val markings: List<String> = emptyList(),
+    val detected: Boolean = true,
+    val developmentLevel: String = "BALANCED", // UNDERDEVELOPED, BALANCED, PROMINENT, NOT_DETECTED
 )
 
 /**
  * Complete set of structured findings derived from palm capture.
  */
+@Serializable
 data class PalmFinding(
     val handType: HandType,
     val lines: List<PalmLineFinding>,
-    val mounts: List<PalmMountFinding>,
-    val overallClarity: Float,
+    val mounts: List<PalmMountFinding> = emptyList(),
+    val overallClarity: Float = 0.8f,
+    val shape: PalmShape = PalmShape.RECTANGULAR,
+    val analysisVersion: String = PalmistryAnalysisCapabilities.ANALYSIS_VERSION,
+)
+
+/**
+ * Structured source-controlled traditional Hastrekha interpretation.
+ */
+@Serializable
+data class PalmistryMeaning(
+    val featureType: String,
+    val condition: String,
+    val title: String = "",
+    val description: String = "",
+    val traditionalInterpretation: String = "",
+    val caution: String = "",
+    val sourceReference: String = "Samudrika Shastra (Classical Hastrekha Tradition)",
+    val contentVersion: String = "1.0.0",
+    val language: String = "en",
+    val titleKey: String = "",
+    val descriptionKey: String = "",
+    val interpretationKey: String = "",
+    val cautionKey: String = "",
+)
+
+
+/**
+ * Structured atomic evidence item grounded in image findings.
+ */
+@Serializable
+data class PalmistryEvidence(
+    val evidenceId: String,
+    val readingId: String,
+    val hand: HandType,
+    val featureType: String,
+    val observation: String,
+    val confidence: Float, // Image/feature measurement confidence (0.0 to 1.0), NOT future probability
+    val analysisVersion: String = PalmistryAnalysisCapabilities.ANALYSIS_VERSION,
+    val source: String = "AYNVORA Palm Vision Engine",
+    val contentVersion: String = "1.0.0",
 )
 
 /**
  * Result of traditional Hastrekha evaluation.
  * Note: Non-medical, non-fatalistic; provides self-reflection patterns only.
  */
+@Serializable
 data class PalmistryAnalysisResult(
     val sessionId: String,
     val handType: HandType,
@@ -89,6 +232,138 @@ data class PalmistryAnalysisResult(
     val reflectiveTendencies: List<String>,
     val traditionalCommentary: Map<PalmLineType, String>,
     val ethicalDisclaimer: String = "Hastrekha observations are for self-reflection and personal insight. They do not constitute medical, psychological, or lifespan predictions.",
+    val analysisVersion: String = PalmistryAnalysisCapabilities.ANALYSIS_VERSION,
+)
+
+/**
+ * Chronological event types in a palm reading timeline.
+ */
+@Serializable
+enum class PalmTimelineEventType {
+    READING_STARTED,
+    HAND_SELECTED,
+    IMAGE_CAPTURED,
+    QUALITY_VALIDATED,
+    ANALYSIS_COMPLETED,
+    FEATURES_DETECTED,
+    QUESTION_ASKED,
+    AI_ANSWER_GENERATED,
+    AI_ANSWER_FALLBACK,
+    FEEDBACK_SUBMITTED,
+    READING_SATISFIED,
+    READING_COMPLETED,
+}
+
+/**
+ * Atomic chronological timeline event for Palmistry.
+ */
+@Serializable
+data class PalmTimelineEvent(
+    val eventId: String,
+    val readingId: String,
+    val timestampEpochMs: Long,
+    val eventType: PalmTimelineEventType,
+    val summary: String,
+    val language: String = "en",
+    val metadata: Map<String, String> = emptyMap(),
+)
+
+/**
+ * Lifecycle status of a Palm reading session.
+ */
+@Serializable
+enum class PalmReadingStatus {
+    ACTIVE,
+    SATISFIED,
+    COMPLETED,
+}
+
+/**
+ * Status of question answering.
+ */
+@Serializable
+enum class PalmAnswerStatus {
+    GENERATING,
+    COMPLETED,
+    INSUFFICIENT_EVIDENCE,
+    FALLBACK,
+    FAILED,
+}
+
+/**
+ * Conversational follow-up question within an active Palm reading.
+ */
+@Serializable
+data class PalmQuestion(
+    val questionId: String,
+    val readingId: String,
+    val questionText: String,
+    val language: String,
+    val timestampEpochMs: Long,
+    val status: PalmAnswerStatus = PalmAnswerStatus.GENERATING,
+    val answerSummary: String? = null,
+    val answerInterpretation: String? = null,
+    val keyThemes: List<String> = emptyList(),
+    val supportingEvidenceIds: List<String> = emptyList(),
+    val fallbackUsed: Boolean = false,
+    val modelMetadata: String? = null,
+)
+
+/**
+ * User feedback on the entire reading session.
+ */
+@Serializable
+data class PalmFeedback(
+    val readingId: String,
+    val ratingStars: Int, // 1 to 5
+    val improvementComment: String? = null,
+    val timestampEpochMs: Long,
+)
+
+/**
+ * Category feedback on individual palm feature cards.
+ */
+@Serializable
+enum class PalmFeatureFeedbackCategory {
+    CLEAR,
+    CONFUSING,
+    NEED_MORE_CONTEXT,
+}
+
+@Serializable
+data class PalmFeatureFeedback(
+    val readingId: String,
+    val featureType: String,
+    val category: PalmFeatureFeedbackCategory,
+    val timestampEpochMs: Long,
+)
+
+@Serializable
+data class PalmAnswerFeedback(
+    val readingId: String,
+    val questionId: String,
+    val isHelpful: Boolean,
+    val timestampEpochMs: Long,
+)
+
+/**
+ * Complete Palm reading session.
+ */
+@Serializable
+data class PalmReadingSession(
+    val id: String,
+    val startedAtEpochMs: Long,
+    val handType: HandType,
+    val imageReference: HandImageReference? = null,
+    val qualityAssessment: ImageQualityAssessment? = null,
+    val finding: PalmFinding? = null,
+    val meanings: List<PalmistryMeaning> = emptyList(),
+    val analysisResult: PalmistryAnalysisResult? = null,
+    val questions: List<PalmQuestion> = emptyList(),
+    val timeline: List<PalmTimelineEvent> = emptyList(),
+    val feedback: PalmFeedback? = null,
+    val status: PalmReadingStatus = PalmReadingStatus.ACTIVE,
+    val language: String = "en",
 )
 
 /**
@@ -97,8 +372,21 @@ data class PalmistryAnalysisResult(
 interface PalmistryRepository {
     suspend fun saveSession(
         reference: HandImageReference,
-        finding: PalmFinding
+        finding: PalmFinding,
     ): AynvoraResult<String>
 
     suspend fun getAnalysisResult(sessionId: String): AynvoraResult<PalmistryAnalysisResult>
+}
+
+/**
+ * Extended repository contract for complete Palmistry sessions (Phase 8.10).
+ */
+interface PalmSessionRepository {
+    suspend fun saveSession(session: PalmReadingSession): AynvoraResult<Unit>
+    suspend fun getSession(sessionId: String): AynvoraResult<PalmReadingSession?>
+    suspend fun getLatestSession(): AynvoraResult<PalmReadingSession?>
+    suspend fun getAllSessions(): AynvoraResult<List<PalmReadingSession>>
+    suspend fun deleteSession(sessionId: String): AynvoraResult<Unit>
+    suspend fun recordFeatureFeedback(feedback: PalmFeatureFeedback): AynvoraResult<Unit>
+    suspend fun recordAnswerFeedback(feedback: PalmAnswerFeedback): AynvoraResult<Unit>
 }

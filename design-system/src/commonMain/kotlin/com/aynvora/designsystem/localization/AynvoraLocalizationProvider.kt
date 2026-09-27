@@ -8,11 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.aynvora.designsystem.AynvoraMotion
 import com.aynvora.localization.locale.AynvoraLocaleManager
 import com.aynvora.localization.locale.SupportedLocale
 import com.aynvora.localization.locale.TextDirection
 import com.aynvora.localization.translation.AynvoraTranslator
-import com.aynvora.designsystem.AynvoraMotion
 
 /**
  * Root localization provider for AYNVORA Compose UI.
@@ -61,13 +61,18 @@ fun AynvoraLocalizationProviderForLocale(
 ) {
     val translator = AynvoraTranslator(locale)
     val isRtl = locale.direction == TextDirection.RTL
+    val layoutDirection =
+        if (isRtl) androidx.compose.ui.unit.LayoutDirection.Rtl else androidx.compose.ui.unit.LayoutDirection.Ltr
 
     CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalLayoutDirection provides layoutDirection,
         LocalAynvoraLocale provides locale,
         LocalAynvoraTranslator provides translator,
+        LocalAynvoraLocalizationProvider provides translator,
         LocalAynvoraIsRtl provides isRtl,
     ) {
-        if (useReducedMotion) {
+
+    if (useReducedMotion) {
             // Skip animation for reduced-motion users
             content()
         } else {

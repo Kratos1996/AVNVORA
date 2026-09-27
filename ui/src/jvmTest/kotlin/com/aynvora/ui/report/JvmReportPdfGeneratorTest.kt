@@ -16,6 +16,7 @@ import com.aynvora.core.report.ReportTextKey
 import com.aynvora.core.report.ReportVersion
 import com.aynvora.localization.report.AynvoraReportTextResolver
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -70,5 +71,70 @@ class JvmReportPdfGeneratorTest {
         assertTrue(Regex("/Count ([2-9]|[1-9][0-9]+)").containsMatchIn(pdfText))
         assertTrue(pdfText.contains("%%EOF"))
         assertTrue(generated.artifact.fileName.startsWith("kundali-"))
+    }
+
+    @Test
+    fun testGeneratesPortablePdfAcrossMultipleSupportedLanguages() {
+        val sampleLanguages = listOf(
+            ReportLanguage.ENGLISH,
+            ReportLanguage.HINDI,
+            ReportLanguage.ARABIC,
+            ReportLanguage.GUJARATI,
+            ReportLanguage.BENGALI,
+            ReportLanguage.TAMIL
+        )
+
+        for (language in sampleLanguages) {
+            val resolver = AynvoraReportTextResolver(language)
+            val document = ReportDocumentFactory.create(
+                metadata = ReportMetadata(
+                    reportId = "test-report-${language.code}",
+                    reportTypeId = "kundali",
+                    generatedAtEpochMs = 1_700_000_000_000L,
+                    language = language,
+                    version = ReportVersion("1.0.0", "engine-1", "content-1"),
+                    identity = ReportIdentity(),
+                    feature = CoreFeatureId.ASTROLOGY,
+                    featureStatus = ReportFeatureStatus.IMPLEMENTED
+                ),
+                title = resolver.text(ReportTextKey.KUNDALI_TITLE),
+                sections = listOf(
+                    ReportSection(
+                        id = "birth_details",
+                        title = resolver.text(ReportTextKey.BIRTH_DETAILS),
+                        blocks = listOf(
+                            ReportKeyValue(resolver.text(ReportTextKey.BIRTH_DATE), "15/05/1990"),
+                            ReportKeyValue(
+                                resolver.text(ReportTextKey.ASCENDANT),
+                                resolver.text(ReportTextKey.ASCENDANT).value
+                            )
+                        )
+                    )
+                ),
+                availability = emptyList(),
+                disclaimer = ReportDisclaimer(
+                    title = resolver.text(ReportTextKey.DISCLAIMER_TITLE),
+                    body = resolver.text(ReportTextKey.DISCLAIMER_TEXT)
+                ),
+            )
+
+            val lines = document.toReportPdfLines(resolver)
+            assertTrue(lines.isNotEmpty(), "PDF lines must not be empty for $language")
+            // Ensure no raw keys appear in lines
+            for (line in lines) {
+                assertFalse(
+                    line.text.startsWith("report.section.") || line.text.startsWith("report.kundali."),
+                    "Line should be localized, not raw key: '${line.text}'"
+                )
+            }
+
+            val generator = JvmReportPdfGenerator(resolver)
+            val result = assertIs<ReportPdfResult.Generated>(generator.generate(document))
+            val bytes = result.artifact.bytes
+            assertTrue(bytes.take(8).toByteArray().decodeToString().startsWith("%PDF-1.4"))
+            val pdfText = bytes.decodeToString()
+            assertTrue(pdfText.contains("%%EOF"))
+            assertTrue(result.artifact.fileName.endsWith(".pdf"))
+        }
     }
 }

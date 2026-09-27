@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
@@ -52,14 +51,23 @@ enum class AynvoraButtonVariant {
 @Composable
 fun AynvoraButton(
     text: String,
-    onClick: () -> Unit,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
+    event: com.aynvora.core.event.AynvoraClickEvent? = null,
     variant: AynvoraButtonVariant = AynvoraButtonVariant.Primary,
     enabled: Boolean = true,
     loading: Boolean = false,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
 ) {
+    val ambientDispatcher = com.aynvora.designsystem.event.LocalAynvoraEventDispatcher.current
+    val effectiveOnClick: () -> Unit = {
+        if (event != null) {
+            ambientDispatcher?.invoke(event)
+        }
+        onClick()
+    }
+
     val isActionable = enabled && !loading
     val shape = AynvoraShapes.shape8
     val minHeight = 48.dp
@@ -71,7 +79,7 @@ fun AynvoraButton(
     when (variant) {
         AynvoraButtonVariant.Primary -> {
             Button(
-                onClick = onClick,
+                onClick = effectiveOnClick,
                 modifier = modifier
                     .defaultMinSize(minHeight = minHeight)
                     .semantics { role = Role.Button },
@@ -96,7 +104,7 @@ fun AynvoraButton(
         }
         AynvoraButtonVariant.Secondary -> {
             Button(
-                onClick = onClick,
+                onClick = effectiveOnClick,
                 modifier = modifier
                     .defaultMinSize(minHeight = minHeight)
                     .semantics { role = Role.Button },
@@ -121,7 +129,7 @@ fun AynvoraButton(
         }
         AynvoraButtonVariant.Outlined -> {
             OutlinedButton(
-                onClick = onClick,
+                onClick = effectiveOnClick,
                 modifier = modifier
                     .defaultMinSize(minHeight = minHeight)
                     .semantics { role = Role.Button },
@@ -148,7 +156,7 @@ fun AynvoraButton(
         }
         AynvoraButtonVariant.Ghost -> {
             TextButton(
-                onClick = onClick,
+                onClick = effectiveOnClick,
                 modifier = modifier
                     .defaultMinSize(minHeight = minHeight)
                     .semantics { role = Role.Button },

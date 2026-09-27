@@ -38,7 +38,9 @@ sealed class AnalyticsEvent(
     val name: String,
     /** Optional structured parameters — string, long, double values only. */
     val params: Map<String, Any> = emptyMap(),
-) {
+) : AynvoraAnalyticsEvent {
+    override val eventName: String get() = name
+    override val parameters: Map<String, Any> get() = params
 
     // ──────────────────────────────────────────────────────────────────────────
     // App Lifecycle
@@ -368,13 +370,19 @@ sealed class AnalyticsEvent(
      * @param spreadId Spread identifier.
      * @param cardCount Total cards to be drawn.
      */
-    class TarotReadingStarted(spreadId: String, cardCount: Int) : AnalyticsEvent(
+    class TarotReadingStarted(
+        spreadId: String,
+        cardCount: Int,
+        language: String = "en",
+    ) : AnalyticsEvent(
         name = "tarot_reading_started",
         params = mapOf(
             Param.SPREAD_ID to spreadId,
             Param.CARD_COUNT to cardCount.toLong(),
+            Param.LANGUAGE_CODE to language,
         ),
     )
+
 
     /**
      * A single card was drawn.
@@ -514,6 +522,18 @@ sealed class AnalyticsEvent(
     class AiDownloadCompleted(modelId: String, durationMs: Long) : AnalyticsEvent(
         name = "ai_download_completed",
         params = mapOf(Param.MODEL_ID to modelId, Param.DURATION_MS to durationMs),
+    )
+
+    /** AI model download cancelled by user. */
+    class AiDownloadCancelled(modelId: String) : AnalyticsEvent(
+        name = "ai_download_cancelled",
+        params = mapOf(Param.MODEL_ID to modelId),
+    )
+
+    /** AI model deleted by user from local storage. */
+    class AiModelDeleted(modelId: String) : AnalyticsEvent(
+        name = "ai_model_deleted",
+        params = mapOf(Param.MODEL_ID to modelId),
     )
 
     /** AI model loaded into memory. */
@@ -725,7 +745,19 @@ sealed class AnalyticsEvent(
         const val FALLBACK_REASON = "fallback_reason"
         const val DURATION_BUCKET = "duration_bucket"
         const val TOKENS_GENERATED = "tokens_generated"
+
+        // Phase 8.9 additions (Tarot Conversational Experience)
+        const val READING_STATE = "reading_state"
+        const val QUESTION_SEQ_NUM = "question_sequence_number"
+        const val MODEL_VERSION = "model_version"
+        const val PROMPT_VERSION = "prompt_version"
+        const val FALLBACK_USED = "fallback_used"
+        const val FEEDBACK_RATING = "feedback_rating"
+        const val FEEDBACK_TYPE = "feedback_type"
+        const val TIMELINE_EVENT_TYPE = "timeline_event_type"
+        const val ANALYSIS_VERSION = "analysis_version"
     }
+
 
     // ──────────────────────────────────────────────────────────────────────────
     // Reference Validation (Engineering only — no user-facing tracking)
@@ -777,6 +809,106 @@ sealed class AnalyticsEvent(
         params = mapOf(Param.NUMEROLOGY_SYSTEM to system),
     )
 
+    /**
+     * Numerology calculation started.
+     * @param rulesetId The numerology ruleset identifier.
+     */
+    class NumerologyCalculationStarted(rulesetId: String) : AnalyticsEvent(
+        name = "numerology_calculation_started",
+        params = mapOf(Param.RULESET_ID to rulesetId),
+    )
+
+    /**
+     * Numerology calculation completed successfully.
+     * @param rulesetId The numerology ruleset identifier.
+     */
+    class NumerologyCalculationCompleted(rulesetId: String) : AnalyticsEvent(
+        name = "numerology_calculation_completed",
+        params = mapOf(Param.RULESET_ID to rulesetId),
+    )
+
+    /**
+     * Numerology calculation failed.
+     * @param errorCode Sanitized error code (no PII).
+     */
+    class NumerologyCalculationFailed(errorCode: String) : AnalyticsEvent(
+        name = "numerology_calculation_failed",
+        params = mapOf(Param.ERROR_CODE to errorCode),
+    )
+
+    class NumerologyRulesetSelected(rulesetId: String) : AnalyticsEvent(
+        name = "numerology_ruleset_selected",
+        params = mapOf(Param.RULESET_ID to rulesetId),
+    )
+
+    class NumerologyResultViewed(rulesetId: String) : AnalyticsEvent(
+        name = "numerology_result_viewed",
+        params = mapOf(Param.RULESET_ID to rulesetId),
+    )
+
+    class NumerologyTraceViewed(rulesetId: String) : AnalyticsEvent(
+        name = "numerology_trace_viewed",
+        params = mapOf(Param.RULESET_ID to rulesetId),
+    )
+
+    object NumerologyMethodCompared : AnalyticsEvent("numerology_method_compared")
+
+    class NumerologyReportRequested(rulesetId: String) : AnalyticsEvent(
+        name = "numerology_report_requested",
+        params = mapOf(Param.RULESET_ID to rulesetId),
+    )
+
+    object NumerologyHistoryOpened : AnalyticsEvent("numerology_history_opened")
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Numerology Conversational AI Events (Phase 10.6) - Zero PII
+    // ──────────────────────────────────────────────────────────────────────────
+
+    class NumerologyAiOpened(rulesetId: String) : AnalyticsEvent(
+        name = "numerology_ai_opened",
+        params = mapOf(Param.RULESET_ID to rulesetId),
+    )
+
+    class NumerologyAiQuestionSubmitted(rulesetId: String, category: String) : AnalyticsEvent(
+        name = "numerology_ai_question_submitted",
+        params = mapOf(Param.RULESET_ID to rulesetId, "question_category" to category),
+    )
+
+    class NumerologyAiExplanationStarted(rulesetId: String, category: String) : AnalyticsEvent(
+        name = "numerology_ai_explanation_started",
+        params = mapOf(Param.RULESET_ID to rulesetId, "question_category" to category),
+    )
+
+    class NumerologyAiExplanationCompleted(
+        rulesetId: String,
+        category: String,
+        fallbackUsed: Boolean,
+        modelId: String? = null,
+    ) : AnalyticsEvent(
+        name = "numerology_ai_explanation_completed",
+        params = buildMap {
+            put(Param.RULESET_ID, rulesetId)
+            put("question_category", category)
+            put("fallback_used", fallbackUsed.toString())
+            if (modelId != null) put("model_id", modelId)
+        },
+    )
+
+    class NumerologyAiExplanationFailed(rulesetId: String, errorCode: String) : AnalyticsEvent(
+        name = "numerology_ai_explanation_failed",
+        params = mapOf(Param.RULESET_ID to rulesetId, Param.ERROR_CODE to errorCode),
+    )
+
+    class NumerologyAiFallbackUsed(rulesetId: String, reason: String) : AnalyticsEvent(
+        name = "numerology_ai_fallback_used",
+        params = mapOf(Param.RULESET_ID to rulesetId, "fallback_reason" to reason),
+    )
+
+    class NumerologyAiClarificationRequested(rulesetId: String, category: String) : AnalyticsEvent(
+        name = "numerology_ai_clarification_requested",
+        params = mapOf(Param.RULESET_ID to rulesetId, "question_category" to category),
+    )
+
     // ──────────────────────────────────────────────────────────────────────────
     // Practice Domain Events (Rudraksha, Jadi, Yantra)
     // ──────────────────────────────────────────────────────────────────────────
@@ -789,4 +921,195 @@ sealed class AnalyticsEvent(
 
     /** User opened the Yantra feature. */
     object YantraOpened : AnalyticsEvent("yantra_opened")
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Tarot Conversational Experience Events (Phase 8.9)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /** Reading lock dialog shown to user (one reading per 24 hours). */
+    class TarotReadingLockShown(readingState: String) : AnalyticsEvent(
+        name = "tarot_reading_lock_shown",
+        params = mapOf(Param.READING_STATE to readingState),
+    )
+
+    /** User submitted a follow-up question in the active reading timeline. */
+    class TarotQuestionSubmitted(sequenceNumber: Int, language: String) : AnalyticsEvent(
+        name = "tarot_question_submitted",
+        params = mapOf(
+            Param.QUESTION_SEQ_NUM to sequenceNumber,
+            Param.LANGUAGE_CODE to language,
+        ),
+    )
+
+    /** AI generated an answer for a question. */
+    class TarotAiAnswerGenerated(
+        modelId: String?,
+        modelVersion: String?,
+        promptVersion: String,
+        fallbackUsed: Boolean,
+        language: String,
+    ) : AnalyticsEvent(
+        name = "tarot_ai_answer_generated",
+        params = buildMap {
+            modelId?.let { put(Param.MODEL_ID, it) }
+            modelVersion?.let { put(Param.MODEL_VERSION, it) }
+            put(Param.PROMPT_VERSION, promptVersion)
+            put(Param.FALLBACK_USED, fallbackUsed)
+            put(Param.LANGUAGE_CODE, language)
+        },
+    )
+
+    /** AI answer generation failed. */
+    class TarotAiAnswerFailed(errorCode: String, language: String) : AnalyticsEvent(
+        name = "tarot_ai_answer_failed",
+        params = mapOf(
+            Param.ERROR_CODE to errorCode,
+            Param.LANGUAGE_CODE to language,
+        ),
+    )
+
+    /** AI recommended drawing a clarification card. */
+    object TarotClarificationRecommended : AnalyticsEvent("tarot_clarification_recommended")
+
+    /** User requested a clarification card. */
+    object TarotClarificationRequested : AnalyticsEvent("tarot_clarification_requested")
+
+    /** User accepted drawing a clarification card. */
+    object TarotClarificationAccepted : AnalyticsEvent("tarot_clarification_accepted")
+
+    /** User revealed drawn card. */
+    object TarotCardRevealed : AnalyticsEvent("tarot_card_revealed")
+
+    /** Clarification card drawn deterministically by TarotDrawEngine. */
+    class TarotClarificationDrawn(cardId: String, orientation: String) : AnalyticsEvent(
+        name = "tarot_clarification_drawn",
+        params = mapOf(
+            Param.CARD_ID to cardId,
+            Param.ORIENTATION to orientation,
+        ),
+    )
+
+    /** User marked reading as satisfied. */
+    object TarotReadingSatisfied : AnalyticsEvent("tarot_reading_satisfied")
+
+    /** Session-level star feedback submitted. */
+    class TarotFeedbackSubmitted(starRating: Int, language: String) : AnalyticsEvent(
+        name = "tarot_feedback_submitted",
+        params = mapOf(
+            Param.FEEDBACK_RATING to starRating,
+            Param.LANGUAGE_CODE to language,
+        ),
+    )
+
+    /** Answer-level feedback submitted. */
+    class TarotAnswerFeedbackSubmitted(starRating: Int, language: String) : AnalyticsEvent(
+        name = "tarot_answer_feedback_submitted",
+        params = mapOf(
+            Param.FEEDBACK_RATING to starRating,
+            Param.LANGUAGE_CODE to language,
+        ),
+    )
+
+    /** Card-level swipe/category feedback submitted. */
+    class TarotCardFeedbackSubmitted(cardId: String, feedbackType: String) : AnalyticsEvent(
+        name = "tarot_card_feedback_submitted",
+        params = mapOf(
+            Param.CARD_ID to cardId,
+            Param.FEEDBACK_TYPE to feedbackType,
+        ),
+    )
+
+    /** User switched language within Tarot experience. */
+    class TarotLanguageChanged(language: String) : AnalyticsEvent(
+        name = "tarot_language_changed",
+        params = mapOf(Param.LANGUAGE_CODE to language),
+    )
+
+    /** User inspected a timeline event in history. */
+    class TarotTimelineEventOpened(eventType: String) : AnalyticsEvent(
+        name = "tarot_timeline_event_opened",
+        params = mapOf(Param.TIMELINE_EVENT_TYPE to eventType),
+    )
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Phase 8.10: Palmistry / Hastrekha Production Analytics (Strictly Zero PII)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /** Palmistry ethical disclaimer viewed. */
+    object PalmistryDisclaimerViewed : AnalyticsEvent("palmistry_disclaimer_viewed")
+
+    /** Palmistry experience entered. */
+    object PalmistryOpened : AnalyticsEvent("palmistry_opened")
+
+    /** User chose left or right hand. */
+    class PalmistryHandSelected(hand: String) : AnalyticsEvent(
+        name = "palmistry_hand_selected",
+        params = mapOf(Param.HAND_TYPE to hand),
+    )
+
+    /** User captured or selected a palm image. Zero image data sent. */
+    object PalmistryImageSelected : AnalyticsEvent("palmistry_image_selected")
+
+    /** Local on-device palm analysis started. */
+    class PalmistryAnalysisStarted(hand: String) : AnalyticsEvent(
+        name = "palmistry_analysis_started",
+        params = mapOf(Param.HAND_TYPE to hand),
+    )
+
+    /** Local on-device palm analysis succeeded. */
+    class PalmistryAnalysisCompleted(hand: String, analysisVersion: String) : AnalyticsEvent(
+        name = "palmistry_analysis_completed",
+        params = mapOf(
+            Param.HAND_TYPE to hand,
+            Param.ANALYSIS_VERSION to analysisVersion,
+        ),
+    )
+
+    /** Palm analysis failed or image quality insufficient. */
+    class PalmistryAnalysisFailed(failureCode: String) : AnalyticsEvent(
+        name = "palmistry_analysis_failed",
+        params = mapOf(Param.FAILURE_CODE to failureCode),
+    )
+
+    /** Follow-up question submitted. Zero question text sent. */
+    class PalmistryQuestionSubmitted(language: String) : AnalyticsEvent(
+        name = "palmistry_question_submitted",
+        params = mapOf(Param.LANGUAGE_CODE to language),
+    )
+
+    /** AI explanation generated for palmistry. */
+    class PalmistryAiAnswerGenerated(modelId: String, fallbackUsed: Boolean) : AnalyticsEvent(
+        name = "palmistry_ai_answer_generated",
+        params = mapOf(
+            Param.MODEL_ID to modelId,
+            Param.FALLBACK_USED to fallbackUsed,
+        ),
+    )
+
+    /** Deterministic fallback used for palm explanation. */
+    class PalmistryAiFallbackUsed(reason: String) : AnalyticsEvent(
+        name = "palmistry_ai_fallback_used",
+        params = mapOf(Param.FALLBACK_REASON to reason),
+    )
+
+    /** User submitted 1-5 star feedback. */
+    class PalmistryFeedbackSubmitted(stars: Int) : AnalyticsEvent(
+        name = "palmistry_feedback_submitted",
+        params = mapOf(Param.FEEDBACK_RATING to stars),
+    )
+
+    /** Palmistry report document produced. */
+    class PalmistryReportGenerated(language: String) : AnalyticsEvent(
+        name = "palmistry_report_generated",
+        params = mapOf(Param.LANGUAGE_CODE to language),
+    )
+
+    /** Palmistry PDF export triggered. */
+    object PalmistryPdfGenerated : AnalyticsEvent("palmistry_pdf_generated")
+
+    /** User switched language within Palmistry experience. */
+    class PalmistryLanguageChanged(language: String) : AnalyticsEvent(
+        name = "palmistry_language_changed",
+        params = mapOf(Param.LANGUAGE_CODE to language),
+    )
 }

@@ -177,3 +177,77 @@ Phase 8.8 governance: Real Native On-Device AI Runtime Integration & Verificatio
 - Native Runtime Verification Suite: 11 tests in `AiNativeRuntimeVerificationTest` covering format
   validation, dynamic RAM safety, cold/warm load, native cancellation, context overflow, resource
   cleanup, and clean deterministic fallback.
+
+Phase 8.10 governance: Palmistry / Hastrekha Complete Production Experience.
+
+- Production Implementation: Standalone Hastrekha experience with real image input (
+  `PalmImageSource`),
+  deterministic image quality verification (`GOOD`, `LOW_RESOLUTION`, `BLURRY`, `TOO_DARK`,
+  `TOO_BRIGHT`,
+  `HAND_NOT_DETECTED`, `PALM_NOT_VISIBLE`, `OBSTRUCTED`, `WRONG_ORIENTATION`, `UNSUPPORTED`).
+- Real Computer Vision Engine: Real luminance, variance, and gradient feature extraction across
+  anatomical
+  quadrants (`PalmImageAnalysisEngine`). Zero fake line coordinates, zero synthetic line generation;
+  unsupported features (`SUN_LINE`, `MERCURY_LINE`, `MOUNTS`, `FINGER_ANALYSIS`) are honestly marked
+  `NOT_DETECTED` or `UNSUPPORTED`.
+- Evidence & Classical Provenance: Structured `PalmFinding` and `PalmistryEvidence` models with
+  immutable source provenance rooted in classical *Hastasamudrika Shastra* (
+  `PalmistryContentPackage`).
+  Full bilingual content in English and Hindi.
+- On-Device AI Explanation: `GroundedSlmPalmistryExplanationEngine` connected via
+  `PalmistryFeatureDataConnector` -> `EvidenceGraph` -> `DataSufficiencyValidator` ->
+  `AiContextBuilder` ->
+  `AiRequest` -> on-device SLM -> `AiOutputValidator`, with infallible deterministic fallback
+  (`DeterministicPalmistryExplanationEngine`). AI cannot mutate findings, fabricate sources, or
+  access DAOs.
+- Follow-up Q&A: `PalmQuestionEngine` with evidence-bounded filtering and honest
+  `INSUFFICIENT_EVIDENCE`
+  handling when queried lines are unobserved.
+- Chronological Timeline & Multi-Tier Feedback: 8 typed timeline events; 1-5 star ratings,
+  per-answer
+  helpfulness, per-feature clarity triage, and anonymous `AiImprovementSignal` generation (on-device
+  models
+  remain strictly immutable).
+- Report & PDF Export: Integrated with AYNVORA Report Engine (`ReportType.PALMISTRY`,
+  `PalmistryReportGenerator`) and `ReportPdfGenerator`.
+- Privacy & Navigation: Strictly local-only processing (zero cloud upload, zero raw images in
+  analytics or
+  Room database). User-deletable sessions. Mounted top-right language switcher on all 10 Palmistry
+  screens
+  preserving state. Reachable directly from root `AynvoraApp` navigation.
+
+Phase 9.0 governance: AYNVORA Unified Event-Driven App SDK & Migration.
+
+- Architecture Foundation: Established comprehensive typed event pipeline in
+  `com.aynvora.core.event`:
+  `AynvoraEvent`, `AynvoraClickEvent`, `AynvoraEventPayload` (sealed typed payloads),
+  `AynvoraEventMetadata`,
+  `AynvoraEffect` / `AynvoraNavigationTarget` (one-shot commands), `AynvoraEventGuard` (
+  `StandardAynvoraEventGuard`),
+  `AynvoraEventDeduplicator` (`DefaultAynvoraEventDeduplicator`), `AynvoraEventDispatcher` (
+  `DefaultAynvoraEventDispatcher`),
+  and `AynvoraBaseViewModel<Event, State, Effect>`.
+- UI Decoupling: UI composables strictly render State, emit Events via `aynvoraClickable` or
+  `onEvent`, and observe
+  Effects. Direct UI navigation calls, direct UI repository calls, and direct UI analytics calls
+  removed.
+- Design System Integration: Integrated `aynvoraClickable` modifier and `event: AynvoraClickEvent?`
+  parameters into
+  `AynvoraButton` and `AynvoraCard`, routing automatically to ambient `LocalAynvoraEventDispatcher`.
+- Security & Idempotency: `StandardAynvoraEventGuard` validates event structure, rejects
+  unauthorized namespaces (`admin.*`,
+  `system.*`), validates feature bounds, and prevents impossible transitions.
+  `DefaultAynvoraEventDeduplicator` prevents
+  rapid double-tap and enforces single-execution idempotency on critical actions (
+  `ai.download.clicked`, `ai.delete.clicked`).
+- Centralized Analytics Bridge: `AynvoraEventAnalyticsBridge` and
+  `DefaultAynvoraEventAnalyticsMapper` observe events
+  dispatched through the pipeline, mapping approved events to `AnalyticsEvent`s. Strict
+  `AnalyticsSafePayload` reject list
+  guarantees zero PII, passwords, prompts, or raw image bytes reach analytics. Tracking failures are
+  isolated and never break
+  business execution.
+- Full App Migration: Migrated root app (`AynvoraApp`, `AynvoraAppViewModel`), Dashboard (
+  `CoreFeatureDashboard`), AI Setup
+  (`AiSetupCard`), and Tarot flow (`TarotRoute`, `TarotViewModel`). 37-point test suite verified in
+  `AynvoraEventSdkTest`.

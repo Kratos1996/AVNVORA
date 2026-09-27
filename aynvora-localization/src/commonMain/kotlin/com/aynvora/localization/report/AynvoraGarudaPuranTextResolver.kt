@@ -12,10 +12,7 @@ import com.aynvora.localization.translation.AynvoraTranslator
 /** Resolves feature labels from the same bundled English/Hindi catalogs used by reports. */
 class AynvoraGarudaPuranTextResolver(language: ReportLanguage) : GarudaPuranTextResolver {
     override val languageCode: String = language.code
-    private val locale: SupportedLocale = when (language) {
-        ReportLanguage.ENGLISH -> LanguageRegistry.ENGLISH
-        ReportLanguage.HINDI -> LanguageRegistry.HINDI
-    }
+    private val locale: SupportedLocale = LanguageRegistry.getLocaleOrDefault(language.code)
     private val translator = AynvoraTranslator(locale)
 
     override fun text(key: GarudaPuranTextKey): String = translator.resolve(key.key)

@@ -293,5 +293,115 @@ This document is the highest-level engineering and product governance rulebook f
 72. **Feature Registry Rule.** Numerology, Rudraksha, Jadi, and Yantra remain first-class core
     domains and remain `FOUNDATION_ONLY` until a genuinely implemented engine exists.
 
+## Phase 9.1 Permanent Rules (Unified Event-Driven SDK Architecture)
+
+73. **No Business Action from UI Callback Rule (Phase 9.1 Rule 40).**
+    No business action may originate directly from a Composable `onClick`, `clickable`, or
+    navigation
+    callback. All user-initiated business interactions must be expressed as typed events and routed
+    through the event pipeline (`onEvent → EventGuard → Dispatcher → ViewModel → private handler`).
+    Direct calls to repositories, use cases, analytics trackers, or navigators from Composable
+    lambdas are prohibited.
+
+74. **Typed Event Entry Rule (Phase 9.1 Rule 41).**
+    All business user interactions must enter the system through a named, typed event from
+    the sealed `AynvoraEvent` hierarchy. Anonymous or ad-hoc lambda business handlers are
+    prohibited.
+    Event IDs must be registered in `AynvoraEventRegistry` before use.
+
+75. **Event Ingestion — Not Business Method — Rule (Phase 9.1 Rule 42).**
+    Feature ViewModels expose only `onEvent(event)` for UI consumption, `uiState`, and `effects`.
+    Repositories, use cases, navigators, analytics trackers, and internal handlers must never be
+    exposed from the ViewModel as callable public methods. The UI layer must only know `onEvent`.
+
+76. **Private Feature Handler Rule (Phase 9.1 Rule 43).**
+    Feature ViewModels must register their business handler using
+    `registerEventHandler(::handleEvent)`.
+    The `handleEvent` function must remain `private` inside the concrete feature ViewModel.
+    It must never be `protected`, `internal`, or `public`, nor directly callable from outside the
+    class.
+
+77. **Typed Navigation Target Rule (Phase 9.1 Rule 44).**
+    Navigation must use typed `AynvoraNavigationTarget` sealed interface members that carry their
+    own typed arguments. Typed targets must be converted to platform-specific navigation only at
+    the navigation host boundary. Route strings must never be assembled in ViewModels or
+    Composables.
+
+78. **No Arbitrary Navigation Map Rule (Phase 9.1 Rule 45).**
+    Navigation must not use `Map<String, String>`, `Map<String, Any>`, `JSONObject`, or other
+    untyped argument containers as the primary navigation contract. All navigation arguments must be
+    expressed as typed properties on a `AynvoraNavigationTarget` member.
+
+79. **Analytics Observer — Not Controller — Rule (Phase 9.1 Rule 46).**
+    The `AynvoraEventAnalyticsBridge` and all analytics subsystems may only observe events.
+    Analytics must never execute business logic, update ViewModel state, trigger navigation,
+    or control the outcome of an event dispatch. An analytics failure must never fail or block
+    business execution.
+
+80. **Typed and Minimal Payload Rule (Phase 9.1 Rule 47).**
+    Event payloads must be typed sealed members of `AynvoraEventPayload`. Arbitrary
+    `Map<String, Any>`
+    payloads as the main event data contract are prohibited. Payloads must be minimal — containing
+    only data required to execute the business action, not UI-observable state.
+
+81. **Event Registration Requirement Rule (Phase 9.1 Rule 48).**
+    Every event must be declared in `AynvoraEventRegistry` with an explicit `eventId`,
+    `eventType`, `allowedFeature`, `expectedPayloadClass`, and `defaultIdempotencyPolicy`.
+    The `StandardAynvoraEventGuard` enforces registry membership before dispatch.
+    Unknown events are rejected with `Unauthorized`.
+
+82. **No Sensitive Data in Event Payloads Rule (Phase 9.1 Rule 49).**
+    User questions, AI prompts, AI answers, palm images, birth data, private notes, passwords,
+    tokens, API keys, email addresses, and phone numbers must never appear as event payload fields
+    that could cross the analytics boundary. `AnalyticsSafePayload.isSafe()` and
+    `AnalyticsSafePayload.sanitizeParams()` must block any such fields before analytics tracking.
+
+83. **Approved Analytics Parameters Rule (Phase 9.1 Rule 50).**
+    Only parameters explicitly listed in `DefaultAynvoraEventAnalyticsMapper` may cross the
+    analytics
+    boundary. Unknown events must be ignored (return `null` from the mapper). No automatic
+    pass-through
+    of raw event IDs or arbitrary payloads to the analytics tracker is allowed.
+
+84. **Route-Level Callback & Repository Mutation Prohibition Rule (Phase 9.2 Rule 51).**
+    Composables and Route functions are strictly prohibited from directly calling repository or data
+    source mutation methods
+    (e.g., `save*`, `update*`, `delete*`, `record*`). All business mutations must flow through
+    `viewModel.onEvent(...)`
+    into private ViewModel handlers or domain use cases. Direct business-action analytics from
+    Composables is strictly forbidden
+    and must be handled exclusively by the observer-only `AynvoraEventAnalyticsBridge`.
+
+85. **Key-Driven Unified Localization Rule (Phase 9.3 Rule 52).**
+    All user-facing strings across presentation (`:ui`), domain (`:aynvora-core`), and reporting
+    must be resolved dynamically through key-driven catalog lookup (`LocalizationProvider` in
+    domain, `LocalAynvoraTranslator` in Compose UI). Direct hardcoded language branches (`isHindi`,
+    `if (language == "hi")`, `when (locale)`, inline Hindi/English conditional strings) are strictly
+    prohibited. Single canonical translation keys (`TranslationKey`) must be used consistently
+    across English, Hindi, Arabic (with RTL directionality), and Indian regional languages. Catalogs
+    must remain bundled and offline-first, with deterministic fallbacks (
+    `requested language -> fallback language -> English -> raw key`). No user data or translated
+    texts may be exposed in analytics logs.
+
+86. **Multi-Language Localization Expansion & Parity Rule (Phase 9.4 Rule 53).**
+    All 11 supported canonical languages (English, Hindi, Arabic, Bengali, Gujarati, Marathi,
+    Punjabi, Tamil, Telugu, Kannada, Malayalam) must adhere to the single canonical 723-key
+    contract (`TranslationKey`) with 100% placeholder parity. Adding a new language requires
+    translation data only, never modifying feature code, ViewModels, or astro-engine. Arabic must
+    enforce RTL text direction (`TextDirection.RTL`). Report and PDF generation must resolve strings
+    strictly through the centralized `LocalizationProvider`. Offline-first bundled catalogs with
+    deterministic fallback must be preserved.
+
+87. **Numerology Domain Architecture & Determinism Rule (Phase 10.0 Rule 54).**
+    Numerology is an independent, pure domain engine in `:aynvora-core`, completely decoupled from
+    `:astro-engine`, Compose, Room, Firebase, Android, and iOS. All calculations must be
+    source-gated with explicit `NumerologyRuleset` declarations (`CHALDEAN_CHEIRO_V1`,
+    `PYTHAGOREAN_WESTERN_V1`). Inventing rules or silently mixing traditions is strictly prohibited.
+    The engine returns structured numerical domain models and immutable calculation traces (
+    `NumerologyCalculationTrace`), never preformatted language strings. AI/SLM layers may consume
+    structured `EvidenceGraph` nodes for explanation but must never recalculate, override, or invent
+    numbers. Analytics events must remain observer-only and strictly exclude PII (no names, no birth
+    dates/times, no private texts).
+
 ## Change Rule
 If a requested feature conflicts with a rule, stop and document the conflict before implementation.

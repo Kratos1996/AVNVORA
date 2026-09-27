@@ -16,7 +16,7 @@ and future implementation plan for all 14 first-class core product domains in AY
 | **1. Vedic Astrology**                    | `IMPLEMENTED`     | `IMPLEMENTED`           | Ephemeris, coordinates, math                                                                                                                    | Consent-gated                                    | Active Core / Phase 8.2 parity audit; JKR parity partial |
 | **2. Tarot Reflection**                   | `VERIFIED`        | `IMPLEMENTED`           | Room 78-card deck, local readings                                                                                                               | Consent-gated                                    | Phase 7.1 / 7.2                                          |
 | **3. Numerology**                         | `VERIFIED`        | `FOUNDATION_ONLY`       | Birth date, full name                                                                                                                           | No PII events                                    | Phase 8.9                                                |
-| **4. Palmistry / Hastrekha**              | `VERIFIED`        | `FOUNDATION_ONLY`       | Local hand camera image                                                                                                                         | Local-only privacy                               | Phase 8.1                                                |
+| **4. Palmistry / Hastrekha**              | `VERIFIED`        | `IMPLEMENTED`           | Local hand camera/gallery image (`PalmImageSource`)                                                                                             | Local-only privacy                               | Phase 8.10 complete; full production experience          |
 | **5. Gemstone / Navaratna**               | `VERIFIED`        | `FOUNDATION_ONLY`       | Wearing inventory, Lab OCR                                                                                                                      | No PII events                                    | Phase 8.2                                                |
 | **6. Bhagavad Gita**                      | `VERIFIED`        | `FOUNDATION_ONLY`       | Sanskrit shlokas, public domain translations                                                                                                    | Content viewed                                   | Phase 8.3                                                |
 | **7. Garuda Puran**                       | `VERIFIED`        | `PARTIALLY_IMPLEMENTED` | Reviewed source package `garuda-content-wood-1911-en-v1` (16 chapters) installed for English; Hindi unavailable under Option B                  | Topic viewed (topic ID only)                     | Phase 8.4B complete; English Saroddhara active offline   |
@@ -28,6 +28,7 @@ and future implementation plan for all 14 first-class core product domains in AY
 | **13. Jadi / Sacred Roots**               | `VERIFIED`        | `FOUNDATION_ONLY`       | Root catalog, source text                                                                                                                       | Feature opened                                   | Phase 8.11                                               |
 | **14. Yantra**                            | `VERIFIED`        | `FOUNDATION_ONLY`       | Yantra type, tradition source                                                                                                                   | Feature opened                                   | Phase 8.12                                               |
 | **15. Core Intelligence & Orchestration** | `VERIFIED`        | `IMPLEMENTED`           | Multi-source evidence, sufficiency validator, conflict preservation                                                                             | Query metrics                                    | Phase 7.5                                                |
+| **16. Unified Event-Driven App SDK**      | `VERIFIED`        | `IMPLEMENTED`           | Typed immutable events, UI decoupling, navigation effects, security guard, idempotency, design system integration, central analytics bridge     | Centralized event observer bridge (zero PII)     | Phase 9.0 complete                                       |
 
 ---
 
@@ -57,11 +58,27 @@ calculation engine. Future report schemas and localization keys reserve matching
 
 ### 2. Palmistry / Hastrekha
 
-- **Current Status**: `FOUNDATION_ONLY` (Target: Phase 8.1)
-- **Domain Contracts**: `PalmFinding`, `HandImageReference`, `PalmLineFinding`, `PalmMountFinding`,
-  `PalmistryAnalysisResult`.
+- **Current Status**: `IMPLEMENTED` (Phase 8.10 complete)
+- **Delivered in Phase 8.10**:
+    - Real image input abstraction (`PalmImageSource`) & deterministic quality validator (
+      `ImageQualityAssessment`).
+    - Deterministic gradient & contour analysis engine (`PalmImageAnalysisEngine`) for Life, Head,
+      Heart, Fate lines and Palm Shape.
+    - Honest capability boundaries (`PalmistryAnalysisCapabilities`) marking unmeasured lines as
+      `NOT_DETECTED`/`UNSUPPORTED`.
+    - Classical Samudrika Shastra bilingual interpretations (`PalmistryContentPackage`) in English
+      and Hindi.
+    - Grounded on-device AI explanation (`GroundedSlmPalmistryExplanationEngine`) with fallback (
+      `DeterministicPalmistryExplanationEngine`).
+    - Evidence-bounded follow-up Q&A (`PalmQuestionEngine`) with `INSUFFICIENT_EVIDENCE` checks.
+    - Reading timeline, multi-tier feedback (1-5 stars, per-answer, per-feature), and anonymous
+      `AiImprovementSignal`.
+    - Report Engine (`PalmistryReportGenerator`) & PDF export integration.
+    - Compose Multiplatform 10-screen UI (`PalmistryRoute.kt`) with top-right language switcher
+      preserving state.
+    - Root navigation hook in `AynvoraApp.kt`.
 - **Privacy Lock**: Strict on-device default. Zero image transmission to cloud or analytics.
-- **Dependencies**: Camera permission, on-device contour/pose extraction.
+  User-deletable sessions.
 
 ### 3. Gemstone / Navaratna
 

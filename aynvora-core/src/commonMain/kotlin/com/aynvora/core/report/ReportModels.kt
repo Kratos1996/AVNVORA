@@ -95,7 +95,19 @@ sealed interface ReportType {
 }
 
 @Serializable
-enum class ReportLanguage(val code: String) { ENGLISH("en"), HINDI("hi") }
+enum class ReportLanguage(val code: String) {
+    ENGLISH("en"),
+    HINDI("hi"),
+    ARABIC("ar"),
+    BENGALI("bn"),
+    GUJARATI("gu"),
+    MARATHI("mr"),
+    PUNJABI("pa"),
+    TAMIL("ta"),
+    TELUGU("te"),
+    KANNADA("kn"),
+    MALAYALAM("ml"),
+}
 @Serializable
 enum class ReportFeatureStatus { IMPLEMENTED, FOUNDATION_ONLY, LIMITED }
 @Serializable
@@ -328,6 +340,14 @@ data class KundaliReportInput(
 interface ReportTextResolver {
     val language: ReportLanguage
     fun text(key: ReportTextKey): ReportText
+    fun rawText(key: String, defaultText: String = key): String = defaultText
+    fun rawText(key: String, args: Map<String, Any?>, defaultText: String = key): String {
+        var str = rawText(key, defaultText)
+        for ((k, v) in args) {
+            str = str.replace("{$k}", v?.toString() ?: "")
+        }
+        return str
+    }
     fun bodyName(body: com.aynvora.core.models.CelestialBody): String
     fun signName(sign: com.aynvora.core.models.Rashi): String
     fun nakshatraName(nakshatra: com.aynvora.core.models.Nakshatra): String
@@ -341,6 +361,7 @@ interface ReportTextResolver {
     fun birthTime(hour: Int, minute: Int, second: Int): String
     fun generatedAtUtc(epochMillis: Long): String
 }
+
 
 @Serializable
 enum class ReportTextKey(val key: String) {

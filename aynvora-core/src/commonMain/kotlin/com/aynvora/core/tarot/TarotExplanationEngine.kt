@@ -71,7 +71,9 @@ interface TarotExplanationEngine {
  * Produces approved card meanings from [TarotCardContent] with no SLM inference.
  * Used as the production default until an SLM integration is deployed in Phase 8.6.
  */
-class DeterministicTarotExplanationEngine : TarotExplanationEngine {
+class DeterministicTarotExplanationEngine(
+    private val localizationProvider: com.aynvora.core.localization.LocalizationProvider? = null,
+) : TarotExplanationEngine {
 
     override suspend fun explain(request: TarotExplanationRequest): AynvoraResult<TarotExplanationResult> {
         val content = request.deterministicContent
@@ -116,31 +118,51 @@ class DeterministicTarotExplanationEngine : TarotExplanationEngine {
         keywords: List<String>,
         language: String,
     ): String {
-        val orientationLabel = if (orientation == TarotCardOrientation.UPRIGHT) {
-            if (language == "hi") "सीधा" else "Upright"
+        val locale = com.aynvora.core.localization.AynvoraLocale.fromId(language)
+        val provider =
+            localizationProvider ?: com.aynvora.core.localization.FallbackLocalizationProvider(
+                locale
+            )
+
+        val orientationKey = if (orientation == TarotCardOrientation.UPRIGHT) {
+            "tarot.screen.upright"
         } else {
-            if (language == "hi") "उल्टा" else "Reversed"
+            "tarot.screen.reversed"
         }
+        val rawOrientation =
+            provider.get(com.aynvora.core.localization.RawLocalizationKey(orientationKey))
+        val orientationLabel = if (rawOrientation.startsWith("tarot.")) {
+            if (orientation == TarotCardOrientation.UPRIGHT) "Upright" else "Reversed"
+        } else rawOrientation
 
         val keywordsText = if (keywords.isNotEmpty()) {
-            if (language == "hi") "मुख्य विषय: ${keywords.joinToString(" · ")}"
-            else "Key themes: ${keywords.joinToString(" · ")}"
+            val rawLabel =
+                provider.get(com.aynvora.core.localization.RawLocalizationKey("tarot.screen.keywords_label"))
+            val label = if (rawLabel.startsWith("tarot.")) "Keywords: " else rawLabel
+            "$label${keywords.joinToString(" · ")}"
         } else ""
 
-        return if (language == "hi") {
-            buildString {
-                append("$positionContext में $cardName ($orientationLabel) पत्ता उभरा है।\n\n")
-                append("$meaning")
-                if (keywordsText.isNotEmpty()) append("\n\n$keywordsText")
-                append("\n\n[यह व्याख्या केवल चिंतन और आत्म-विश्लेषण के लिए है, भविष्यवाणी नहीं।]")
+        val template = provider.get(
+            com.aynvora.core.localization.RawLocalizationKey("tarot.explanation.template"),
+            mapOf(
+                "position" to positionContext,
+                "card" to cardName,
+                "orientation" to orientationLabel,
+                "meaning" to meaning,
+                "keywords" to keywordsText,
+            ),
+        )
+        if (template.isNotEmpty() && !template.startsWith("tarot.explanation.template")) {
+            return template
+        }
+
+        return buildString {
+            append("In the position of $positionContext, the card $cardName ($orientationLabel) has emerged.\n\n")
+            append(meaning)
+            if (keywordsText.isNotEmpty()) {
+                append("\n\n$keywordsText")
             }
-        } else {
-            buildString {
-                append("In the position of $positionContext, the card $cardName ($orientationLabel) has emerged.\n\n")
-                append(meaning)
-                if (keywordsText.isNotEmpty()) append("\n\n$keywordsText")
-                append("\n\n[This reflection is offered for contemplation, not prediction.]")
-            }
+            append("\n\n[This reflection is offered for contemplation, not prediction.]")
         }
     }
 }

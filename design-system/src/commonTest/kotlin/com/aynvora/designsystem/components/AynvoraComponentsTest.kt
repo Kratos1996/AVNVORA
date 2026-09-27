@@ -32,6 +32,18 @@ class AynvoraComponentsTest {
     }
 
     @Test
+    fun statusChipVariantsAreDefined() {
+        val variants = AynvoraStatusChipVariant.entries
+        assertEquals(6, variants.size)
+        assertNotNull(AynvoraStatusChipVariant.Available)
+        assertNotNull(AynvoraStatusChipVariant.Offline)
+        assertNotNull(AynvoraStatusChipVariant.InDevelopment)
+        assertNotNull(AynvoraStatusChipVariant.Warning)
+        assertNotNull(AynvoraStatusChipVariant.Error)
+        assertNotNull(AynvoraStatusChipVariant.Neutral)
+    }
+
+    @Test
     fun navigationItemContractIsValid() {
         val item = AynvoraNavigationItem(
             id = "charts",

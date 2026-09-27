@@ -91,6 +91,10 @@ class ReportEngineTest {
         )
         assertEquals(
             ReportFeatureStatus.FOUNDATION_ONLY,
+            ReportTypeRegistry.featureStatus(ReportType.RUDRAKSHA.feature)
+        )
+        assertEquals(
+            ReportFeatureStatus.IMPLEMENTED,
             ReportTypeRegistry.featureStatus(ReportType.GEMSTONE.feature)
         )
         assertEquals(
@@ -209,10 +213,10 @@ class ReportEngineTest {
 
     @Test
     fun foundationOnlyReportDoesNotRunOrInventCalculations() = runBlocking {
-        val gemstone = request.copy(reportType = ReportType.GEMSTONE, chartRequest = null)
+        val rudraksha = request.copy(reportType = ReportType.RUDRAKSHA, chartRequest = null)
         val result = assertIs<ReportGenerationResult.Unavailable>(
             GenerateReportUseCase(Aynvora.create()).execute(
-                gemstone,
+                rudraksha,
                 text
             )
         )

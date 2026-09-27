@@ -166,12 +166,12 @@ object FeatureCapabilityRegistry {
             false
         ),
 
-        // Gemstone Capabilities
+        // Gemstone Capabilities (Phase 8.2)
         FeatureCapability(
             "gemstone_inventory",
             CoreFeatureId.GEMSTONE,
             "User gemstone wearing inventory tracking",
-            CapabilityStatus.FOUNDATION_ONLY,
+            CapabilityStatus.IMPLEMENTED,
             true,
             false
         ),
@@ -179,8 +179,24 @@ object FeatureCapabilityRegistry {
             "gemstone_lab_verification",
             CoreFeatureId.GEMSTONE,
             "Gemological lab certificate data verification",
-            CapabilityStatus.FOUNDATION_ONLY,
+            CapabilityStatus.IMPLEMENTED,
             false,
+            false
+        ),
+        FeatureCapability(
+            "gemstone_compatibility",
+            CoreFeatureId.GEMSTONE,
+            "Planetary and inventory compatibility engine",
+            CapabilityStatus.IMPLEMENTED,
+            true,
+            false
+        ),
+        FeatureCapability(
+            "gemstone_recommendations",
+            CoreFeatureId.GEMSTONE,
+            "Birth-chart-derived Jeevan, Bhagya, and Punya Ratna recommendations",
+            CapabilityStatus.IMPLEMENTED,
+            true,
             false
         ),
 
@@ -258,12 +274,12 @@ object FeatureCapabilityRegistry {
             false
         ),
 
-        // Numerology Capabilities (Phase 8.1 — FOUNDATION_ONLY)
+        // Numerology Capabilities (Phase 10.0 — IMPLEMENTED)
         FeatureCapability(
             "numerology_radical",
             CoreFeatureId.NUMEROLOGY,
             "Radical (Moolank) calculation from day of birth",
-            CapabilityStatus.FOUNDATION_ONLY,
+            CapabilityStatus.IMPLEMENTED,
             true,
             true
         ),
@@ -271,7 +287,7 @@ object FeatureCapabilityRegistry {
             "numerology_destiny",
             CoreFeatureId.NUMEROLOGY,
             "Destiny (Bhagyank) calculation from full birth date",
-            CapabilityStatus.FOUNDATION_ONLY,
+            CapabilityStatus.IMPLEMENTED,
             true,
             true
         ),
@@ -279,7 +295,7 @@ object FeatureCapabilityRegistry {
             "numerology_name",
             CoreFeatureId.NUMEROLOGY,
             "Name Number calculation (Chaldean or Pythagorean)",
-            CapabilityStatus.FOUNDATION_ONLY,
+            CapabilityStatus.IMPLEMENTED,
             true,
             false
         ),
@@ -287,7 +303,7 @@ object FeatureCapabilityRegistry {
             "numerology_pinnacles",
             CoreFeatureId.NUMEROLOGY,
             "Four Pinnacle period calculation",
-            CapabilityStatus.FOUNDATION_ONLY,
+            CapabilityStatus.IMPLEMENTED,
             true,
             true
         ),
@@ -295,7 +311,7 @@ object FeatureCapabilityRegistry {
             "numerology_personal_years",
             CoreFeatureId.NUMEROLOGY,
             "Personal Year and Personal Month calculations",
-            CapabilityStatus.FOUNDATION_ONLY,
+            CapabilityStatus.IMPLEMENTED,
             true,
             true
         ),

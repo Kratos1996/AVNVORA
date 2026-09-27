@@ -52,11 +52,7 @@ fun AynvoraLogo(
         AynvoraLogoVariant.Transparent -> Res.drawable.logo_avnvora_transparent
         AynvoraLogoVariant.Dark -> Res.drawable.logo_avnvora_dark
         AynvoraLogoVariant.Wordmark -> Res.drawable.logo_txt_avnvora
-        AynvoraLogoVariant.Default -> if (isDark) {
-            Res.drawable.logo_avnvora_dark
-        } else {
-            Res.drawable.logo_avnvora
-        }
+        AynvoraLogoVariant.Default -> Res.drawable.logo_avnvora
     }
 
     Box(

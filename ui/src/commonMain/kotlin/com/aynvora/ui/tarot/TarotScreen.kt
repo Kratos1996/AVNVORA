@@ -39,6 +39,8 @@ import com.aynvora.designsystem.components.AynvoraButton
 import com.aynvora.designsystem.components.AynvoraButtonVariant
 import com.aynvora.designsystem.components.AynvoraCard
 import com.aynvora.designsystem.components.AynvoraCardVariant
+import com.aynvora.designsystem.localization.LocalAynvoraTranslator
+import com.aynvora.localization.translation.TranslationKey
 import kotlinx.coroutines.launch
 
 /**
@@ -59,6 +61,7 @@ fun TarotScreen(
     language: String = "en",
     onClose: () -> Unit = {},
 ) {
+    val translator = LocalAynvoraTranslator.current
     var hasAcceptedDisclaimer by remember { mutableStateOf(false) }
     var selectedSpread by remember { mutableStateOf(TarotSpread.SingleCard) }
     var currentReading by remember { mutableStateOf<TarotReading?>(null) }
@@ -95,12 +98,12 @@ fun TarotScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = if (language == "hi") "टैरो चिंतन" else "Tarot Reflection",
+                text = translator.translate(TranslationKey.Tarot.ReflectionTitle),
                 style = AynvoraTheme.typography.headline28.copy(fontSize = 24.ssp),
                 color = AynvoraTheme.colors.Gold,
             )
             AynvoraButton(
-                text = if (language == "hi") "बंद करें" else "Close",
+                text = translator.translate(TranslationKey.Tarot.Close),
                 variant = AynvoraButtonVariant.Ghost,
                 onClick = onClose,
             )
@@ -109,10 +112,7 @@ fun TarotScreen(
         Spacer(modifier = Modifier.height(8.sdp))
 
         Text(
-            text = if (language == "hi")
-                "आत्म-चिंतन और सजगता के लिए प्रतीकात्मक माध्यम।"
-            else
-                "Contemplative archetypes for mindful reflection and self-inquiry.",
+            text = translator.translate(TranslationKey.Tarot.Subtitle),
             style = AynvoraTheme.typography.body14.copy(fontSize = 14.ssp),
             color = secondaryTextColor,
         )
@@ -122,7 +122,6 @@ fun TarotScreen(
         // Step 1: Ethical & Non-Predictive Disclaimer Gate
         if (!hasAcceptedDisclaimer) {
             TarotDisclaimerCard(
-                language = language,
                 onAccept = {
                     analyticsTracker.track(AnalyticsEvent.TarotDisclaimerViewed)
                     hasAcceptedDisclaimer = true
@@ -133,7 +132,7 @@ fun TarotScreen(
 
         // Step 2: Spread Selection
         Text(
-            text = if (language == "hi") "स्प्रेड चुनें" else "Select a Spread",
+            text = translator.translate(TranslationKey.Tarot.SelectSpread),
             style = AynvoraTheme.typography.title18.copy(fontSize = 18.ssp),
             color = AynvoraTheme.colors.GoldLight,
             modifier = Modifier.fillMaxWidth(),
@@ -149,9 +148,9 @@ fun TarotScreen(
                 val isSelected = spread.id == selectedSpread.id
                 AynvoraButton(
                     text = if (spread.id == "single_card") {
-                        if (language == "hi") "एक पत्ता" else "Single Card"
+                        translator.translate(TranslationKey.Tarot.SingleCard)
                     } else {
-                        if (language == "hi") "तीन पत्ते" else "Three Cards"
+                        translator.translate(TranslationKey.Tarot.ThreeCards)
                     },
                     variant = if (isSelected) AynvoraButtonVariant.Primary else AynvoraButtonVariant.Secondary,
                     onClick = {
@@ -168,11 +167,11 @@ fun TarotScreen(
         // Step 3: Draw Trigger with double-tap guard
         AynvoraButton(
             text = if (isLoading) {
-                if (language == "hi") "पत्ते चुने जा रहे हैं…" else "Drawing Cards…"
+                translator.translate(TranslationKey.Tarot.DrawingCards)
             } else if (currentReading == null) {
-                if (language == "hi") "पत्ते निकालें" else "Draw Cards"
+                translator.translate(TranslationKey.Tarot.DrawCards)
             } else {
-                if (language == "hi") "पुनः निकालें" else "Draw Again"
+                translator.translate(TranslationKey.Tarot.DrawAgain)
             },
             variant = AynvoraButtonVariant.Primary,
             enabled = !isLoading,
@@ -228,9 +227,9 @@ fun TarotScreen(
 
 @Composable
 private fun TarotDisclaimerCard(
-    language: String,
     onAccept: () -> Unit,
 ) {
+    val translator = LocalAynvoraTranslator.current
     AynvoraCard(
         modifier = Modifier.fillMaxWidth(),
         variant = AynvoraCardVariant.Elevated,
@@ -242,19 +241,19 @@ private fun TarotDisclaimerCard(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = if (language == "hi") "चिंतन एवं गैर-भविष्यवाणी प्रकटीकरण" else "Reflection & Mindful Use Disclosure",
+                text = translator.translate(TranslationKey.Tarot.DisclaimerTitle),
                 style = AynvoraTheme.typography.title18.copy(fontSize = 18.ssp),
                 color = AynvoraTheme.colors.Gold,
             )
             Spacer(modifier = Modifier.height(8.sdp))
             Text(
-                text = if (language == "hi") TarotDisclaimer.HINDI_TEXT else TarotDisclaimer.ENGLISH_TEXT,
+                text = translator.translate(TranslationKey.Tarot.DisclaimerBody),
                 style = AynvoraTheme.typography.body14.copy(fontSize = 14.ssp),
                 color = AynvoraTheme.colors.TextLightSecondary,
             )
             Spacer(modifier = Modifier.height(16.sdp))
             AynvoraButton(
-                text = if (language == "hi") "मैं समझता हूँ और आगे बढ़ें" else "I Understand & Continue",
+                text = translator.translate(TranslationKey.Tarot.DisclosureAccept),
                 variant = AynvoraButtonVariant.Primary,
                 onClick = onAccept,
             )
@@ -269,6 +268,7 @@ private fun TarotDrawResultCard(
     analyticsTracker: AnalyticsTracker,
     language: String,
 ) {
+    val translator = LocalAynvoraTranslator.current
     var cardContent by remember(draw.card.id, language) { mutableStateOf<TarotCardContent?>(null) }
 
     LaunchedEffect(draw.card.id, language) {
@@ -309,9 +309,9 @@ private fun TarotDrawResultCard(
                 )
                 Text(
                     text = if (draw.orientation == TarotCardOrientation.UPRIGHT) {
-                        if (language == "hi") "सीधा (Upright)" else "Upright"
+                        translator.translate(TranslationKey.Tarot.Upright)
                     } else {
-                        if (language == "hi") "उल्टा (Reversed)" else "Reversed"
+                        translator.translate(TranslationKey.Tarot.Reversed)
                     },
                     style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
                     color = if (draw.orientation == TarotCardOrientation.UPRIGHT)
@@ -340,7 +340,7 @@ private fun TarotDrawResultCard(
                     content.reversedMeaning
 
                 Text(
-                    text = if (language == "hi") "चिंतनशील दृष्टिकोण:" else "Reflective Perspective:",
+                    text = translator.translate(TranslationKey.Tarot.ReflectivePerspective),
                     style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
                     color = AynvoraTheme.colors.CelestialBlue,
                 )
@@ -355,7 +355,7 @@ private fun TarotDrawResultCard(
                 if (content.keywords.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.sdp))
                     Text(
-                        text = (if (language == "hi") "मुख्य शब्द: " else "Keywords: ") + content.keywords.joinToString(
+                        text = translator.translate(TranslationKey.Tarot.KeywordsLabel) + ": " + content.keywords.joinToString(
                             " • "
                         ),
                         style = AynvoraTheme.typography.caption12.copy(fontSize = 12.ssp),

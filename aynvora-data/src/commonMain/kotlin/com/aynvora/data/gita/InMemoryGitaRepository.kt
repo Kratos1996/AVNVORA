@@ -1,5 +1,6 @@
 package com.aynvora.data.gita
 
+import com.aynvora.core.gita.GitaAuthor
 import com.aynvora.core.gita.GitaChapter
 import com.aynvora.core.gita.GitaRepository
 import com.aynvora.core.gita.GitaSourceEdition
@@ -78,6 +79,18 @@ class InMemoryGitaRepository : GitaRepository {
         )
     }
 
+    override suspend fun getChapter(chapterNumber: Int): AynvoraResult<GitaChapter> {
+        val chaptersResult = getChapters()
+        if (chaptersResult is AynvoraResult.Success) {
+            val ch = chaptersResult.value.find { it.chapterNumber == chapterNumber }
+            if (ch != null) return AynvoraResult.Success(ch)
+        }
+        return AynvoraResult.Failure.NotFound(
+            resourceId = "GITA_CHAPTER_$chapterNumber",
+            message = "Chapter $chapterNumber not found.",
+        )
+    }
+
     override suspend fun getVerse(
         chapterNumber: Int,
         verseNumber: Int,
@@ -103,6 +116,16 @@ class InMemoryGitaRepository : GitaRepository {
         return AynvoraResult.Success(verses)
     }
 
+    override suspend fun searchVerses(query: String): AynvoraResult<List<GitaVerse>> {
+        val q = query.lowercase()
+        val matches = sampleVerses.filter {
+            it.sanskritDevanagari.contains(q, ignoreCase = true) ||
+                    it.transliteration.contains(q, ignoreCase = true) ||
+                    it.translation.contains(q, ignoreCase = true)
+        }
+        return AynvoraResult.Success(matches)
+    }
+
     override suspend fun searchVersesByTheme(
         themeTag: String,
         language: String
@@ -111,4 +134,14 @@ class InMemoryGitaRepository : GitaRepository {
         val verses = sampleVerses.filter { it.themeTags.contains(normalized) }
         return AynvoraResult.Success(verses)
     }
+
+    override suspend fun getAuthors(): AynvoraResult<List<GitaAuthor>> {
+        return AynvoraResult.Success(
+            listOf(GitaAuthor(authorId = 1, name = "Charles Johnston"))
+        )
+    }
+
+    override suspend fun isSeeded(): Boolean = true
+
+    override suspend fun getSeededVerseCount(): Int = sampleVerses.size
 }

@@ -2,10 +2,12 @@ package com.aynvora.core.gemstone
 
 import com.aynvora.core.models.CelestialBody
 import com.aynvora.core.result.AynvoraResult
+import kotlinx.serialization.Serializable
 
 /**
  * Vedic Navaratna gemstone types.
  */
+@Serializable
 enum class GemstoneType(
     val sanskritName: String,
     val primaryPlanet: CelestialBody,
@@ -24,6 +26,7 @@ enum class GemstoneType(
 /**
  * Metal setting for wearing gemstones.
  */
+@Serializable
 enum class GemstoneMetal {
     GOLD,
     SILVER,
@@ -36,6 +39,7 @@ enum class GemstoneMetal {
 /**
  * User-entered or scanned lab certificate metadata for authenticity provenance.
  */
+@Serializable
 data class GemstoneCertificate(
     val certificateNumber: String,
     val labName: String,
@@ -50,6 +54,7 @@ data class GemstoneCertificate(
  * Item representing an active gemstone currently worn or owned by the user.
  * Enables inventory-aware evaluation to prevent planetary conflict.
  */
+@Serializable
 data class GemstoneInventoryItem(
     val id: String,
     val type: GemstoneType,
@@ -64,6 +69,7 @@ data class GemstoneInventoryItem(
 /**
  * Context of all gemstones currently worn by the user.
  */
+@Serializable
 data class GemstoneWearingContext(
     val wornItems: List<GemstoneInventoryItem>,
 )
@@ -71,6 +77,7 @@ data class GemstoneWearingContext(
 /**
  * Astrologically derived gemstone recommendation with ethical guardrails.
  */
+@Serializable
 data class GemstoneRecommendation(
     val gemstoneType: GemstoneType,
     val associatedPlanet: CelestialBody,

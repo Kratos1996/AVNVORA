@@ -76,14 +76,17 @@ class LocaleRegistryTest {
     fun testIsSupportedReturnsTrueForKnownLocales() {
         assertTrue(LanguageRegistry.isSupported("en"))
         assertTrue(LanguageRegistry.isSupported("hi"))
+        assertTrue(LanguageRegistry.isSupported("ar"))
     }
 
     @Test
     fun testIsSupportedReturnsFalseForUnknown() {
         assertFalse(LanguageRegistry.isSupported("fr"))
         assertFalse(LanguageRegistry.isSupported(""))
-        assertFalse(LanguageRegistry.isSupported("ar"))
+        assertFalse(LanguageRegistry.isSupported("de"))
+        assertFalse(LanguageRegistry.isSupported("es"))
     }
+
 
     @Test
     fun testResolveFallbackForHindiIsEnglish() {

@@ -4,6 +4,7 @@ import com.aynvora.core.ai.AiModelCatalog
 import com.aynvora.core.ai.AiModelStorageRepository
 import com.aynvora.core.ai.AiModelVariant
 import com.aynvora.core.result.AynvoraResult
+import com.aynvora.data.storage.StorageDriver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
@@ -14,12 +15,18 @@ import kotlinx.coroutines.withContext
  * Storage and file lifecycle manager for on-device AI model binaries.
  *
  * Implements atomic staging, cryptographic checksum verification,
- * and clean uninstallation.
+ * and clean uninstallation with persistent restart survival.
  */
 class AiModelStorageRepositoryImpl(
+    private val driver: StorageDriver? = null,
     private val basePath: String = "models/ondevice",
     private val availableStorageBytesProvider: () -> Long = { 16L * 1024L * 1024L * 1024L }, // 16 GB default free storage
 ) : AiModelStorageRepository {
+
+    companion object {
+        private const val KEY_INSTALLED_MODEL_ID = "aynvora_ai_installed_model_id"
+        private const val KEY_INSTALLED_MODEL_PATH = "aynvora_ai_installed_model_path"
+    }
 
     private val mutex = Mutex()
     private var currentInstalledVariant: AiModelVariant? = null
@@ -27,15 +34,43 @@ class AiModelStorageRepositoryImpl(
     private val tempFiles = mutableSetOf<String>()
 
     override suspend fun getInstalledModel(): AiModelVariant? = mutex.withLock {
+        if (currentInstalledVariant == null) {
+            val savedId = driver?.read(KEY_INSTALLED_MODEL_ID)
+            if (savedId != null) {
+                val variant = AiModelCatalog.allVariants.firstOrNull { it.modelId == savedId }
+                if (variant != null) {
+                    currentInstalledVariant = variant
+                    val savedPath =
+                        driver.read(KEY_INSTALLED_MODEL_PATH) ?: "$basePath/${variant.modelId}.gguf"
+                    installedFiles[variant.modelId] = savedPath
+                }
+            }
+        }
         currentInstalledVariant
     }
 
     override suspend fun isModelInstalled(modelId: String): Boolean = mutex.withLock {
-        currentInstalledVariant?.modelId == modelId
+        getInstalledModelInternal()?.modelId == modelId
     }
 
     override suspend fun getModelFilePath(modelId: String): String? = mutex.withLock {
-        installedFiles[modelId]
+        installedFiles[modelId] ?: driver?.read(KEY_INSTALLED_MODEL_PATH)
+    }
+
+    private suspend fun getInstalledModelInternal(): AiModelVariant? {
+        if (currentInstalledVariant == null) {
+            val savedId = driver?.read(KEY_INSTALLED_MODEL_ID)
+            if (savedId != null) {
+                val variant = AiModelCatalog.allVariants.firstOrNull { it.modelId == savedId }
+                if (variant != null) {
+                    currentInstalledVariant = variant
+                    val savedPath =
+                        driver.read(KEY_INSTALLED_MODEL_PATH) ?: "$basePath/${variant.modelId}.gguf"
+                    installedFiles[variant.modelId] = savedPath
+                }
+            }
+        }
+        return currentInstalledVariant
     }
 
     override suspend fun downloadModel(
@@ -101,6 +136,8 @@ class AiModelStorageRepositoryImpl(
                 tempFiles.remove(tempFilePath)
                 installedFiles[variant.modelId] = finalPath
                 currentInstalledVariant = variant
+                driver?.write(KEY_INSTALLED_MODEL_ID, variant.modelId)
+                driver?.write(KEY_INSTALLED_MODEL_PATH, finalPath)
                 AynvoraResult.Success(finalPath)
             } catch (t: Throwable) {
                 AynvoraResult.Failure.InternalFailure(t.message ?: "Failed to commit installation")
@@ -114,6 +151,8 @@ class AiModelStorageRepositoryImpl(
             if (currentInstalledVariant?.modelId == modelId) {
                 currentInstalledVariant = null
             }
+            driver?.delete(KEY_INSTALLED_MODEL_ID)
+            driver?.delete(KEY_INSTALLED_MODEL_PATH)
             AynvoraResult.Success(Unit)
         }
     }

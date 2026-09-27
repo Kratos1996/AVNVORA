@@ -11,7 +11,50 @@ import org.koin.dsl.module
  * Koin module aggregating UI and core application dependencies for Compose Multiplatform.
  */
 val uiModule: Module = module {
-    // UI viewmodels and navigation-level factories can be registered here
+    factory {
+        com.aynvora.ui.AynvoraAppViewModel(
+            localeManager = getOrNull(),
+            aiLifecycleManager = getOrNull(),
+            aiModelSelector = getOrNull(),
+            aiCapabilityDetector = getOrNull(),
+            eventDispatcher = getOrNull(),
+        )
+    }
+    factory {
+        com.aynvora.ui.tarot.TarotViewModel(
+            sessionRepository = get(),
+            availabilityPolicy = get(),
+            readingUseCase = get(),
+            questionEngine = get(),
+            eventDispatcher = getOrNull(),
+        )
+    }
+    factory {
+        com.aynvora.ui.palmistry.PalmistryViewModel(
+            repository = get(),
+            eventDispatcher = getOrNull(),
+        )
+    }
+    factory {
+        com.aynvora.ui.numerology.NumerologyViewModel(
+            numerologyRepository = get(),
+            historyRepository = get(),
+            eventDispatcher = getOrNull(),
+        )
+    }
+    factory {
+        com.aynvora.ui.gemstone.GemstoneViewModel(
+            repository = get(),
+            certificateAnalyzer = get(),
+            eventDispatcher = getOrNull(),
+        )
+    }
+    factory {
+        com.aynvora.ui.gita.GitaViewModel(
+            gitaRepository = get(),
+            eventDispatcher = getOrNull(),
+        )
+    }
 }
 
 /**

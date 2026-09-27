@@ -73,7 +73,7 @@ class CoreFeatureArchitectureTest {
 
         val palmistry = features.find { it.id == CoreFeatureId.PALMISTRY }
         assertNotNull(palmistry)
-        assertTrue(palmistry.availability is FeatureAvailability.ComingSoon)
+        assertTrue(palmistry.availability is FeatureAvailability.Available)
     }
 
     @Test

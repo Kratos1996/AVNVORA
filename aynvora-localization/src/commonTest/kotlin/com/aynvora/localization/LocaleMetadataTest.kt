@@ -36,15 +36,13 @@ class LocaleMetadataTest {
 
     // ── Test 23: RTL layout state (structural) ───────────────────────────
     @Test
-    fun testAllCurrentLocalesAreNonRtl() {
-        // All currently supported locales are LTR (Devanagari is LTR)
-        LanguageRegistry.availableLocales().forEach { locale ->
-            assertFalse(
-                locale.isRtl,
-                "${locale.localeId} should be LTR in this release",
-            )
-        }
+    fun testRtlLocaleSupport() {
+        assertFalse(LanguageRegistry.ENGLISH.isRtl)
+        assertFalse(LanguageRegistry.HINDI.isRtl)
+        assertTrue(LanguageRegistry.ARABIC.isRtl)
+        assertEquals(TextDirection.RTL, LanguageRegistry.ARABIC.direction)
     }
+
 
     @Test
     fun testTextDirectionEnumHasBothValues() {

@@ -3,4 +3,7 @@
     <cache-path
         name="report_exports"
         path="shared-reports/" />
+    <cache-path
+        name="palm_images"
+        path="palm_images/" />
 </paths>

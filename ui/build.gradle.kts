@@ -16,6 +16,7 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.androidx.core)
+            implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
         }
         commonMain.dependencies {
@@ -23,6 +24,8 @@ kotlin {
             implementation(project(":aynvora-core"))
             implementation(project(":aynvora-data"))
             implementation(project(":aynvora-localization"))
+            implementation(project(":aynvora-qa-core"))
+            implementation(project(":aynvora-qa-android"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -36,6 +39,7 @@ kotlin {
         }
         jvmTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }

@@ -8,6 +8,7 @@ import com.aynvora.data.database.dao.BirthProfileDao
 import com.aynvora.data.database.dao.ContentItemDao
 import com.aynvora.data.database.dao.ContentPackDao
 import com.aynvora.data.database.dao.ContentSyncMetadataDao
+import com.aynvora.data.database.dao.GitaDao
 import com.aynvora.data.database.dao.SavedChartDao
 import com.aynvora.data.database.dao.UserPreferencesDao
 import com.aynvora.data.database.dao.UserProfileDao
@@ -15,6 +16,12 @@ import com.aynvora.data.database.entity.BirthProfileRoomEntity
 import com.aynvora.data.database.entity.ContentItemRoomEntity
 import com.aynvora.data.database.entity.ContentPackRoomEntity
 import com.aynvora.data.database.entity.ContentSyncMetadataRoomEntity
+import com.aynvora.data.database.entity.GitaAuthorRoomEntity
+import com.aynvora.data.database.entity.GitaChapterRoomEntity
+import com.aynvora.data.database.entity.GitaCommentaryRoomEntity
+import com.aynvora.data.database.entity.GitaSeedStateRoomEntity
+import com.aynvora.data.database.entity.GitaTranslationRoomEntity
+import com.aynvora.data.database.entity.GitaVerseRoomEntity
 import com.aynvora.data.database.entity.SavedChartRoomEntity
 import com.aynvora.data.database.entity.UserPreferencesRoomEntity
 import com.aynvora.data.database.entity.UserProfileRoomEntity
@@ -23,7 +30,12 @@ import com.aynvora.data.database.entity.UserProfileRoomEntity
  * Versioned Room KMP local database.
  *
  * Serves as the authoritative offline source of truth for user profiles,
- * birth records, persisted charts, user preferences, and downloaded knowledge packs.
+ * birth records, persisted charts, user preferences, downloaded knowledge packs,
+ * and Bhagavad Gita scripture data.
+ *
+ * Version history:
+ *  v1 — initial schema (profiles, charts, tarot)
+ *  v2 — Phase 8.3: Bhagavad Gita scripture tables (gita/gita, Public Domain)
  */
 @Database(
     entities = [
@@ -38,8 +50,15 @@ import com.aynvora.data.database.entity.UserProfileRoomEntity
         com.aynvora.data.database.entity.TarotCardRoomEntity::class,
         com.aynvora.data.database.entity.TarotCardContentRoomEntity::class,
         com.aynvora.data.database.entity.TarotReadingHistoryRoomEntity::class,
+        // ── Phase 8.3: Bhagavad Gita ─────────────────────────────────────────
+        GitaChapterRoomEntity::class,
+        GitaVerseRoomEntity::class,
+        GitaTranslationRoomEntity::class,
+        GitaCommentaryRoomEntity::class,
+        GitaAuthorRoomEntity::class,
+        GitaSeedStateRoomEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 @ConstructedBy(AynvoraDatabaseConstructor::class)
@@ -52,6 +71,7 @@ abstract class AynvoraDatabase : RoomDatabase() {
     abstract fun contentItemDao(): ContentItemDao
     abstract fun contentSyncMetadataDao(): ContentSyncMetadataDao
     abstract fun tarotDao(): com.aynvora.data.database.dao.TarotDao
+    abstract fun gitaDao(): GitaDao
 
     companion object {
         const val DATABASE_NAME = "aynvora.db"

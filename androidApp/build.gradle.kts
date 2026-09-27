@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.compose)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
@@ -32,6 +33,11 @@ android {
 dependencies {
     implementation(project(":ui"))
     implementation(project(":aynvora-core"))
+    implementation(project(":aynvora-data"))
+    implementation(project(":aynvora-qa-core"))
+    implementation(project(":aynvora-qa-android"))
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.sqlite.bundled)
     implementation(libs.androidx.activity.compose)
     implementation(libs.koin.core)
     implementation(libs.koin.android)

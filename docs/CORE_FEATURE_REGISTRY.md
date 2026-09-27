@@ -16,7 +16,7 @@ data dependencies.
 | #  | Domain ID        | Domain Title                         | Architectural Tier / Primary Package                                                         | Status                  | Primary Responsibility                                                                                                                                                                                                            |
 |----|------------------|--------------------------------------|----------------------------------------------------------------------------------------------|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 1  | `ASTROLOGY`      | Vedic Astrology                      | `:astro-engine`, `com.aynvora.core.models`, `:aynvora-data`                                  | `IMPLEMENTED`           | Pure deterministic astronomical calculations, Vargas, Shadbala, Ashtakavarga, Pinda.                                                                                                                                              |
-| 2  | `PALMISTRY`      | Hastrekha / Palmistry                | `com.aynvora.core.palmistry`, `com.aynvora.data.palmistry`                                   | `FOUNDATION_ONLY`       | Camera/hand image capture reference, palm lines/mounts domain model, traditional rule contracts. On-device default.                                                                                                               |
+| 2  | `PALMISTRY`      | Hastrekha / Palmistry                | `com.aynvora.core.palmistry`, `com.aynvora.data.palmistry`, `com.aynvora.ui.palmistry`       | `IMPLEMENTED`           | Real image quality check, deterministic vision engine, classical Samudrika Shastra meanings, grounded on-device AI explanation, Q&A, timeline, report & PDF.                                                                      |
 | 3  | `GEMSTONE`       | Gemstone / Ratna                     | `com.aynvora.core.gemstone`, `com.aynvora.data.gemstone`                                     | `FOUNDATION_ONLY`       | Gemstone catalog, user wearing inventory, certificate OCR/scale evidence provenance, ethical recommendation contracts.                                                                                                            |
 | 4  | `GITA`           | Bhagavad Gita                        | `com.aynvora.core.gita`, `com.aynvora.data.gita`                                             | `FOUNDATION_ONLY`       | Edition-aware Sanskrit shloka text, transliteration, authentic translations, and commentary provenance.                                                                                                                           |
 | 5  | `GARUDA_PURAN`   | Garuda Puran                         | `com.aynvora.core.garudapuran`, `com.aynvora.data.garudapuran`, `com.aynvora.ui.garudapuran` | `PARTIALLY_IMPLEMENTED` | Typed, source-gated offline content/report pipeline. Approved English package `garuda-content-wood-1911-en-v1` (16 chapters, 23 passages) installed. Hindi content remains unavailable under Option B.                            |
@@ -51,11 +51,18 @@ statuses `FOUNDATION_ONLY` until their engines exist.
 
 ### 2. Palmistry / Hastrekha (`PALMISTRY`)
 
-- **Domain Models**: `PalmSession`, `HandImageReference`, `PalmRegion`, `PalmLine`, `PalmFinding`,
-  `PalmAnalysis`, `PalmistryRuleSet`, `PalmistryAnalysisResult`.
-- **Privacy Boundary**: Local-only by default. Hand images must NEVER be transmitted to analytics or
-  cloud storage without explicit opt-in consent.
-- **Ethical Gate**: Non-medical; strictly avoids deterministic lifespan or health guarantees.
+- **Domain Models**: `PalmSession`, `PalmImageSource`, `PalmRegion`, `PalmLine`, `PalmFinding`,
+  `PalmAnalysis`, `PalmistryRuleSet`, `PalmistryAnalysisResult`, `PalmistryEvidence`,
+  `PalmTimelineEvent`.
+- **Implementation**: Real deterministic computer vision (`PalmImageAnalysisEngine`), classical
+  Samudrika Shastra
+  bilingual content (`PalmistryContentPackage`), grounded on-device AI (
+  `GroundedSlmPalmistryExplanationEngine`),
+  evidence-bounded Q&A (`PalmQuestionEngine`), report generation (`PalmistryReportGenerator`), and
+  Compose UI (`PalmistryRoute`).
+- **Privacy Boundary**: Strictly local-only. Zero transmission of hand images to cloud or analytics.
+- **Ethical Gate**: Non-medical, non-fatalistic; strictly avoids deterministic lifespan or health
+  guarantees.
 
 ### 3. Gemstone / Ratna (`GEMSTONE`)
 

@@ -67,6 +67,7 @@ fun GarudaPuranRoute(
     shareService: ReportShareService,
     nowEpochMillis: () -> Long,
     analyticsTracker: AnalyticsTracker = NoOpAnalyticsTracker(),
+    eventDispatcher: com.aynvora.core.event.AynvoraEventDispatcher? = null,
     modifier: Modifier = Modifier,
 ) {
     var loading by remember { mutableStateOf(true) }
@@ -82,8 +83,8 @@ fun GarudaPuranRoute(
     val language = reportText.language
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(analyticsTracker) {
-        analyticsTracker.track(AnalyticsEvent.GarudaPuranOpened)
+    LaunchedEffect(Unit) {
+        eventDispatcher?.dispatch(com.aynvora.core.event.GarudaPuranEvents.screenOpened())
     }
     LaunchedEffect(catalogUseCase, garudaText.languageCode, language) {
         loading = true
@@ -257,11 +258,13 @@ fun GarudaPuranRoute(
                     items(catalog!!.topics, key = { it.topicId.name }) { availability ->
                         TopicCard(availability, garudaText) {
                             if (availability.status == GarudaPuranContentStatus.AVAILABLE) {
-                                analyticsTracker.track(
-                                    AnalyticsEvent.GarudaPuranTopicOpened(
-                                        availability.topicId
+                                scope.launch {
+                                    eventDispatcher?.dispatch(
+                                        com.aynvora.core.event.GarudaPuranEvents.topicSelected(
+                                            availability.topicId.name
+                                        )
                                     )
-                                )
+                                }
                                 selectedTopic = availability.topicId
                             }
                         }

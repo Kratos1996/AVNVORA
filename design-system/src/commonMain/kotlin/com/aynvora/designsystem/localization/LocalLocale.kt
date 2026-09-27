@@ -36,6 +36,14 @@ val LocalAynvoraTranslator = compositionLocalOf<AynvoraTranslator> {
 }
 
 /**
+ * Composition local providing the unified [com.aynvora.core.localization.LocalizationProvider].
+ */
+val LocalAynvoraLocalizationProvider =
+    compositionLocalOf<com.aynvora.core.localization.LocalizationProvider> {
+        AynvoraTranslator(LanguageRegistry.defaultLocale())
+    }
+
+/**
  * Composition local for the layout direction derived from the current locale.
  *
  * Compose [CompositionLocalProvider] should set this to

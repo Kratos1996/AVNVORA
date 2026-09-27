@@ -77,8 +77,12 @@ val coreDataModule: Module = module {
         com.aynvora.data.garudapuran.ContentBackedGarudaPuranRepository(get())
     }
 
+    // Phase 8.3 — Bhagavad Gita: Room-backed, offline-first, 701 verses from gita/gita (Public Domain)
     single<com.aynvora.core.gita.GitaRepository> {
-        com.aynvora.data.gita.InMemoryGitaRepository()
+        val database: AynvoraDatabase = get()
+        com.aynvora.data.gita.RoomGitaRepository(
+            dao = database.gitaDao(),
+        )
     }
 
     single<com.aynvora.core.tarot.TarotAssetVerifier> {
@@ -91,10 +95,49 @@ val coreDataModule: Module = module {
 
     // On-Device AI Data & Storage (Phase 8.6)
     single<com.aynvora.core.ai.AiModelStorageRepository> {
-        com.aynvora.data.ai.AiModelStorageRepositoryImpl()
+        com.aynvora.data.ai.AiModelStorageRepositoryImpl(driver = get())
     }
 
     single<com.aynvora.core.ai.AiDeviceCapabilityDetector> {
         com.aynvora.data.ai.DefaultAiDeviceCapabilityDetector()
+    }
+
+    // Tarot Conversational Session Repository (Phase 8.9)
+    single<com.aynvora.data.tarot.TarotSessionStorage> {
+        com.aynvora.data.tarot.DriverTarotSessionStorage(driver = get())
+    }
+
+    single<com.aynvora.core.tarot.TarotSessionRepository> {
+        com.aynvora.data.tarot.TarotSessionRepositoryImpl(storage = get())
+    }
+
+    // Palmistry Session Repository (Phase 8.10)
+    single<com.aynvora.data.palmistry.PalmSessionStorage> {
+        com.aynvora.data.palmistry.DriverPalmSessionStorage(driver = get())
+    }
+
+    single<com.aynvora.data.palmistry.PalmSessionRepositoryImpl> {
+        com.aynvora.data.palmistry.PalmSessionRepositoryImpl(storage = get())
+    }
+
+    single<com.aynvora.core.palmistry.PalmSessionRepository> {
+        get<com.aynvora.data.palmistry.PalmSessionRepositoryImpl>()
+    }
+
+    single<com.aynvora.core.palmistry.PalmistryRepository> {
+        get<com.aynvora.data.palmistry.PalmSessionRepositoryImpl>()
+    }
+
+    // Numerology Domain Repository (Phase 10.0 & 10.4)
+    single<com.aynvora.core.numerology.NumerologyRepository> {
+        com.aynvora.data.numerology.NumerologyRepositoryImpl()
+    }
+    single<com.aynvora.core.numerology.NumerologyHistoryRepository> {
+        com.aynvora.data.numerology.NumerologyHistoryRepositoryImpl(driver = get())
+    }
+
+    // Gemstone Domain Repository (Phase 8.2)
+    single<com.aynvora.core.gemstone.GemstoneRepository> {
+        com.aynvora.data.gemstone.GemstoneRepositoryImpl(driver = get())
     }
 }

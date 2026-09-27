@@ -1,0 +1,132 @@
+{
+  "sessionId": "SENTINEL-SM-S918B-20260927-P109",
+  "deviceModel": "SM-S918B (Samsung Galaxy S23 Ultra)",
+  "deviceManufacturer": "samsung",
+  "androidVersion": "16 (SDK 36)",
+  "appBuild": "1.0.0-qa-sentinel",
+  "timestampMs": 1758979800000,
+  "totalActions": 78,
+  "totalSuccess": 74,
+  "totalNoOp": 2,
+  "totalRepeatedNoOp": 0,
+  "totalError": 2,
+  "totalTimeout": 0,
+  "totalLoadingHang": 0,
+  "totalUndetermined": 0,
+  "screensVisited": [
+    "CoreFeatureDashboard",
+    "FeatureFoundationDetailSheet",
+    "LanguagePickerSheet",
+    "NumerologyScreen",
+    "PalmistryScreen",
+    "QaSentinelDashboard",
+    "TarotScreen"
+  ],
+  "featureStats": [
+    {
+      "feature": "dashboard",
+      "totalActions": 24,
+      "success": 24,
+      "noOp": 0,
+      "repeatedNoOp": 0,
+      "error": 0,
+      "timeout": 0,
+      "loadingHang": 0,
+      "undetermined": 0
+    },
+    {
+      "feature": "localization",
+      "totalActions": 12,
+      "success": 11,
+      "noOp": 1,
+      "repeatedNoOp": 0,
+      "error": 0,
+      "timeout": 0,
+      "loadingHang": 0,
+      "undetermined": 0
+    },
+    {
+      "feature": "numerology",
+      "totalActions": 16,
+      "success": 15,
+      "noOp": 0,
+      "repeatedNoOp": 0,
+      "error": 1,
+      "timeout": 0,
+      "loadingHang": 0,
+      "undetermined": 0
+    },
+    {
+      "feature": "tarot",
+      "totalActions": 14,
+      "success": 13,
+      "noOp": 0,
+      "repeatedNoOp": 0,
+      "error": 1,
+      "timeout": 0,
+      "loadingHang": 0,
+      "undetermined": 0
+    },
+    {
+      "feature": "palmistry",
+      "totalActions": 12,
+      "success": 11,
+      "noOp": 1,
+      "repeatedNoOp": 0,
+      "error": 0,
+      "timeout": 0,
+      "loadingHang": 0,
+      "undetermined": 0
+    }
+  ],
+  "failureCapsules": [
+    {
+      "failureId": "INT-20260927-001",
+      "actionId": {
+        "feature": "dashboard",
+        "screen": "feature_detail_sheet",
+        "component": "close_button",
+        "action": "close"
+      },
+      "screen": "FeatureFoundationDetailSheet",
+      "route": "dashboard",
+      "interactionType": "TAP",
+      "expected": "BottomSheetStateChanged(open=false)",
+      "observed": "CottonSheet remained presented on screen; ViewModel dismissed state but controller.dismiss() was omitted.",
+      "repeatedCount": 1,
+      "durationMs": 420,
+      "classification": "ACTION_NO_OP",
+      "confidence": "HIGH",
+      "beforeFingerprint": "FeatureFoundationDetailSheet|r=dashboard|s=true|d=false",
+      "afterFingerprint": "FeatureFoundationDetailSheet|r=dashboard|s=true|d=false",
+      "eventsLogged": [
+        "CLICK/FeatureFoundationDetailSheet:CloseButton (status=Handled)"
+      ],
+      "stackTrace": null,
+      "timestampMs": 1758979802000
+    },
+    {
+      "failureId": "INT-20260927-002",
+      "actionId": {
+        "feature": "runtime",
+        "screen": "database",
+        "component": "koin_scope",
+        "action": "resolve_room"
+      },
+      "screen": "CoreFeatureDashboard",
+      "route": "dashboard",
+      "interactionType": "SYSTEM_INJECTION",
+      "expected": "AynvoraDatabase resolved in Koin",
+      "observed": "org.koin.core.error.NoDefinitionFoundException: No definition found for type 'com.aynvora.data.database.AynvoraDatabase' in scope '_root_'.",
+      "repeatedCount": 1,
+      "durationMs": 12,
+      "classification": "ACTION_ERROR",
+      "confidence": "HIGH",
+      "beforeFingerprint": "CoreFeatureDashboard|r=dashboard|s=false|d=false",
+      "afterFingerprint": "CoreFeatureDashboard|r=dashboard|s=false|d=false",
+      "eventsLogged": [],
+      "stackTrace": "org.koin.core.error.NoDefinitionFoundException: No definition found for type 'com.aynvora.data.database.AynvoraDatabase' on scope '['_root_']'\\n\\tat com.aynvora.data.di.CoreDataModuleKt.coreDataModule$lambda$0$11(CoreDataModule.kt:185)",
+      "timestampMs": 1758979805000
+    }
+  ]
+}

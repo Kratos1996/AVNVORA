@@ -22,6 +22,7 @@ kotlin {
             implementation(compose.animation)
             api(compose.components.resources)
             implementation(project(":aynvora-localization"))
+            api(project(":aynvora-core"))
             api(libs.cottonsheet)
             api(libs.popbox)
         }

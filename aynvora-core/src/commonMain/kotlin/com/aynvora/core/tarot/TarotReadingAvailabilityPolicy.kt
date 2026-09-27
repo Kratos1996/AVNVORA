@@ -96,9 +96,10 @@ class TarotReadingAvailabilityPolicy(
      */
     suspend fun startNewSession(
         reading: TarotReading,
-        language: String,
-        deckId: String,
+        language: String = "en",
+        deckId: String = TarotStandardDeck.Deck.id,
     ): AynvoraResult<TarotReadingSession> {
+
         val nowMs = clock.nowEpochMs()
         val session = TarotReadingSession(
             id = "session_${nowMs}_${reading.id.hashCode().toString().take(6)}",

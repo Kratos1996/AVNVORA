@@ -94,10 +94,7 @@ object LocaleFormatter {
     fun formatDate(year: Int, month: Int, day: Int, locale: SupportedLocale): String {
         val dd = day.toString().padStart(2, '0')
         val mm = month.toString().padStart(2, '0')
-        return when (locale.localeId) {
-            "en", "hi" -> "$dd/$mm/$year"
-            else -> "$dd/$mm/$year"
-        }
+        return "$dd/$mm/$year"
     }
 
     /**

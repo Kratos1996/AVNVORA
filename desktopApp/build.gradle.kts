@@ -9,6 +9,7 @@ kotlin {
     sourceSets {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutines.swing)
             implementation(project(":ui"))
             implementation(project(":aynvora-core"))
             implementation(project(":aynvora-data"))

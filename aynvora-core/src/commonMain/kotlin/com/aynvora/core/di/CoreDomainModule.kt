@@ -38,7 +38,7 @@ val coreDomainModule: Module = module {
     single<AnalyticsTracker> { NoOpAnalyticsTracker() }
 
     // Core SDK
-    single<AynvoraSdk> { Aynvora.create() }
+    single<AynvoraSdk> { Aynvora.create(numerology = getOrNull()) }
 
     // Domain Use Cases
     factory { SaveBirthProfileUseCase(get()) }
@@ -64,6 +64,24 @@ val coreDomainModule: Module = module {
             deterministicEngine = com.aynvora.core.tarot.DeterministicTarotExplanationEngine(),
         )
     }
+
+    // Tarot Conversational Experience (Phase 8.9)
+    single<com.aynvora.core.tarot.TarotClock> { com.aynvora.core.tarot.SystemTarotClock() }
+    single {
+        com.aynvora.core.tarot.TarotReadingAvailabilityPolicy(
+            sessionRepository = get(),
+            clock = get(),
+        )
+    }
+    single {
+        com.aynvora.core.tarot.TarotQuestionEngine(
+            explanationEngine = get(),
+            drawEngine = get(),
+            clock = get(),
+            localizationProvider = getOrNull(),
+        )
+    }
+
 
     // On-Device AI Core Services (Phase 8.6 & 8.8 Native Runtime)
     single { com.aynvora.core.ai.AiModelSelector() }
@@ -113,5 +131,33 @@ val coreDomainModule: Module = module {
             sdk = get(),
             analyticsTracker = getOrNull(),
         )
+    }
+
+    // Palmistry Domain Services (Phase 8.10)
+    single { com.aynvora.core.palmistry.PalmImageAnalysisEngine() }
+    single { com.aynvora.core.palmistry.PalmistryFeatureDataConnector() }
+    single<com.aynvora.core.palmistry.PalmistryExplanationEngine> {
+        com.aynvora.core.palmistry.GroundedSlmPalmistryExplanationEngine(
+            aiInferenceEngine = get(),
+            deterministicEngine = com.aynvora.core.palmistry.DeterministicPalmistryExplanationEngine(),
+        )
+    }
+    single { com.aynvora.core.palmistry.PalmQuestionEngine(explanationEngine = get()) }
+
+    // Gemstone Domain Services (Phase 8.2)
+    single<com.aynvora.core.gemstone.CertificateImageAnalyzer> {
+        com.aynvora.core.gemstone.DefaultCertificateImageAnalyzer()
+    }
+
+    // Unified Event SDK (Phase 9.0)
+    single<com.aynvora.core.event.AynvoraEventGuard> { com.aynvora.core.event.StandardAynvoraEventGuard() }
+    single<com.aynvora.core.event.AynvoraEventDeduplicator> { com.aynvora.core.event.DefaultAynvoraEventDeduplicator() }
+    single<com.aynvora.core.event.AynvoraEventAnalyticsMapper> { com.aynvora.core.event.DefaultAynvoraEventAnalyticsMapper() }
+    single { com.aynvora.core.event.AynvoraEventAnalyticsBridge(get(), get()) }
+    single<com.aynvora.core.event.AynvoraEventDispatcher> {
+        val dispatcher = com.aynvora.core.event.DefaultAynvoraEventDispatcher(get(), get())
+        val bridge: com.aynvora.core.event.AynvoraEventAnalyticsBridge = get()
+        dispatcher.addObserver(bridge)
+        dispatcher
     }
 }

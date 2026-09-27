@@ -1,46 +1,33 @@
 package com.aynvora.ui.features
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import com.aynvora.core.ai.AiDeviceProfile
 import com.aynvora.core.ai.AiModelLifecycleState
 import com.aynvora.core.ai.AiModelSelectionResult
+import com.aynvora.core.event.AynvoraClickEvent
+import com.aynvora.core.event.AynvoraEventPayload
 import com.aynvora.core.feature.CanonicalCoreFeatures
 import com.aynvora.core.feature.CoreFeatureDescriptor
 import com.aynvora.core.feature.CoreFeatureId
 import com.aynvora.core.feature.FeatureAvailability
-import com.aynvora.designsystem.AynvoraTheme
-import com.aynvora.designsystem.adaptive.sdp
-import com.aynvora.designsystem.adaptive.ssp
-import com.aynvora.designsystem.components.AynvoraButton
+import com.aynvora.designsystem.AynvoraSpacing
 import com.aynvora.designsystem.components.AynvoraButtonVariant
-import com.aynvora.designsystem.components.AynvoraCard
-import com.aynvora.designsystem.components.AynvoraCardVariant
-import com.aynvora.localization.locale.LanguageRegistry
+import com.aynvora.designsystem.components.AynvoraFeatureCard
+import com.aynvora.designsystem.components.AynvoraStatusChipVariant
+import com.aynvora.designsystem.localization.LocalAynvoraTranslator
 import com.aynvora.localization.translation.AynvoraTranslator
+import com.aynvora.localization.translation.TranslationKey
 import com.aynvora.ui.ai.AiSetupCard
 
 /**
  * Core Product Dashboard displaying all 14 first-class features with typed availability badges,
- * full Hindi/English bilingual localization, and adaptive theme styling.
+ * full multi-locale localization, and standardized SDK feature cards.
  */
 @Composable
 fun CoreFeatureDashboard(
@@ -54,30 +41,12 @@ fun CoreFeatureDashboard(
     onDeleteAiClicked: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val isDark = AynvoraTheme.isDark
-    val translator = AynvoraTranslator(LanguageRegistry.getLocaleOrDefault(language))
-
-    val cardContainerColor = if (isDark) {
-        AynvoraTheme.colors.CosmicNavy
-    } else {
-        AynvoraTheme.colors.White
-    }
-
-    val primaryTextColor = if (isDark) {
-        AynvoraTheme.colors.TextLight
-    } else {
-        AynvoraTheme.colors.TextDark
-    }
-
-    val secondaryTextColor = if (isDark) {
-        AynvoraTheme.colors.TextLightSecondary
-    } else {
-        AynvoraTheme.colors.TextSecondary
-    }
+    val translator = LocalAynvoraTranslator.current
 
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(14.sdp),
+        verticalArrangement = Arrangement.spacedBy(AynvoraSpacing.space12),
+        contentPadding = PaddingValues(bottom = AynvoraSpacing.space24),
     ) {
         if (aiLifecycleState != null) {
             item(key = "ai_setup_header") {
@@ -93,90 +62,31 @@ fun CoreFeatureDashboard(
         }
 
         items(CanonicalCoreFeatures, key = { it.id.name }) { feature ->
-            val featureTitle = resolveFeatureTitle(feature, translator, language)
-            val featureSubtitle = resolveFeatureSubtitle(feature, translator, language)
-            val badgeLabel = resolveBadgeLabel(feature.availability, language)
-            val buttonLabel = resolveButtonLabel(feature.availability, language)
+            val featureTitle = resolveFeatureTitle(feature, translator)
+            val featureSubtitle = resolveFeatureSubtitle(feature, translator)
+            val badgeLabel = resolveBadgeLabel(feature.availability, translator)
+            val buttonLabel = resolveButtonLabel(feature.availability, translator)
             val iconGlyph = getFeatureGlyph(feature.id)
 
-            AynvoraCard(
-                modifier = Modifier.fillMaxWidth(),
-                variant = AynvoraCardVariant.Elevated,
-                containerColor = cardContainerColor,
-                contentColor = primaryTextColor,
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isDark) AynvoraTheme.colors.CosmicIndigo else AynvoraTheme.colors.SoftGold),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = iconGlyph,
-                                    style = AynvoraTheme.typography.title18.copy(fontSize = 18.ssp),
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(10.sdp))
-
-                            Text(
-                                text = featureTitle,
-                                style = AynvoraTheme.typography.title18.copy(fontSize = 17.ssp),
-                                color = AynvoraTheme.colors.Gold,
-                            )
-                        }
-
-                        val badgeColor = when (feature.availability) {
-                            is FeatureAvailability.Available -> AynvoraTheme.colors.CelestialBlue
-                            is FeatureAvailability.OfflineAvailable -> AynvoraTheme.colors.Success
-                            else -> AynvoraTheme.colors.GoldLight
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(badgeColor.copy(alpha = 0.15f))
-                                .padding(horizontal = 8.sdp, vertical = 4.sdp),
-                        ) {
-                            Text(
-                                text = badgeLabel,
-                                style = AynvoraTheme.typography.caption12.copy(fontSize = 10.ssp),
-                                color = badgeColor,
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.sdp))
-
-                    Text(
-                        text = featureSubtitle,
-                        style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
-                        color = secondaryTextColor,
-                    )
-
-                    Spacer(modifier = Modifier.height(14.sdp))
-
-                    AynvoraButton(
-                        text = buttonLabel,
-                        variant = when (feature.availability) {
-                            is FeatureAvailability.Available -> AynvoraButtonVariant.Primary
-                            else -> AynvoraButtonVariant.Outlined
-                        },
-                        onClick = { onFeatureSelected(feature.id) },
-                    )
-                }
-            }
+            AynvoraFeatureCard(
+                title = featureTitle,
+                description = featureSubtitle,
+                iconGlyph = iconGlyph,
+                statusLabel = badgeLabel,
+                statusVariant = resolveStatusVariant(feature.availability),
+                buttonLabel = buttonLabel,
+                buttonVariant = when (feature.availability) {
+                    is FeatureAvailability.Available -> AynvoraButtonVariant.Primary
+                    else -> AynvoraButtonVariant.Outlined
+                },
+                buttonEvent = AynvoraClickEvent(
+                    eventId = "dashboard.feature.open_clicked",
+                    screenId = "dashboard",
+                    componentId = "feature_card_${feature.id.name.lowercase()}",
+                    payload = AynvoraEventPayload.FeatureOpenPayload(feature.id),
+                ),
+                onButtonClick = { onFeatureSelected(feature.id) },
+            )
         }
     }
 }
@@ -184,7 +94,6 @@ fun CoreFeatureDashboard(
 private fun resolveFeatureTitle(
     feature: CoreFeatureDescriptor,
     translator: AynvoraTranslator,
-    language: String,
 ): String {
     val key = when (feature.id) {
         CoreFeatureId.ASTROLOGY -> "feature.astrology"
@@ -213,45 +122,62 @@ private fun resolveFeatureTitle(
 private fun resolveFeatureSubtitle(
     feature: CoreFeatureDescriptor,
     translator: AynvoraTranslator,
-    language: String,
 ): String {
-    if (language != "hi") return feature.subtitleKey
-
-    return when (feature.id) {
-        CoreFeatureId.ASTROLOGY -> "निश्चित जन्म कुंडली, दशा समय, गोचर, पंचांग, व्याख्या इंजन और 16 वर्ग।"
-        CoreFeatureId.TAROT -> "गहन प्रतीकात्मक चिंतन, 78-पत्तों की प्रामाणिक गड्डी और पूर्णतः ऑफ़लाइन आत्म-निरीक्षण।"
-        CoreFeatureId.NUMEROLOGY -> "मूलांक, भाग्यांक, नामांक, व्यक्तिगत वर्ष और जीवन शिखर काल।"
-        CoreFeatureId.PALMISTRY -> translator.resolve("palmistry.subtitle")
-        CoreFeatureId.GEMSTONE -> translator.resolve("gemstone.subtitle")
-        CoreFeatureId.GITA -> translator.resolve("gita.subtitle")
-        CoreFeatureId.GARUDA_PURAN -> translator.resolve("garuda.subtitle")
-        CoreFeatureId.LAL_KITAB -> translator.resolve("lalkitab.subtitle")
-        CoreFeatureId.AI_ASSISTANT -> translator.resolve("ai.subtitle")
-        CoreFeatureId.DAILY_GUIDANCE -> translator.resolve("guidance.subtitle")
-        CoreFeatureId.WALLPAPER -> translator.resolve("wallpaper.subtitle")
-        CoreFeatureId.RUDRAKSHA -> "पारंपरिक मुखी आधारित रुद्राक्ष मार्गदर्शन, ग्रहीय संबंध एवं स्रोत प्रामाणिकता।"
-        CoreFeatureId.JADI -> "वैदिक परंपरा से पारंपरिक वनस्पति मूल उपाय। विशुद्ध गैर-चिकित्सीय परामर्श।"
-        CoreFeatureId.YANTRA -> "साधना एवं उपासना हेतु पवित्र ज्यामितीय यंत्र आरेख।"
+    val key = when (feature.id) {
+        CoreFeatureId.PALMISTRY -> "palmistry.subtitle"
+        CoreFeatureId.GEMSTONE -> "gemstone.subtitle"
+        CoreFeatureId.GITA -> "gita.subtitle"
+        CoreFeatureId.GARUDA_PURAN -> "garuda.subtitle"
+        CoreFeatureId.LAL_KITAB -> "lalkitab.subtitle"
+        CoreFeatureId.AI_ASSISTANT -> "ai.subtitle"
+        CoreFeatureId.DAILY_GUIDANCE -> "guidance.subtitle"
+        CoreFeatureId.WALLPAPER -> "wallpaper.subtitle"
+        else -> "feature.${feature.id.name.lowercase()}.subtitle"
+    }
+    val resolved = translator.resolve(key)
+    return if (resolved.startsWith("[MISSING:") || resolved == key) {
+        feature.subtitleKey
+    } else {
+        resolved
     }
 }
 
-private fun resolveBadgeLabel(availability: FeatureAvailability, language: String): String {
-    val isHi = language == "hi"
+private fun resolveStatusVariant(availability: FeatureAvailability): AynvoraStatusChipVariant {
     return when (availability) {
-        is FeatureAvailability.Available -> if (isHi) "उपलब्ध" else "AVAILABLE"
-        is FeatureAvailability.ComingSoon -> if (isHi) "आधारभूत तैयार" else "FOUNDATION READY"
-        is FeatureAvailability.OfflineAvailable -> if (isHi) "ऑफ़लाइन" else "OFFLINE"
-        is FeatureAvailability.ConfigurationRequired -> if (isHi) "सेटअप" else "SETUP"
-        is FeatureAvailability.UpdateRequired -> if (isHi) "अपडेट" else "UPDATE"
-        is FeatureAvailability.UnsupportedOnPlatform -> if (isHi) "असमर्थित" else "UNSUPPORTED"
+        is FeatureAvailability.Available -> AynvoraStatusChipVariant.Available
+        is FeatureAvailability.OfflineAvailable -> AynvoraStatusChipVariant.Offline
+        is FeatureAvailability.ComingSoon -> AynvoraStatusChipVariant.InDevelopment
+        is FeatureAvailability.ConfigurationRequired -> AynvoraStatusChipVariant.Warning
+        is FeatureAvailability.UpdateRequired -> AynvoraStatusChipVariant.Warning
+        is FeatureAvailability.UnsupportedOnPlatform -> AynvoraStatusChipVariant.Error
     }
 }
 
-private fun resolveButtonLabel(availability: FeatureAvailability, language: String): String {
-    val isHi = language == "hi"
+private fun resolveBadgeLabel(
+    availability: FeatureAvailability,
+    translator: AynvoraTranslator
+): String {
     return when (availability) {
-        is FeatureAvailability.Available -> if (isHi) "सुविधा खोलें" else "Open Feature"
-        else -> if (isHi) "संरचना देखें" else "View Foundation"
+        is FeatureAvailability.Available -> translator.translate(TranslationKey.FeatureDetail.StatusAvailable)
+        is FeatureAvailability.ComingSoon -> translator.translateWithArgs(
+            TranslationKey.FeatureDetail.StatusInDevelopment,
+            "phase" to availability.targetPhase,
+        )
+
+        is FeatureAvailability.OfflineAvailable -> translator.translate(TranslationKey.FeatureDetail.StatusOffline)
+        is FeatureAvailability.ConfigurationRequired -> translator.translate(TranslationKey.FeatureDetail.StatusSetupRequired)
+        is FeatureAvailability.UpdateRequired -> translator.translate(TranslationKey.FeatureDetail.StatusUpdateRequired)
+        is FeatureAvailability.UnsupportedOnPlatform -> translator.translate(TranslationKey.FeatureDetail.StatusUnsupported)
+    }
+}
+
+private fun resolveButtonLabel(
+    availability: FeatureAvailability,
+    translator: AynvoraTranslator
+): String {
+    return when (availability) {
+        is FeatureAvailability.Available -> translator.translate(TranslationKey.FeatureDetail.FeatureOpen)
+        else -> translator.translate(TranslationKey.FeatureDetail.FeatureViewFoundation)
     }
 }
 

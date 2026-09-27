@@ -1,5 +1,8 @@
 package com.aynvora.core.tarot
 
+import com.aynvora.core.localization.AynvoraLocale
+import com.aynvora.core.localization.LocalizationProvider
+import com.aynvora.core.localization.RawLocalizationKey
 import com.aynvora.core.result.AynvoraResult
 
 /**
@@ -37,6 +40,7 @@ class TarotQuestionEngine(
     private val explanationEngine: TarotExplanationEngine,
     private val drawEngine: TarotDrawEngine = TarotDrawEngine(),
     private val clock: TarotClock = SystemTarotClock(),
+    private val localizationProvider: LocalizationProvider? = null,
 ) {
 
     /**
@@ -72,10 +76,9 @@ class TarotQuestionEngine(
                 primaryDraws.size < 3
 
         if (hasInsufficientEvidence) {
-            val clarificationReason = when (language) {
-                "hi" -> "वर्तमान पत्ते आपके प्रश्न के लिए पर्याप्त संदर्भ नहीं देते। एक स्पष्टीकरण पत्ता और स्पष्टता दे सकता है।"
-                else -> "The current cards offer broad reflection but may not provide sufficient context for your specific question. Drawing one clarification card could help."
-            }
+            val clarificationReason =
+                localizationProvider?.get(RawLocalizationKey("tarot.clarification.offer"))
+                    ?: "The current cards offer broad reflection but may not provide sufficient context for your specific question. Drawing one clarification card could help."
             return AynvoraResult.Success(
                 TarotQuestionAnswer(
                     id = "ans_${clock.nowEpochMs()}_${question.id.hashCode().toString().take(4)}",
@@ -186,10 +189,9 @@ class TarotQuestionEngine(
         val cardNames = draws.joinToString(", ") { draw ->
             contents[draw.card.id]?.title ?: draw.card.name
         }
-        return when (language) {
-            "hi" -> "आपके प्रश्न \"${question.questionText.take(60)}\" के संदर्भ में $cardNames पत्तों का चिंतन।"
-            else -> "Reflection on \"${question.questionText.take(60)}\" through the lens of $cardNames."
-        }
+        val prefix = localizationProvider?.get(RawLocalizationKey("tarot.screen.reflection_title"))
+            ?: "Reflection"
+        return "$prefix: \"${question.questionText.take(60)}\" — $cardNames"
     }
 
     private fun buildInterpretation(
@@ -198,6 +200,14 @@ class TarotQuestionEngine(
         question: TarotQuestion,
         language: String,
     ): String {
+        val uprightText = localizationProvider?.get(RawLocalizationKey("tarot.upright"))
+            ?: "Upright"
+        val reversedText = localizationProvider?.get(RawLocalizationKey("tarot.reversed"))
+            ?: "Reversed"
+        val disclaimerText =
+            localizationProvider?.get(RawLocalizationKey("tarot.question.disclaimer"))
+                ?: "[This reflection is offered for contemplation, not as a guaranteed prediction.]"
+
         return buildString {
             draws.forEachIndexed { index, draw ->
                 val content = contents[draw.card.id]
@@ -206,21 +216,13 @@ class TarotQuestionEngine(
                 } else {
                     content?.reversedMeaning ?: draw.card.name
                 }
-                val orientLabel = if (draw.orientation == TarotCardOrientation.UPRIGHT) {
-                    if (language == "hi") "सीधा" else "Upright"
-                } else {
-                    if (language == "hi") "उल्टा" else "Reversed"
-                }
+                val orientLabel =
+                    if (draw.orientation == TarotCardOrientation.UPRIGHT) uprightText else reversedText
                 val cardName = content?.title ?: draw.card.name
                 if (index > 0) append("\n\n")
                 append("$cardName ($orientLabel): $meaning")
             }
-            val disclaimer = if (language == "hi") {
-                "\n\n[यह व्याख्या चिंतन के लिए है, भविष्यवाणी नहीं।]"
-            } else {
-                "\n\n[This reflection is offered for contemplation, not as a guaranteed prediction.]"
-            }
-            append(disclaimer)
+            append("\n\n$disclaimerText")
         }
     }
 

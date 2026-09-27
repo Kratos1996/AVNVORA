@@ -816,9 +816,8 @@ class LocalSimulationEngine(
         request: AiGenerationRequest,
         model: AiModelVariant
     ): String {
-        val isHindi = request.language.lowercase().startsWith("hi")
-        return if (isHindi) {
-            "प्रस्तुत साक्ष्य और ज्ञान के आधार पर: ${request.userPrompt.take(120)}। यह विचार ऑन-डिवाइस एआई मॉडल (${model.parameterCount}) द्वारा बिना किसी नेटवर्क के पूर्णतः निजी रूप से उत्पन्न किया गया है।"
+        return if (request.language.startsWith("hi")) {
+            "प्रस्तुत साक्ष्य और ज्ञान के आधार पर: ${request.userPrompt.take(140)}। यह विश्लेषण ${model.name} द्वारा ऑफलाइन तैयार किया गया है।"
         } else {
             "Reflecting upon the grounded wisdom and evidence: ${request.userPrompt.take(140)}. This synthesis was generated completely offline on-device by ${model.name}."
         }

@@ -26,6 +26,8 @@ include(
     ":aynvora-localization",
     ":aynvora-navigation",
     ":ui",
+    ":aynvora-qa-core",
+    ":aynvora-qa-android",
     ":androidApp",
     ":desktopApp"
 )

@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
@@ -17,25 +19,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.aynvora.core.ai.AiDeviceProfile
 import com.aynvora.core.ai.AiModelLifecycleState
 import com.aynvora.core.ai.AiModelSelectionResult
 import com.aynvora.core.ai.AiModelSelectionStatus
+import com.aynvora.core.event.AynvoraClickEvent
+import com.aynvora.core.event.AynvoraEventPayload
+import com.aynvora.designsystem.AynvoraColors
+import com.aynvora.designsystem.AynvoraShapes
+import com.aynvora.designsystem.AynvoraSpacing
 import com.aynvora.designsystem.AynvoraTheme
-import com.aynvora.designsystem.adaptive.sdp
 import com.aynvora.designsystem.adaptive.ssp
 import com.aynvora.designsystem.components.AynvoraButton
 import com.aynvora.designsystem.components.AynvoraButtonVariant
 import com.aynvora.designsystem.components.AynvoraCard
 import com.aynvora.designsystem.components.AynvoraCardVariant
+import com.aynvora.designsystem.components.AynvoraStatusChip
+import com.aynvora.designsystem.components.AynvoraStatusChipVariant
 
 /**
- * Single-touch UI card for On-Device AI platform management.
+ * Enterprise SDK Intelligence card for On-Device AI platform management.
  *
  * Implements the core principle: "You use AYNVORA. AYNVORA decides the AI."
  * The user is never prompted for model size, quantization, or runtime parameters.
+ * Visuals adhere to the SDK design system: unified hierarchy, compact vertical rhythm,
+ * token-based spacing, and standardized status chips.
  */
 @Composable
 fun AiSetupCard(
@@ -48,102 +57,133 @@ fun AiSetupCard(
     onDiagnosticsClicked: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    val isDark = AynvoraTheme.isDark
+
+    val containerColor = if (isDark) {
+        AynvoraTheme.colors.CosmicNavy
+    } else {
+        AynvoraTheme.colors.White
+    }
+
+    val iconBoxBg = if (isDark) {
+        AynvoraTheme.colors.CosmicIndigo
+    } else {
+        AynvoraTheme.colors.SoftGold
+    }
+
+    val borderColor = if (isDark) {
+        AynvoraColors.Gold.copy(alpha = 0.28f)
+    } else {
+        AynvoraColors.Gold.copy(alpha = 0.40f)
+    }
+
+    val secondaryTextColor = if (isDark) {
+        AynvoraTheme.colors.TextLightSecondary
+    } else {
+        AynvoraTheme.colors.TextSecondary
+    }
+
+    val (statusText, statusVariant) = when (lifecycleState) {
+        is AiModelLifecycleState.Ready -> "100% OFFLINE" to AynvoraStatusChipVariant.Offline
+        is AiModelLifecycleState.Downloading -> "DOWNLOADING" to AynvoraStatusChipVariant.Available
+        is AiModelLifecycleState.VerifyingChecksum -> "VERIFYING" to AynvoraStatusChipVariant.InDevelopment
+        is AiModelLifecycleState.Installing -> "INSTALLING" to AynvoraStatusChipVariant.InDevelopment
+        is AiModelLifecycleState.Error -> "ATTENTION" to AynvoraStatusChipVariant.Error
+        is AiModelLifecycleState.NotInstalled -> {
+            if (selectionResult?.status == AiModelSelectionStatus.READY_TO_DOWNLOAD) "READY" to AynvoraStatusChipVariant.InDevelopment
+            else "UNAVAILABLE" to AynvoraStatusChipVariant.Neutral
+        }
+    }
+
     AynvoraCard(
-        modifier = modifier.fillMaxWidth(),
-        variant = AynvoraCardVariant.Elevated,
-        containerColor = AynvoraTheme.colors.CosmicNavy,
-        contentColor = AynvoraTheme.colors.TextLight,
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, borderColor, AynvoraShapes.shape12),
+        variant = AynvoraCardVariant.Filled,
+        shape = AynvoraShapes.shape12,
+        containerColor = containerColor,
+        contentColor = if (isDark) AynvoraTheme.colors.TextLight else AynvoraTheme.colors.TextDark,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(AynvoraSpacing.space16),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.sdp),
-        ) {
-            // Header Row
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Header Row: Icon + Brand AI Title + Status Chip
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column {
-                    Text(
-                        text = "AYNVORA AI",
-                        style = AynvoraTheme.typography.title18.copy(fontSize = 18.ssp),
-                        color = AynvoraTheme.colors.Gold,
-                    )
-                    Text(
-                        text = "Private On-Device Intelligence",
-                        style = AynvoraTheme.typography.caption12.copy(fontSize = 12.ssp),
-                        color = AynvoraTheme.colors.TextLightSecondary,
-                    )
-                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(AynvoraShapes.shape8)
+                            .background(iconBoxBg),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "🧠",
+                            style = AynvoraTheme.typography.title18.copy(fontSize = 18.ssp),
+                        )
+                    }
 
-                val statusBadgeText = when (lifecycleState) {
-                    is AiModelLifecycleState.Ready -> "100% OFFLINE"
-                    is AiModelLifecycleState.Downloading -> "DOWNLOADING"
-                    is AiModelLifecycleState.VerifyingChecksum -> "VERIFYING"
-                    is AiModelLifecycleState.Installing -> "INSTALLING"
-                    is AiModelLifecycleState.Error -> "ATTENTION"
-                    is AiModelLifecycleState.NotInstalled -> {
-                        if (selectionResult?.status == AiModelSelectionStatus.READY_TO_DOWNLOAD) "READY"
-                        else "UNAVAILABLE"
+                    Spacer(modifier = Modifier.width(AynvoraSpacing.space12))
+
+                    Column {
+                        Text(
+                            text = "AYNVORA AI",
+                            style = AynvoraTheme.typography.title18.copy(fontSize = 17.ssp),
+                            color = AynvoraColors.Gold,
+                        )
+                        Text(
+                            text = "Private On-Device Intelligence",
+                            style = AynvoraTheme.typography.caption12.copy(fontSize = 11.ssp),
+                            color = secondaryTextColor,
+                        )
                     }
                 }
 
-                val statusBadgeColor = when (lifecycleState) {
-                    is AiModelLifecycleState.Ready -> AynvoraTheme.colors.CelestialBlue
-                    is AiModelLifecycleState.Downloading,
-                    is AiModelLifecycleState.VerifyingChecksum,
-                    is AiModelLifecycleState.Installing -> AynvoraTheme.colors.Gold
+                Spacer(modifier = Modifier.width(AynvoraSpacing.space8))
 
-                    is AiModelLifecycleState.Error -> Color(0xFFEF5350)
-                    is AiModelLifecycleState.NotInstalled -> AynvoraTheme.colors.TextLightSecondary
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(statusBadgeColor.copy(alpha = 0.15f))
-                        .border(1.dp, statusBadgeColor.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                ) {
-                    Text(
-                        text = statusBadgeText,
-                        style = AynvoraTheme.typography.caption12.copy(fontSize = 10.ssp),
-                        color = statusBadgeColor,
-                    )
-                }
+                AynvoraStatusChip(
+                    text = statusText,
+                    variant = statusVariant,
+                )
             }
 
-            Spacer(modifier = Modifier.height(12.sdp))
+            Spacer(modifier = Modifier.height(AynvoraSpacing.space10))
 
-            // Zero-Configuration Consumer Device Banner
+            // Zero-Configuration Hardware Banner
             if (deviceProfile != null) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(AynvoraTheme.colors.CosmicNavy.copy(alpha = 0.6f))
+                        .clip(AynvoraShapes.shape8)
+                        .background(
+                            if (isDark) AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.5f)
+                            else AynvoraTheme.colors.SoftGold.copy(alpha = 0.7f),
+                        )
                         .border(
-                            1.dp,
-                            AynvoraTheme.colors.Gold.copy(alpha = 0.2f),
-                            RoundedCornerShape(8.dp)
+                            width = 1.dp,
+                            color = if (isDark) AynvoraColors.Gold.copy(alpha = 0.15f) else AynvoraColors.Gold.copy(
+                                alpha = 0.25f
+                            ),
+                            shape = AynvoraShapes.shape8,
                         )
-                        .padding(10.sdp),
+                        .padding(
+                            horizontal = AynvoraSpacing.space10,
+                            vertical = AynvoraSpacing.space6
+                        ),
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = "AI optimized for your device • 100% Private & On-Device",
-                            style = AynvoraTheme.typography.caption12.copy(fontSize = 11.ssp),
-                            color = AynvoraTheme.colors.GoldLight,
-                        )
-                    }
+                    Text(
+                        text = "AI optimized for your device • 100% Private & On-Device",
+                        style = AynvoraTheme.typography.caption12.copy(fontSize = 11.ssp),
+                        color = if (isDark) AynvoraColors.GoldLight else AynvoraColors.GoldDeep,
+                    )
                 }
-                Spacer(modifier = Modifier.height(12.sdp))
+                Spacer(modifier = Modifier.height(AynvoraSpacing.space10))
             }
 
             // State-Specific Interactive Content
@@ -153,13 +193,25 @@ fun AiSetupCard(
                     if (summary != null && selectionResult.status == AiModelSelectionStatus.READY_TO_DOWNLOAD) {
                         Text(
                             text = "AYNVORA has automatically selected the optimal model package (${summary.downloadSizeFormatted}) tuned specifically for your device hardware.",
-                            style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
-                            color = AynvoraTheme.colors.TextLight,
+                            style = AynvoraTheme.typography.body14.copy(
+                                fontSize = 13.ssp,
+                                lineHeight = 18.ssp
+                            ),
+                            color = if (isDark) AynvoraTheme.colors.TextLight else AynvoraTheme.colors.TextDark,
                         )
-                        Spacer(modifier = Modifier.height(14.sdp))
+                        Spacer(modifier = Modifier.height(AynvoraSpacing.space12))
                         AynvoraButton(
                             text = summary.actionLabel,
                             variant = AynvoraButtonVariant.Primary,
+                            event = AynvoraClickEvent(
+                                eventId = "dashboard.ai.download_clicked",
+                                screenId = "dashboard",
+                                componentId = "ai_setup_download",
+                                payload = AynvoraEventPayload.AiDownloadPayload(
+                                    modelId = selectionResult.selectedModel?.modelId
+                                        ?: "recommended"
+                                ),
+                            ),
                             onClick = onDownloadClicked,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -167,8 +219,11 @@ fun AiSetupCard(
                         Text(
                             text = summary?.description
                                 ?: "Checking hardware capability and preparing automatic configuration...",
-                            style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
-                            color = AynvoraTheme.colors.TextLightSecondary,
+                            style = AynvoraTheme.typography.body14.copy(
+                                fontSize = 13.ssp,
+                                lineHeight = 18.ssp
+                            ),
+                            color = secondaryTextColor,
                         )
                     }
                 }
@@ -177,19 +232,19 @@ fun AiSetupCard(
                     Text(
                         text = "Downloading AYNVORA AI package...",
                         style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
-                        color = AynvoraTheme.colors.TextLight,
+                        color = if (isDark) AynvoraTheme.colors.TextLight else AynvoraTheme.colors.TextDark,
                     )
-                    Spacer(modifier = Modifier.height(8.sdp))
+                    Spacer(modifier = Modifier.height(AynvoraSpacing.space8))
                     LinearProgressIndicator(
                         progress = { lifecycleState.progressFraction },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(8.sdp)
-                            .clip(RoundedCornerShape(4.dp)),
-                        color = AynvoraTheme.colors.Gold,
-                        trackColor = AynvoraTheme.colors.CosmicNavy,
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = AynvoraColors.Gold,
+                        trackColor = if (isDark) AynvoraTheme.colors.CosmicIndigo else AynvoraTheme.colors.SoftGold,
                     )
-                    Spacer(modifier = Modifier.height(6.sdp))
+                    Spacer(modifier = Modifier.height(AynvoraSpacing.space6))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -199,18 +254,24 @@ fun AiSetupCard(
                         Text(
                             text = "${lifecycleState.percentage}% ($downloadedMb / $totalMb MB)",
                             style = AynvoraTheme.typography.caption12.copy(fontSize = 11.ssp),
-                            color = AynvoraTheme.colors.TextLightSecondary,
+                            color = secondaryTextColor,
                         )
                         Text(
                             text = "Cancel",
                             style = AynvoraTheme.typography.caption12.copy(fontSize = 11.ssp),
-                            color = AynvoraTheme.colors.GoldLight,
+                            color = AynvoraColors.GoldLight,
                         )
                     }
-                    Spacer(modifier = Modifier.height(10.sdp))
+                    Spacer(modifier = Modifier.height(AynvoraSpacing.space10))
                     AynvoraButton(
                         text = "Cancel Download",
                         variant = AynvoraButtonVariant.Outlined,
+                        event = AynvoraClickEvent(
+                            eventId = "dashboard.ai.cancel_clicked",
+                            screenId = "dashboard",
+                            componentId = "ai_setup_cancel",
+                            payload = AynvoraEventPayload.AiCancelPayload(),
+                        ),
                         onClick = onCancelClicked,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -220,16 +281,16 @@ fun AiSetupCard(
                     Text(
                         text = "Verifying cryptographic SHA-256 integrity...",
                         style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
-                        color = AynvoraTheme.colors.Gold,
+                        color = AynvoraColors.Gold,
                     )
-                    Spacer(modifier = Modifier.height(8.sdp))
+                    Spacer(modifier = Modifier.height(AynvoraSpacing.space8))
                     LinearProgressIndicator(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(6.sdp)
+                            .height(6.dp)
                             .clip(RoundedCornerShape(3.dp)),
-                        color = AynvoraTheme.colors.Gold,
-                        trackColor = AynvoraTheme.colors.CosmicNavy,
+                        color = AynvoraColors.Gold,
+                        trackColor = if (isDark) AynvoraTheme.colors.CosmicIndigo else AynvoraTheme.colors.SoftGold,
                     )
                 }
 
@@ -237,20 +298,29 @@ fun AiSetupCard(
                     Text(
                         text = "Finalizing atomic installation...",
                         style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
-                        color = AynvoraTheme.colors.Gold,
+                        color = AynvoraColors.Gold,
                     )
                 }
 
                 is AiModelLifecycleState.Ready -> {
                     Text(
                         text = "AYNVORA AI is installed and fully operational offline. Contemplation for Tarot, Astrology, and Scriptures runs locally without any network requests.",
-                        style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
-                        color = AynvoraTheme.colors.TextLight,
+                        style = AynvoraTheme.typography.body14.copy(
+                            fontSize = 13.ssp,
+                            lineHeight = 18.ssp
+                        ),
+                        color = if (isDark) AynvoraTheme.colors.TextLight else AynvoraTheme.colors.TextDark,
                     )
-                    Spacer(modifier = Modifier.height(12.sdp))
+                    Spacer(modifier = Modifier.height(AynvoraSpacing.space12))
                     AynvoraButton(
                         text = "Remove AI Package",
                         variant = AynvoraButtonVariant.Outlined,
+                        event = AynvoraClickEvent(
+                            eventId = "dashboard.ai.delete_clicked",
+                            screenId = "dashboard",
+                            componentId = "ai_setup_delete",
+                            payload = AynvoraEventPayload.AiDeletePayload(),
+                        ),
                         onClick = onDeleteClicked,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -260,12 +330,18 @@ fun AiSetupCard(
                     Text(
                         text = lifecycleState.message,
                         style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
-                        color = Color(0xFFEF5350),
+                        color = AynvoraColors.Error,
                     )
-                    Spacer(modifier = Modifier.height(12.sdp))
+                    Spacer(modifier = Modifier.height(AynvoraSpacing.space12))
                     AynvoraButton(
                         text = "Retry Download",
                         variant = AynvoraButtonVariant.Primary,
+                        event = AynvoraClickEvent(
+                            eventId = "dashboard.ai.download_clicked",
+                            screenId = "dashboard",
+                            componentId = "ai_setup_retry",
+                            payload = AynvoraEventPayload.AiRetryPayload(),
+                        ),
                         onClick = onDownloadClicked,
                         modifier = Modifier.fillMaxWidth(),
                     )

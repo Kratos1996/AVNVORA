@@ -211,6 +211,118 @@ interface TarotDao {
     @Query("DELETE FROM tarot_reading_history WHERE id = :id")
     suspend fun deleteReadingById(id: String)
 
+
     @Query("DELETE FROM tarot_reading_history")
     suspend fun clearHistory()
+}
+
+@Dao
+interface GitaDao {
+
+    // ── Chapters ──────────────────────────────────────────────────────────────
+
+    @Upsert
+    suspend fun upsertChapters(entities: List<com.aynvora.data.database.entity.GitaChapterRoomEntity>)
+
+    @Query("SELECT * FROM gita_chapters ORDER BY chapterNumber ASC")
+    suspend fun getAllChapters(): List<com.aynvora.data.database.entity.GitaChapterRoomEntity>
+
+    @Query("SELECT * FROM gita_chapters WHERE chapterNumber = :chapterNumber LIMIT 1")
+    suspend fun getChapterByNumber(chapterNumber: Int): com.aynvora.data.database.entity.GitaChapterRoomEntity?
+
+    // ── Verses ────────────────────────────────────────────────────────────────
+
+    @Upsert
+    suspend fun upsertVerses(entities: List<com.aynvora.data.database.entity.GitaVerseRoomEntity>)
+
+    @Query("SELECT * FROM gita_verses WHERE chapterNumber = :chapterNumber ORDER BY verseOrder ASC")
+    suspend fun getVersesForChapter(chapterNumber: Int): List<com.aynvora.data.database.entity.GitaVerseRoomEntity>
+
+    @Query("SELECT * FROM gita_verses WHERE chapterNumber = :chapterNumber AND verseNumber = :verseNumber LIMIT 1")
+    suspend fun getVerse(
+        chapterNumber: Int,
+        verseNumber: Int
+    ): com.aynvora.data.database.entity.GitaVerseRoomEntity?
+
+    @Query("SELECT COUNT(*) FROM gita_verses")
+    suspend fun getVerseCount(): Int
+
+    @Query(
+        """
+        SELECT * FROM gita_verses
+        WHERE sanskritDevanagari LIKE '%' || :query || '%'
+           OR transliteration LIKE '%' || :query || '%'
+           OR wordMeanings LIKE '%' || :query || '%'
+        ORDER BY chapterNumber ASC, verseOrder ASC
+        LIMIT 50
+    """
+    )
+    suspend fun searchVersesBySanskrit(query: String): List<com.aynvora.data.database.entity.GitaVerseRoomEntity>
+
+    // ── Translations ──────────────────────────────────────────────────────────
+
+    @Upsert
+    suspend fun upsertTranslations(entities: List<com.aynvora.data.database.entity.GitaTranslationRoomEntity>)
+
+    @Query("SELECT * FROM gita_translations WHERE verseId = :verseId AND language = :language")
+    suspend fun getTranslationsForVerse(
+        verseId: Int,
+        language: String
+    ): List<com.aynvora.data.database.entity.GitaTranslationRoomEntity>
+
+    @Query("SELECT * FROM gita_translations WHERE verseId IN (:verseIds) AND language = :language")
+    suspend fun getTranslationsForVerses(
+        verseIds: List<Int>,
+        language: String
+    ): List<com.aynvora.data.database.entity.GitaTranslationRoomEntity>
+
+    @Query("SELECT COUNT(*) FROM gita_translations")
+    suspend fun getTranslationCount(): Int
+
+    @Query(
+        """
+        SELECT DISTINCT v.* FROM gita_verses v
+        INNER JOIN gita_translations t ON t.verseId = v.verseId
+        WHERE t.description LIKE '%' || :query || '%' AND t.language = :language
+        ORDER BY v.chapterNumber ASC, v.verseOrder ASC
+        LIMIT 50
+    """
+    )
+    suspend fun searchVersesByTranslation(
+        query: String,
+        language: String
+    ): List<com.aynvora.data.database.entity.GitaVerseRoomEntity>
+
+    // ── Commentaries ──────────────────────────────────────────────────────────
+
+    @Upsert
+    suspend fun upsertCommentaries(entities: List<com.aynvora.data.database.entity.GitaCommentaryRoomEntity>)
+
+    @Query("SELECT * FROM gita_commentaries WHERE verseId = :verseId AND language = :language")
+    suspend fun getCommentariesForVerse(
+        verseId: Int,
+        language: String
+    ): List<com.aynvora.data.database.entity.GitaCommentaryRoomEntity>
+
+    @Query("SELECT * FROM gita_commentaries WHERE verseId IN (:verseIds) AND language = :language")
+    suspend fun getCommentariesForVerses(
+        verseIds: List<Int>,
+        language: String
+    ): List<com.aynvora.data.database.entity.GitaCommentaryRoomEntity>
+
+    // ── Authors ───────────────────────────────────────────────────────────────
+
+    @Upsert
+    suspend fun upsertAuthors(entities: List<com.aynvora.data.database.entity.GitaAuthorRoomEntity>)
+
+    @Query("SELECT * FROM gita_authors ORDER BY authorId ASC")
+    suspend fun getAllAuthors(): List<com.aynvora.data.database.entity.GitaAuthorRoomEntity>
+
+    // ── Seed State ────────────────────────────────────────────────────────────
+
+    @Upsert
+    suspend fun upsertSeedState(entity: com.aynvora.data.database.entity.GitaSeedStateRoomEntity)
+
+    @Query("SELECT * FROM gita_seed_state WHERE id = 'gita_seed_v1' LIMIT 1")
+    suspend fun getSeedState(): com.aynvora.data.database.entity.GitaSeedStateRoomEntity?
 }
