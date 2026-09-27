@@ -5,10 +5,14 @@ import androidx.compose.ui.window.application
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.aynvora.data.database.AynvoraDatabase
+import com.aynvora.data.gita.GitaDataSeeder
 import com.aynvora.ui.AynvoraApp
 import com.aynvora.ui.di.aynvoraAppModules
 import com.aynvora.ui.report.jvmReportModule
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import java.io.File
@@ -51,6 +55,19 @@ fun main() {
 
     startKoin {
         modules(aynvoraAppModules + jvmReportModule + jvmDataModule)
+    }
+
+    CoroutineScope(Dispatchers.IO).launch {
+        runCatching {
+            val database = GlobalContext.get().get<AynvoraDatabase>()
+            val seeder = GitaDataSeeder(dao = database.gitaDao())
+            val seeded = seeder.seedIfNeeded()
+            if (seeded) {
+                println("AynvoraGita: Bhagavad Gita successfully seeded on Desktop JVM.")
+            }
+        }.onFailure { e ->
+            println("AynvoraGita: Gita seeding failed on Desktop JVM: ${e.message}")
+        }
     }
 
     application {
