@@ -1,0 +1,6 @@
+/Users/ishant/Desktop/aynvora-sdk/androidApp/src/main/cpp/CMakeLists.txt
+/Users/ishant/Desktop/aynvora-sdk/native/llama.cpp/CMakeLists.txt
+/Users/ishant/Desktop/aynvora-sdk/native/llama.cpp/common/CMakeLists.txt
+/Users/ishant/Desktop/aynvora-sdk/native/llama.cpp/ggml/CMakeLists.txt
+/Users/ishant/Desktop/aynvora-sdk/native/llama.cpp/ggml/src/CMakeLists.txt
+/Users/ishant/Desktop/aynvora-sdk/native/llama.cpp/src/CMakeLists.txt

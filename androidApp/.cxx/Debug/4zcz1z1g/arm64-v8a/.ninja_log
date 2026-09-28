@@ -1,0 +1,18 @@
+# ninja log v5
+1	782	1790626951247880498	llama_build/ggml/src/CMakeFiles/ggml.dir/ggml-alloc.c.o	b461fe61dbcdead
+5	844	1790626951311255573	llama_build/ggml/src/CMakeFiles/ggml.dir/ggml-aarch64.c.o	f70b8fb54aab5815
+1	1046	1790626951511418437	llama_build/ggml/src/CMakeFiles/ggml.dir/ggml-backend.c.o	4b73a4eca266ffcd
+3	1566	1790626952029782708	llama_build/ggml/src/CMakeFiles/ggml.dir/llamafile/sgemm.cpp.o	3e64964ff6bbf287
+2	2644	1790626953097888019	llama_build/ggml/src/CMakeFiles/ggml.dir/ggml-quants.c.o	6a73f2f554de2498
+0	3881	1790626954324679549	llama_build/ggml/src/CMakeFiles/ggml.dir/ggml.c.o	96822ccaa4baa907
+13	4009	1790626954442713913	llama_build/src/CMakeFiles/llama.dir/llama-grammar.cpp.o	f257254267d8da0b
+16	4160	1790626954605106377	llama_build/src/CMakeFiles/llama.dir/llama-sampling.cpp.o	9bf9ffd42f11daa2
+10	4957	1790626955406290622	llama_build/src/CMakeFiles/llama.dir/llama-vocab.cpp.o	5417d5beb3c3c6ba
+783	8826	1790626959212096723	llama_build/src/CMakeFiles/llama.dir/unicode.cpp.o	2aa0a53792bfc51d
+845	12670	1790626963131039189	llama_build/src/CMakeFiles/llama.dir/unicode-data.cpp.o	1f5071c375cd3a92
+7	16849	1790626967190186515	llama_build/src/CMakeFiles/llama.dir/llama.cpp.o	10d6ba6d8925624b
+9	476	1790627010171143980	/Users/ishant/Desktop/aynvora-sdk/androidApp/build/intermediates/cxx/Debug/4zcz1z1g/obj/arm64-v8a/libggml.so	3d85507a5f996646
+10	1852	1790627011556839394	llama_build/src/CMakeFiles/llama.dir/Users/ishant/Desktop/aynvora-sdk/androidApp/src/main/cpp/aynvora_llama_jni.cpp.o	da0b4a769ba5f97c
+1852	2075	1790627011737068673	/Users/ishant/Desktop/aynvora-sdk/androidApp/build/intermediates/cxx/Debug/4zcz1z1g/obj/arm64-v8a/libllama.so	52723f7ce51e1544
+7	2243	1790627568351989116	llama_build/src/CMakeFiles/llama.dir/Users/ishant/Desktop/aynvora-sdk/androidApp/src/main/cpp/aynvora_llama_jni.cpp.o	da0b4a769ba5f97c
+2243	2783	1790627568821689784	/Users/ishant/Desktop/aynvora-sdk/androidApp/build/intermediates/cxx/Debug/4zcz1z1g/obj/arm64-v8a/libllama.so	52723f7ce51e1544

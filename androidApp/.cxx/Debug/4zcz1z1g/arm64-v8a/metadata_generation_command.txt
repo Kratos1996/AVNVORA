@@ -1,0 +1,23 @@
+                        -H/Users/ishant/Desktop/aynvora-sdk/androidApp/src/main/cpp
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_SYSTEM_VERSION=24
+-DANDROID_PLATFORM=android-24
+-DANDROID_ABI=arm64-v8a
+-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a
+-DANDROID_NDK=/Users/ishant/Library/Android/sdk/ndk/26.1.10909125
+-DCMAKE_ANDROID_NDK=/Users/ishant/Library/Android/sdk/ndk/26.1.10909125
+-DCMAKE_TOOLCHAIN_FILE=/Users/ishant/Library/Android/sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake
+-DCMAKE_MAKE_PROGRAM=/Users/ishant/Library/Android/sdk/cmake/3.22.1/bin/ninja
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/Users/ishant/Desktop/aynvora-sdk/androidApp/build/intermediates/cxx/Debug/4zcz1z1g/obj/arm64-v8a
+-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/Users/ishant/Desktop/aynvora-sdk/androidApp/build/intermediates/cxx/Debug/4zcz1z1g/obj/arm64-v8a
+-DCMAKE_BUILD_TYPE=Debug
+-B/Users/ishant/Desktop/aynvora-sdk/androidApp/.cxx/Debug/4zcz1z1g/arm64-v8a
+-GNinja
+-DANDROID_STL=c++_shared
+-DBUILD_SHARED_LIBS=ON
+-DLLAMA_BUILD_EXAMPLES=OFF
+-DLLAMA_BUILD_TESTS=OFF
+-DLLAMA_BUILD_SERVER=OFF
+                        Build command args: []
+                        Version: 2

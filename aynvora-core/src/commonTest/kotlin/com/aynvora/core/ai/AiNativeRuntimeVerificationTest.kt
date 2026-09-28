@@ -192,7 +192,7 @@ class AiNativeRuntimeVerificationTest {
         val response = (result as AynvoraResult.Success).value
         assertEquals("test_req_001", response.requestId)
         assertEquals(expectedText, response.text)
-        assertEquals(AiExecutionMode.REAL_MODEL_INFERENCE, response.executionMode)
+        assertEquals(AiExecutionMode.LOCAL_NATIVE, response.executionMode)
         assertTrue(response.isOfflineExecution)
         assertEquals("STOP", response.finishReason)
     }
@@ -214,7 +214,7 @@ class AiNativeRuntimeVerificationTest {
         val simRes = (simulationEngine.generate(req) as AynvoraResult.Success).value
 
         // Strictly verify execution modes are different
-        assertEquals(AiExecutionMode.REAL_MODEL_INFERENCE, nativeRes.executionMode)
+        assertEquals(AiExecutionMode.LOCAL_NATIVE, nativeRes.executionMode)
         assertEquals(AiExecutionMode.LOCAL_SIMULATION, simRes.executionMode)
     }
 

@@ -1,0 +1,104 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"/Users/ishant/Desktop/aynvora-sdk/native/llama.cpp/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 149,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 164,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 168,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 184,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"/Users/ishant/Desktop/aynvora-sdk/androidApp/build/intermediates/cxx/Debug/4zcz1z1g/obj/arm64-v8a/libllama.so"
+			],
+			"targetId" : "llama::@a28f7d715364b5d9b6c0",
+			"targetIndex" : 3,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "include",
+			"paths" : 
+			[
+				"/Users/ishant/Desktop/aynvora-sdk/native/llama.cpp/include/llama.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib/cmake/llama",
+			"paths" : 
+			[
+				"/Users/ishant/Desktop/aynvora-sdk/androidApp/.cxx/Debug/4zcz1z1g/arm64-v8a/llama_build/llama-config.cmake",
+				"/Users/ishant/Desktop/aynvora-sdk/androidApp/.cxx/Debug/4zcz1z1g/arm64-v8a/llama_build/llama-version.cmake"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "bin",
+			"paths" : 
+			[
+				"/Users/ishant/Desktop/aynvora-sdk/native/llama.cpp/convert_hf_to_gguf.py"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "Unspecified",
+			"destination" : "lib/pkgconfig",
+			"paths" : 
+			[
+				"/Users/ishant/Desktop/aynvora-sdk/androidApp/.cxx/Debug/4zcz1z1g/arm64-v8a/llama_build/llama.pc"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "llama_build",
+		"source" : "/Users/ishant/Desktop/aynvora-sdk/native/llama.cpp"
+	}
+}
