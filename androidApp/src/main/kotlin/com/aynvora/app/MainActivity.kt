@@ -151,6 +151,39 @@ class MainActivity : ComponentActivity() {
         analyticsTracker = FirebaseAnalyticsTracker(this)
         analyticsTracker.track(AnalyticsEvent.AppOpened)
 
+        // Register broadcast receiver for autonomous on-device AI testing (Phase 10.12)
+        val filter = android.content.IntentFilter("com.aynvora.app.RUN_AI_TEST")
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(aiTestReceiver, filter, android.content.Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(aiTestReceiver, filter)
+        }
+
         setContent { AynvoraApp() }
+    }
+
+    private val aiTestReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+            if (intent?.action == "com.aynvora.app.RUN_AI_TEST") {
+                val testType = intent.getStringExtra("test") ?: "all"
+                appScope.launch {
+                    try {
+                        android.util.Log.i("AynvoraAiTestResult", "Received broadcast to run AI tests: $testType")
+                        val runner = AynvoraNativeAiTestRunner(this@MainActivity.applicationContext)
+                        runner.runTests(testType)
+                    } catch (t: Throwable) {
+                        android.util.Log.e("AynvoraAiTestResult", "Error running AI tests: ${t.message}", t)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            unregisterReceiver(aiTestReceiver)
+        } catch (_: Throwable) {
+        }
     }
 }

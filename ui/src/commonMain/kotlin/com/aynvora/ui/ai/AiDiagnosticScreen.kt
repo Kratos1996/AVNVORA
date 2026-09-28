@@ -59,6 +59,9 @@ fun AiDiagnosticScreen(
     jniStatus: String = "UNLINKED",
     installedModel: AiModelVariant? = null,
     knowledgePacks: List<AynvoraKnowledgePack> = emptyList(),
+    testResult: String? = null,
+    isTestRunning: Boolean = false,
+    onRunTestClicked: (String) -> Unit = {},
     onLoadModelClicked: () -> Unit = {},
     onUnloadModelClicked: () -> Unit = {},
     onBackClicked: () -> Unit,
@@ -163,7 +166,7 @@ fun AiDiagnosticScreen(
             item {
                 DiagnosticCard(title = "RUNTIME") {
                     DiagnosticRow("Runtime Name", "llama.cpp On-Device Runtime")
-                    DiagnosticRow("Runtime Version", "b3920-android")
+                    DiagnosticRow("Runtime Version", "b3600-android (pinned tag b3600)")
                     DiagnosticRow("Execution Mode", executionMode.name)
                     DiagnosticRow("Native Library Status", nativeLibraryStatus)
                     DiagnosticRow("JNI Status", jniStatus)
@@ -344,6 +347,58 @@ fun AiDiagnosticScreen(
                         "Last Error Code",
                         inferenceDiagnostics.lastErrorCode?.name ?: "NONE"
                     )
+                }
+            }
+
+            // ── 5.1 NATIVE INFERENCE SELF-TEST ────────────────────────────────
+            item {
+                DiagnosticCard(title = "NATIVE INFERENCE SELF-TEST") {
+                    Text(
+                        text = "Execute live on-device SLM inference via libllama.so + JNI on Samsung Galaxy S23 Ultra hardware:",
+                        style = AynvoraTheme.typography.caption12,
+                        color = AynvoraTheme.colors.TextLightSecondary,
+                    )
+                    Spacer(modifier = Modifier.height(8.sdp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.sdp),
+                    ) {
+                        AynvoraButton(
+                            text = if (isTestRunning) "Inferring..." else "Run Self-Test",
+                            variant = AynvoraButtonVariant.Primary,
+                            onClick = { onRunTestClicked("self_test") },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isTestRunning && inferenceStatus == AiInferenceStatus.READY,
+                        )
+                        AynvoraButton(
+                            text = "Run Gita Test",
+                            variant = AynvoraButtonVariant.Outlined,
+                            onClick = { onRunTestClicked("gita") },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isTestRunning && inferenceStatus == AiInferenceStatus.READY,
+                        )
+                    }
+
+                    if (testResult != null) {
+                        Spacer(modifier = Modifier.height(10.sdp))
+                        Text(
+                            text = "Latest On-Device Inference Result:",
+                            style = AynvoraTheme.typography.caption12.copy(color = AynvoraColors.Gold),
+                        )
+                        Spacer(modifier = Modifier.height(4.sdp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(AynvoraTheme.colors.CosmicBlack.copy(alpha = 0.6f))
+                                .padding(8.sdp),
+                        ) {
+                            Text(
+                                text = testResult,
+                                style = AynvoraTheme.typography.caption12.copy(fontSize = 11.ssp),
+                                color = AynvoraTheme.colors.TextLight,
+                            )
+                        }
+                    }
                 }
             }
 

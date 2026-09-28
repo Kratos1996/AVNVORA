@@ -53,6 +53,8 @@ data class AynvoraAppState(
     val inferenceDiagnostics: AiInferenceDiagnostics = AiInferenceDiagnostics(),
     val inferenceStatus: AiInferenceStatus = AiInferenceStatus.UNLOADED,
     val knowledgePacks: List<AynvoraKnowledgePack> = emptyList(),
+    val lastTestResult: String? = null,
+    val isTestRunning: Boolean = false,
 )
 
 /**
@@ -184,6 +186,13 @@ sealed class AynvoraAppUiEvent(
             "ai.diagnostics.unload_model",
             screenId = "ai_system_details",
             componentId = "unload_button"
+        )
+
+    data class RunAiTest(val testType: String = "self_test") :
+        AynvoraAppUiEvent(
+            "ai.diagnostics.run_test",
+            screenId = "ai_system_details",
+            componentId = "run_test_button"
         )
 
     data object DismissSheet : AynvoraAppUiEvent("app.sheet.dismiss", componentId = "bottom_sheet")
@@ -511,6 +520,8 @@ class AynvoraAppViewModel(
                                 ?: AiInferenceStatus.UNLOADED,
                             inferenceDiagnostics = localIntelligence?.getDiagnostics()
                                 ?: AiInferenceDiagnostics(),
+                            aiExecutionMode = localIntelligence?.getExecutionMode()
+                                ?: AiExecutionMode.DETERMINISTIC_FALLBACK,
                         )
                     }
                 }
@@ -525,7 +536,83 @@ class AynvoraAppViewModel(
                                 ?: AiInferenceStatus.UNLOADED,
                             inferenceDiagnostics = localIntelligence?.getDiagnostics()
                                 ?: AiInferenceDiagnostics(),
+                            aiExecutionMode = localIntelligence?.getExecutionMode()
+                                ?: AiExecutionMode.DETERMINISTIC_FALLBACK,
                         )
+                    }
+                }
+            }
+
+            is AynvoraAppUiEvent.RunAiTest -> {
+                viewModelScope.launch {
+                    updateState { copy(isTestRunning = true) }
+                    try {
+                        val intelligence = localIntelligence
+                        if (intelligence != null) {
+                            if (!intelligence.isModelLoaded()) {
+                                intelligence.loadModel()
+                            }
+                            val response = when (event.testType) {
+                                "gita" -> {
+                                    val userContext = com.aynvora.core.ai.AynvoraUserContext(
+                                        question = "Can you help me reflect on this using the Bhagavad Gita?",
+                                        userSituation = "I am confused about my career direction.",
+                                    )
+                                    val pack = intelligence.getKnowledgePack(com.aynvora.core.feature.CoreFeatureId.GITA)
+                                    val evidence = pack?.retrieveRelevantEvidence(userContext.question, userContext) ?: emptyList()
+                                    val req = com.aynvora.core.ai.AynvoraAiRequest(
+                                        requestId = "diag_gita_${System.currentTimeMillis()}",
+                                        featureId = com.aynvora.core.feature.CoreFeatureId.GITA,
+                                        knowledgePackId = pack?.knowledgePackId ?: "kp_gita_canonical_v1",
+                                        rulesetId = "CANONICAL_GITA_TRADITION",
+                                        evidence = evidence,
+                                        userContext = userContext,
+                                        question = userContext.question,
+                                        locale = "en",
+                                        responseMode = com.aynvora.core.ai.AynvoraResponseMode.REFLECTIVE,
+                                    )
+                                    intelligence.synthesize(req)
+                                }
+                                else -> {
+                                    val userContext = com.aynvora.core.ai.AynvoraUserContext(
+                                        question = "Hello! State your contemplative purpose in 5 words:"
+                                    )
+                                    val req = com.aynvora.core.ai.AynvoraAiRequest(
+                                        requestId = "diag_selftest_${System.currentTimeMillis()}",
+                                        featureId = com.aynvora.core.feature.CoreFeatureId.GITA,
+                                        knowledgePackId = "kp_gita_canonical_v1",
+                                        rulesetId = "CANONICAL_GITA_TRADITION",
+                                        userContext = userContext,
+                                        question = userContext.question,
+                                        locale = "en",
+                                        responseMode = com.aynvora.core.ai.AynvoraResponseMode.REFLECTIVE,
+                                    )
+                                    intelligence.synthesize(req)
+                                }
+                            }
+                            val summary = when (response) {
+                                is com.aynvora.core.result.AynvoraResult.Success -> {
+                                    val res = response.value
+                                    "SUCCESS [${res.executionMode.name}] (${res.latencyMs}ms)\nTokens: >0, Validated: ${res.validationStatus.name}\n\n${res.responseText}"
+                                }
+                                is com.aynvora.core.result.AynvoraResult.Failure -> {
+                                    "FAILED: ${response.message}"
+                                }
+                            }
+                            updateState {
+                                copy(
+                                    lastTestResult = summary,
+                                    isTestRunning = false,
+                                    aiExecutionMode = intelligence.getExecutionMode(),
+                                    inferenceDiagnostics = intelligence.getDiagnostics(),
+                                    inferenceStatus = intelligence.runtime.getStatus(),
+                                )
+                            }
+                        } else {
+                            updateState { copy(lastTestResult = "FAILED: localIntelligence is null", isTestRunning = false) }
+                        }
+                    } catch (t: Throwable) {
+                        updateState { copy(lastTestResult = "ERROR: ${t.message}", isTestRunning = false) }
                     }
                 }
             }

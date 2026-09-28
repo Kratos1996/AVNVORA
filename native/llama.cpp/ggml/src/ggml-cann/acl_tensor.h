@@ -62,10 +62,10 @@ aclDataType ggml_cann_type_mapping(ggml_type type);
  * @param   offset      Offset in bytes for the ACL tensor data. Defaults to 0.
  * @return  Pointer to the created ACL tensor.
  */
-aclTensor* ggml_cann_create_tensor(const ggml_tensor* tensor, int64_t* ne = nullptr,
-                             size_t* nb = nullptr, int64_t dims = 0,
-                             aclFormat format = ACL_FORMAT_ND,
-                             size_t offset = 0);
+aclTensor *ggml_cann_create_tensor(const ggml_tensor *tensor, int64_t *ne = nullptr,
+        size_t *nb = nullptr, int64_t dims = 0,
+        aclFormat format = ACL_FORMAT_ND,
+        size_t offset = 0);
 
 /**
  * @brief   Template for creating an ACL tensor from provided parameters. typename TYPE
@@ -88,11 +88,11 @@ aclTensor* ggml_cann_create_tensor(const ggml_tensor* tensor, int64_t* ne = null
  * @return  Pointer to the created ACL tensor.
  */
 template<typename TYPE>
-aclTensor* ggml_cann_create_tensor(void* data_ptr, aclDataType dtype,
-                                   TYPE type_size, int64_t* ne, TYPE* nb,
-                                   int64_t dims,
-                                   aclFormat format = ACL_FORMAT_ND,
-                                   size_t offset = 0) {
+aclTensor *ggml_cann_create_tensor(void *data_ptr, aclDataType dtype,
+        TYPE type_size, int64_t *ne, TYPE *nb,
+        int64_t dims,
+        aclFormat format = ACL_FORMAT_ND,
+        size_t offset = 0) {
     int64_t tmp_ne[GGML_MAX_DIMS * 2];
     int64_t tmp_stride[GGML_MAX_DIMS * 2];
 
@@ -109,9 +109,9 @@ aclTensor* ggml_cann_create_tensor(void* data_ptr, aclDataType dtype,
         acl_storage_len += (ne[i] - 1) * nb[i];
     }
 
-    aclTensor* acl_tensor =
-        aclCreateTensor(tmp_ne, dims, dtype, tmp_stride, offset / type_size,
-                        format, &acl_storage_len, 1, data_ptr);
+    aclTensor *acl_tensor =
+            aclCreateTensor(tmp_ne, dims, dtype, tmp_stride, offset / type_size,
+                    format, &acl_storage_len, 1, data_ptr);
 
     return acl_tensor;
 }
@@ -132,7 +132,7 @@ aclTensor* ggml_cann_create_tensor(void* data_ptr, aclDataType dtype,
  *          to 1. If such a dimension is found, broadcasting is required to align t1
  *          with t0 for element-wise operations.
  */
-bool ggml_cann_need_bcast(const ggml_tensor* t0, const ggml_tensor* t1);
+bool ggml_cann_need_bcast(const ggml_tensor *t0, const ggml_tensor *t1);
 
 /**
  * @brief   Computes broadcast shapes and strides for two ggml_tensors.
@@ -187,9 +187,9 @@ bool ggml_cann_need_bcast(const ggml_tensor* t0, const ggml_tensor* t1);
  *  dim1 in a inserted dim, should add nb for dim1,
  *  and all other nb moves to next in order.
  */
-int64_t ggml_cann_get_bcast_shape(const ggml_tensor* src0, const ggml_tensor* src1,
-                        int64_t* bcast_ne_src0, int64_t* bcast_ne_src1,
-                        size_t* bcast_nb_src0, size_t* bcast_nb_src1);
+int64_t ggml_cann_get_bcast_shape(const ggml_tensor *src0, const ggml_tensor *src1,
+        int64_t *bcast_ne_src0, int64_t *bcast_ne_src1,
+        size_t *bcast_nb_src0, size_t *bcast_nb_src1);
 
 // Bcast macro to avoid duplicate code.
 #define BCAST_SHAPE(src0, src1)                                              \
@@ -234,10 +234,10 @@ int64_t ggml_cann_get_bcast_shape(const ggml_tensor* src0, const ggml_tensor* sr
  * @sa ggml_cann_get_bcast_shape
  */
 int64_t ggml_cann_get_mulmat_bcast_shape(
-    const int64_t* input_ne, const int64_t* weight_ne, const int64_t* dst_ne,
-    const size_t* input_nb, const size_t* weight_nb, const size_t* dst_nb,
-    int64_t* bcast_input_ne, int64_t* bcast_weight_ne, int64_t* bcast_dst_ne,
-    size_t* bcast_input_nb, size_t* bcast_weight_nb, size_t* bcast_dst_nb);
+        const int64_t *input_ne, const int64_t *weight_ne, const int64_t *dst_ne,
+        const size_t *input_nb, const size_t *weight_nb, const size_t *dst_nb,
+        int64_t *bcast_input_ne, int64_t *bcast_weight_ne, int64_t *bcast_dst_ne,
+        size_t *bcast_input_nb, size_t *bcast_weight_nb, size_t *bcast_dst_nb);
 
 // Bcast macro to avoid duplicate code.
 #define BCAST_MUL_MAT_SHAPE(input, weight, dst)                         \
