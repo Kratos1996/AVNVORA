@@ -10,6 +10,8 @@ android {
     namespace = "com.aynvora.app"
     compileSdk = libs.versions.androidCompileSdk.get().toInt()
 
+    ndkVersion = "26.1.10909125"
+
     defaultConfig {
         applicationId = "com.aynvora.app"
         minSdk = libs.versions.androidMinSdk.get().toInt()
@@ -18,7 +20,26 @@ android {
         versionName = "0.1.0"
 
         ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
+            abiFilters += listOf("arm64-v8a")
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments += listOf(
+                    "-DANDROID_STL=c++_shared",
+                    "-DBUILD_SHARED_LIBS=ON",
+                    "-DLLAMA_BUILD_EXAMPLES=OFF",
+                    "-DLLAMA_BUILD_TESTS=OFF",
+                    "-DLLAMA_BUILD_SERVER=OFF"
+                )
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
         }
     }
 

@@ -97,5 +97,20 @@ data class QaActionId(
             of("gemstone", "certificate", "inspect_button", "inspect")
         val GEMSTONE_GENERATE_REPORT = of("gemstone", "report", "generate_button", "generate")
         val GEMSTONE_CLOSE = of("gemstone", "screen", "close_button", "close")
+
+        // Canonical AI System & Intelligence actions
+        val AI_OPEN = of("ai", "dashboard", "card", "open")
+        val AI_VIEW_MODEL_DETAILS = of("ai", "card", "link", "view_details")
+        val AI_VIEW_SYSTEM_DETAILS = AI_VIEW_MODEL_DETAILS
+        val AI_DOWNLOAD_MODEL = of("ai", "setup", "button", "download")
+        val AI_CANCEL_DOWNLOAD = of("ai", "setup", "button", "cancel_download")
+        val AI_DELETE_MODEL = of("ai", "setup", "button", "delete")
+        val AI_LOAD_MODEL = of("ai", "details", "button", "load")
+        val AI_UNLOAD_MODEL = of("ai", "details", "button", "unload")
+        val AI_ASK_QUESTION = of("ai", "interaction", "button", "ask")
+        val AI_ASK = AI_ASK_QUESTION
+        val AI_RETRY = of("ai", "setup", "button", "retry")
+        val AI_CHANGE_FEATURE_CONTEXT = of("ai", "interaction", "picker", "change_context")
+        val AI_CLOSE_DETAILS = of("ai", "details", "close_button", "close")
     }
 }

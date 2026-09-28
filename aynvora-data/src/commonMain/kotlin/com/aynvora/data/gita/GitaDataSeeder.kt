@@ -100,16 +100,18 @@ class GitaDataSeeder(
         }
 
         val authors = parseAuthors()
-        val chapters = parseChapters()
-        val verses = parseVerses()
-        val translations = parseTranslations()
-        val commentaries = parseCommentaries()
-
         dao.upsertAuthors(authors)
+
+        val chapters = parseChapters()
         dao.upsertChapters(chapters)
+
+        val verses = parseVerses()
         dao.upsertVerses(verses)
 
+        val translations = parseTranslations()
         translations.chunked(500).forEach { dao.upsertTranslations(it) }
+
+        val commentaries = parseCommentaries()
         commentaries.chunked(500).forEach { dao.upsertCommentaries(it) }
 
         dao.upsertSeedState(

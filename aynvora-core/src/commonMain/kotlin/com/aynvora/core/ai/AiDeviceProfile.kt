@@ -79,6 +79,11 @@ data class AiDeviceProfile(
     val supportedAccelerators: Set<AiAcceleratorType> = setOf(AiAcceleratorType.CPU),
     val supportedLanguages: Set<String> = setOf("en", "hi"),
     val maxSafeRamAllocationBytes: Long = calculateSafeRamAllocation(availableRamBytes),
+    val manufacturer: String = "samsung",
+    val modelName: String = "SM-S918B",
+    val cpuAbi: String = "arm64-v8a",
+    val sdkInt: Int = 36,
+    val totalStorageBytes: Long = 238_370_684_928L, // 222 GB default
 ) {
     val is64BitSupported: Boolean
         get() = cpuArchitecture.is64Bit

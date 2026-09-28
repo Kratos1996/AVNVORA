@@ -144,6 +144,65 @@ class DefaultAynvoraEventAnalyticsMapper(
                 AnalyticsEvent.AiModelDeleted(modelId)
             }
 
+            "ai.opened" -> {
+                val screenId = (event.payload as? AynvoraEventPayload.AiOpenedPayload)?.screenId
+                    ?: "ai_system_details"
+                AnalyticsEvent.AiOpened(screenId)
+            }
+
+            "ai.model_status_viewed" -> {
+                val p = event.payload as? AynvoraEventPayload.AiModelStatusViewedPayload
+                AnalyticsEvent.AiModelStatusViewed(p?.modelId, p?.status ?: "unknown")
+            }
+
+            "ai.model_download_started" -> {
+                val modelId =
+                    (event.payload as? AynvoraEventPayload.AiDownloadStartedPayload)?.modelId
+                        ?: "unknown"
+                AnalyticsEvent.AiDownloadStarted(modelId)
+            }
+
+            "ai.model_download_completed" -> {
+                val p = event.payload as? AynvoraEventPayload.AiDownloadCompletedPayload
+                AnalyticsEvent.AiDownloadCompleted(p?.modelId ?: "unknown", 0L)
+            }
+
+            "ai.model_verification_completed" -> {
+                val p = event.payload as? AynvoraEventPayload.AiVerificationCompletedPayload
+                AnalyticsEvent.AiModelVerificationCompleted(
+                    p?.modelId ?: "unknown",
+                    p?.isSuccess ?: true
+                )
+            }
+
+            "ai.inference_started" -> {
+                val p = event.payload as? AynvoraEventPayload.AiInferenceStartedPayload
+                AnalyticsEvent.AiInferenceStarted(p?.featureId ?: "ai", "en")
+            }
+
+            "ai.inference_completed" -> {
+                val p = event.payload as? AynvoraEventPayload.AiInferenceCompletedPayload
+                AnalyticsEvent.AiInferenceCompleted(
+                    p?.featureId ?: "ai",
+                    "${p?.latencyMs ?: 0}ms",
+                    1
+                )
+            }
+
+            "ai.fallback_used" -> {
+                val p = event.payload as? AynvoraEventPayload.AiFallbackUsedPayload
+                AnalyticsEvent.AiFallbackUsed(p?.featureId ?: "ai", p?.reason ?: "fallback")
+            }
+
+            "ai.validation_failed" -> {
+                val p = event.payload as? AynvoraEventPayload.AiValidationFailedPayload
+                AnalyticsEvent.AiValidationFailed(
+                    p?.featureId ?: "ai",
+                    p?.reason ?: "validation_failed"
+                )
+            }
+
+
             "tarot.disclaimer.viewed" -> AnalyticsEvent.TarotDisclaimerViewed
 
             "tarot.spread.selected" -> {

@@ -63,6 +63,10 @@ data class AiModelVariant(
     val defaultContextLength: Int = 2048,
     val supportedLanguages: Set<String> = setOf("en", "hi"),
     val license: String = "Apache-2.0",
+    val format: String = "GGUF",
+    val version: String = "1.0.0",
+    val recommendedRamBytes: Long = minRamBytes * 2,
+    val supportedAbis: Set<String> = setOf("arm64-v8a", "x86_64"),
 ) {
     val displaySizeMb: Int
         get() = (fileSizeBytes / (1024L * 1024L)).toInt()

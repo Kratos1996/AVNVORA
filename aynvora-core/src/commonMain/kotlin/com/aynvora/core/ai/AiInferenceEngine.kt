@@ -15,10 +15,15 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 enum class AiExecutionMode {
+    LOCAL_NATIVE,
     REAL_MODEL_INFERENCE,
     DETERMINISTIC_FALLBACK,
-    LOCAL_SIMULATION,
+    LOCAL_SIMULATION;
+
+    val isNative: Boolean
+        get() = this == LOCAL_NATIVE || this == REAL_MODEL_INFERENCE
 }
+
 
 /**
  * Technical runtime error codes for model load and inference failures.
@@ -112,6 +117,7 @@ interface AiInferenceEngine {
     fun getStatus(): AiInferenceStatus
     fun getLoadedModel(): AiModelVariant?
     fun getDiagnostics(): AiInferenceDiagnostics = AiInferenceDiagnostics()
+    fun hasGeneratedTokens(): Boolean = false
 }
 
 /**
@@ -161,6 +167,8 @@ interface NativeLibraryBridge {
 interface NativeAiRuntime {
     fun isAvailable(): Boolean
     fun getRuntimeName(): String = "llama.cpp"
+    fun getNativeLibraryStatus(): String = if (isAvailable()) "VERIFIED (libllama.so loaded)" else "NOT_VERIFIED (libllama.so pending build packaging)"
+    fun getJniStatus(): String = if (isAvailable()) "LINKED" else "UNLINKED"
     fun loadModel(modelPath: String, contextLength: Int, threads: Int = 4): NativeModelHandleResult
     fun generate(
         handle: Long,
@@ -181,7 +189,7 @@ interface NativeAiRuntime {
  * and typed native error mapping.
  */
 class LlamaNativeRuntimeDriver(
-    private val bridge: NativeLibraryBridge? = null,
+    private val bridge: NativeLibraryBridge? = RealLlamaJniBridge(),
 ) : NativeAiRuntime {
 
     private val activeHandles = mutableSetOf<Long>()
@@ -189,6 +197,24 @@ class LlamaNativeRuntimeDriver(
 
     override fun isAvailable(): Boolean {
         return bridge?.isAvailable() ?: false
+    }
+
+    override fun getNativeLibraryStatus(): String {
+        return if (bridge?.isAvailable() == true) {
+            "VERIFIED (libllama.so loaded)"
+        } else {
+            "NOT_VERIFIED (libllama.so pending build packaging)"
+        }
+    }
+
+    override fun getJniStatus(): String {
+        return if (bridge is RealLlamaJniBridge) {
+            RealLlamaJniBridge.getLinkStatusMessage()
+        } else if (bridge?.isAvailable() == true) {
+            "LINKED"
+        } else {
+            "UNLINKED"
+        }
     }
 
     override fun loadModel(
@@ -312,7 +338,7 @@ class LlamaNativeRuntimeDriver(
  */
 class LocalNativeInferenceEngine(
     private val nativeRuntime: NativeAiRuntime = LlamaNativeRuntimeDriver(),
-    private val availableRamProvider: () -> Long = { 4L * 1024L * 1024L * 1024L }, // 4 GB default
+    private val availableRamProvider: () -> Long = { ActualAndroidDeviceProfile.AVAILABLE_RAM_BYTES },
     private val inferenceTimeoutMs: Long = 10_000L,
 ) : AiInferenceEngine {
 
@@ -324,6 +350,7 @@ class LocalNativeInferenceEngine(
     private var activeRequestId: String? = null
     private val cancelledRequestIds = mutableSetOf<String>()
 
+    private var hasGeneratedTokens: Boolean = false
     private var coldLoadDurationMs: Long = 0L
     private var warmLoadDurationMs: Long = 0L
     private var lastInferenceDurationMs: Long = 0L
@@ -334,6 +361,8 @@ class LocalNativeInferenceEngine(
 
     override fun getLoadedModel(): AiModelVariant? = loadedModel
 
+    override fun hasGeneratedTokens(): Boolean = hasGeneratedTokens
+
     override fun getDiagnostics(): AiInferenceDiagnostics = AiInferenceDiagnostics(
         coldLoadDurationMs = coldLoadDurationMs,
         warmLoadDurationMs = warmLoadDurationMs,
@@ -341,7 +370,11 @@ class LocalNativeInferenceEngine(
         tokensPerSecond = lastTokensPerSec,
         memoryAllocatedBytes = loadedModel?.minRamBytes ?: 0L,
         contextTokensAllocated = loadedModel?.defaultContextLength ?: 0,
-        executionMode = AiExecutionMode.REAL_MODEL_INFERENCE,
+        executionMode = if (status == AiInferenceStatus.READY && nativeHandle != null && nativeRuntime.isAvailable() && hasGeneratedTokens) {
+            AiExecutionMode.LOCAL_NATIVE
+        } else {
+            AiExecutionMode.DETERMINISTIC_FALLBACK
+        },
         lastErrorCode = lastErrorCode,
     )
 
@@ -426,6 +459,7 @@ class LocalNativeInferenceEngine(
             }
             loadedModel = null
             loadedFilePath = null
+            hasGeneratedTokens = false
             status = AiInferenceStatus.UNLOADED
             activeRequestId = null
             cancelledRequestIds.clear()
@@ -499,6 +533,7 @@ class LocalNativeInferenceEngine(
                 val safeMaxTokens =
                     request.maxTokens.coerceAtMost(currentModel.defaultContextLength - estimatedPromptTokens)
 
+                val genStartTime = System.currentTimeMillis()
                 val generationResult = withTimeoutOrNull(inferenceTimeoutMs) {
                     if (cancelledRequestIds.contains(request.requestId)) {
                         return@withTimeoutOrNull NativeInferenceResult.Failure(
@@ -527,10 +562,14 @@ class LocalNativeInferenceEngine(
 
                 when (generationResult) {
                     is NativeInferenceResult.Success -> {
-                        lastInferenceDurationMs = 1400L
+                        val durationMs = (System.currentTimeMillis() - genStartTime).coerceAtLeast(1L)
+                        lastInferenceDurationMs = durationMs
+                        if (generationResult.tokensGenerated > 0) {
+                            hasGeneratedTokens = true
+                        }
                         lastTokensPerSec = if (generationResult.tokensGenerated > 0) {
-                            (generationResult.tokensGenerated.toFloat() / (lastInferenceDurationMs / 1000f)).coerceAtMost(
-                                45.0f
+                            (generationResult.tokensGenerated.toFloat() / (durationMs / 1000f)).coerceAtMost(
+                                60.0f
                             )
                         } else 0.0f
 
@@ -541,7 +580,7 @@ class LocalNativeInferenceEngine(
                                 tokensGenerated = generationResult.tokensGenerated,
                                 finishReason = generationResult.finishReason,
                                 isOfflineExecution = true,
-                                executionMode = AiExecutionMode.REAL_MODEL_INFERENCE,
+                                executionMode = if (generationResult.tokensGenerated > 0) AiExecutionMode.LOCAL_NATIVE else AiExecutionMode.DETERMINISTIC_FALLBACK,
                                 provenance = request.evidenceProvenance,
                             )
                         )

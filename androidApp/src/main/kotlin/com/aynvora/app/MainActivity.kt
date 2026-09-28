@@ -4,17 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.room.Room
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.aynvora.app.analytics.FirebaseAnalyticsTracker
 import com.aynvora.core.analytics.AnalyticsEvent
 import com.aynvora.core.analytics.AnalyticsTracker
-import com.aynvora.ui.AynvoraApp
-import com.aynvora.ui.di.aynvoraAppModules
-import com.aynvora.ui.report.androidReportModule
-import androidx.room.Room
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.aynvora.data.database.AynvoraDatabase
 import com.aynvora.data.gita.GitaDataSeeder
 import com.aynvora.qa.android.AndroidInteractionSentinelRuntime
+import com.aynvora.ui.AynvoraApp
+import com.aynvora.ui.di.aynvoraAppModules
+import com.aynvora.ui.report.androidReportModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -49,9 +49,72 @@ class MainActivity : ComponentActivity() {
                         context = applicationContext,
                         name = dbFile.absolutePath,
                     )
+                        .fallbackToDestructiveMigration(true)
                         .setDriver(BundledSQLiteDriver())
                         .setQueryCoroutineContext(Dispatchers.IO)
                         .build()
+                }
+                single<com.aynvora.core.ai.AiDeviceCapabilityDetector> {
+                    object : com.aynvora.core.ai.AiDeviceCapabilityDetector {
+                        override suspend fun detectCapability(): com.aynvora.core.ai.AiDeviceProfile {
+                            val context = this@MainActivity.applicationContext
+                            val activityManager =
+                                context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+                            val memInfo = android.app.ActivityManager.MemoryInfo()
+                            val totalRam: Long
+                            val availRam: Long
+                            if (activityManager != null) {
+                                activityManager.getMemoryInfo(memInfo)
+                                totalRam = memInfo.totalMem
+                                availRam = memInfo.availMem
+                            } else {
+                                totalRam =
+                                    com.aynvora.core.ai.ActualAndroidDeviceProfile.TOTAL_RAM_BYTES
+                                availRam =
+                                    com.aynvora.core.ai.ActualAndroidDeviceProfile.AVAILABLE_RAM_BYTES
+                            }
+
+                            val filesDir = context.filesDir
+                            val stat = android.os.StatFs(filesDir.absolutePath)
+                            val freeStorage = stat.availableBytes
+                            val totalStorage = stat.totalBytes
+
+                            val primaryAbi =
+                                android.os.Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
+                            val cpuArch =
+                                if (primaryAbi.contains("arm64") || primaryAbi.contains("aarch64")) {
+                                    com.aynvora.core.ai.CpuArchitecture.ARM64
+                                } else {
+                                    com.aynvora.core.ai.CpuArchitecture.X86_64
+                                }
+
+                            return com.aynvora.core.ai.AiDeviceProfile(
+                                totalRamBytes = totalRam,
+                                availableRamBytes = availRam,
+                                freeStorageBytes = freeStorage,
+                                cpuArchitecture = cpuArch,
+                                osPlatform = com.aynvora.core.ai.OsPlatform.ANDROID,
+                                osVersion = "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})",
+                                supportedRuntimes = setOf(
+                                    com.aynvora.core.ai.AiRuntimeType.GGUF,
+                                    com.aynvora.core.ai.AiRuntimeType.DETERMINISTIC_FALLBACK,
+                                ),
+                                supportedAccelerators = setOf(
+                                    com.aynvora.core.ai.AiAcceleratorType.CPU,
+                                    com.aynvora.core.ai.AiAcceleratorType.GPU,
+                                ),
+                                supportedLanguages = setOf("en", "hi", "ar"),
+                                maxSafeRamAllocationBytes = com.aynvora.core.ai.AiDeviceProfile.calculateSafeRamAllocation(
+                                    availRam
+                                ),
+                                manufacturer = android.os.Build.MANUFACTURER,
+                                modelName = android.os.Build.MODEL,
+                                cpuAbi = primaryAbi,
+                                sdkInt = android.os.Build.VERSION.SDK_INT,
+                                totalStorageBytes = totalStorage,
+                            )
+                        }
+                    }
                 }
             }
             startKoin {

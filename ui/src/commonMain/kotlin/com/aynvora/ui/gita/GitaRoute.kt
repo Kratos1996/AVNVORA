@@ -23,12 +23,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -50,7 +48,6 @@ import com.aynvora.core.gita.GitaTranslation
 import com.aynvora.core.gita.GitaVerse
 import com.aynvora.designsystem.AynvoraColors
 import com.aynvora.designsystem.AynvoraShapes
-import com.aynvora.designsystem.AynvoraSpacing
 import com.aynvora.designsystem.AynvoraTheme
 import com.aynvora.designsystem.adaptive.sdp
 import com.aynvora.designsystem.adaptive.ssp
@@ -229,7 +226,7 @@ private fun GitaChapterListScreen(
                         .aynvoraClickable(
                             event = GitaUiEvent.UpdateSearchQuery(""),
                             onDispatch = {
-                                onEvent(GitaUiEvent.UpdateSearchQuery(" ")) // trigger search screen
+                                onEvent(GitaUiEvent.UpdateSearchQuery("")) // trigger search screen
                             },
                         ),
                     contentAlignment = Alignment.Center,
@@ -242,26 +239,77 @@ private fun GitaChapterListScreen(
         // Attribution banner
         GitaAttributionBanner()
 
-        if (state.isLoading && state.chapters.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = AynvoraColors.Gold)
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.sdp, vertical = 8.sdp),
-                verticalArrangement = Arrangement.spacedBy(10.sdp),
-            ) {
-                items(state.chapters, key = { it.chapterNumber }) { chapter ->
-                    GitaChapterCard(
-                        chapter = chapter,
-                        isDark = isDark,
-                        textColor = textColor,
-                        secondaryTextColor = secondaryTextColor,
-                        onClick = { onEvent(GitaUiEvent.SelectChapter(chapter)) },
-                    )
+        when {
+            state.isLoading && state.chapters.isEmpty() -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = AynvoraColors.Gold)
+                        Spacer(modifier = Modifier.height(16.sdp))
+                        Text(
+                            text = "Loading sacred verses…",
+                            style = AynvoraTheme.typography.body14.copy(fontSize = 13.ssp),
+                            color = secondaryTextColor,
+                        )
+                    }
                 }
-                item { Spacer(modifier = Modifier.height(24.sdp)) }
+            }
+
+            state.chapters.isEmpty() -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(horizontal = 24.sdp),
+                    ) {
+                        Text("📖", style = AynvoraTheme.typography.title20.copy(fontSize = 40.ssp))
+                        Spacer(modifier = Modifier.height(12.sdp))
+                        Text(
+                            text = state.errorMessage ?: "Initializing scripture data…",
+                            style = AynvoraTheme.typography.body14.copy(fontSize = 14.ssp),
+                            color = textColor,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(modifier = Modifier.height(16.sdp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(AynvoraColors.Gold.copy(alpha = 0.2f))
+                                .border(1.dp, AynvoraColors.Gold, RoundedCornerShape(20.dp))
+                                .aynvoraClickable(
+                                    event = GitaUiEvent.LoadChapters,
+                                    onDispatch = { onEvent(GitaUiEvent.LoadChapters) },
+                                )
+                                .padding(horizontal = 20.sdp, vertical = 8.sdp),
+                        ) {
+                            Text(
+                                text = "Retry",
+                                style = AynvoraTheme.typography.caption12.copy(
+                                    fontSize = 13.ssp,
+                                    fontWeight = FontWeight.SemiBold,
+                                ),
+                                color = AynvoraColors.Gold,
+                            )
+                        }
+                    }
+                }
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.sdp, vertical = 8.sdp),
+                    verticalArrangement = Arrangement.spacedBy(10.sdp),
+                ) {
+                    items(state.chapters, key = { it.chapterNumber }) { chapter ->
+                        GitaChapterCard(
+                            chapter = chapter,
+                            isDark = isDark,
+                            textColor = textColor,
+                            secondaryTextColor = secondaryTextColor,
+                            onClick = { onEvent(GitaUiEvent.SelectChapter(chapter)) },
+                        )
+                    }
+                    item { Spacer(modifier = Modifier.height(24.sdp)) }
+                }
             }
         }
     }

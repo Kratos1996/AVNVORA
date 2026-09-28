@@ -3,10 +3,16 @@ package com.aynvora.ui
 import androidx.lifecycle.viewModelScope
 import com.aynvora.core.ai.AiDeviceCapabilityDetector
 import com.aynvora.core.ai.AiDeviceProfile
+import com.aynvora.core.ai.AiExecutionMode
+import com.aynvora.core.ai.AiInferenceDiagnostics
+import com.aynvora.core.ai.AiInferenceStatus
 import com.aynvora.core.ai.AiModelLifecycleManager
 import com.aynvora.core.ai.AiModelLifecycleState
 import com.aynvora.core.ai.AiModelSelectionResult
 import com.aynvora.core.ai.AiModelSelector
+import com.aynvora.core.ai.AiModelVariant
+import com.aynvora.core.ai.AynvoraLocalIntelligence
+import com.aynvora.core.ai.knowledge.AynvoraKnowledgePack
 import com.aynvora.core.event.AynvoraClickEvent
 import com.aynvora.core.event.AynvoraEffect
 import com.aynvora.core.event.AynvoraEventDispatcher
@@ -33,11 +39,20 @@ data class AynvoraAppState(
     val isNumerologyOpen: Boolean = false,
     val isGemstoneOpen: Boolean = false,
     val isGitaOpen: Boolean = false,
+    val isAiDiagnosticsOpen: Boolean = false,
     val selectedFeatureDetail: CoreFeatureDescriptor? = null,
     val isLanguagePickerOpen: Boolean = false,
     val aiLifecycleState: AiModelLifecycleState = AiModelLifecycleState.NotInstalled,
     val selectionResult: AiModelSelectionResult? = null,
     val deviceProfile: AiDeviceProfile? = null,
+    val installedModel: AiModelVariant? = null,
+    val aiExecutionMode: AiExecutionMode = AiExecutionMode.DETERMINISTIC_FALLBACK,
+    val isNativeVerified: Boolean = false,
+    val nativeLibraryStatus: String = "NOT_VERIFIED",
+    val jniStatus: String = "UNLINKED",
+    val inferenceDiagnostics: AiInferenceDiagnostics = AiInferenceDiagnostics(),
+    val inferenceStatus: AiInferenceStatus = AiInferenceStatus.UNLOADED,
+    val knowledgePacks: List<AynvoraKnowledgePack> = emptyList(),
 )
 
 /**
@@ -147,6 +162,30 @@ sealed class AynvoraAppUiEvent(
     data object DeleteAi :
         AynvoraAppUiEvent("dashboard.ai.delete_clicked", componentId = "ai_setup")
 
+    data object OpenAiDiagnostics :
+        AynvoraAppUiEvent("dashboard.ai.diagnostics_clicked", componentId = "ai_system_details")
+
+    data object CloseAiDiagnostics :
+        AynvoraAppUiEvent(
+            "ai.diagnostics.close_clicked",
+            screenId = "ai_system_details",
+            componentId = "close_button"
+        )
+
+    data object LoadAiModel :
+        AynvoraAppUiEvent(
+            "ai.diagnostics.load_model",
+            screenId = "ai_system_details",
+            componentId = "load_button"
+        )
+
+    data object UnloadAiModel :
+        AynvoraAppUiEvent(
+            "ai.diagnostics.unload_model",
+            screenId = "ai_system_details",
+            componentId = "unload_button"
+        )
+
     data object DismissSheet : AynvoraAppUiEvent("app.sheet.dismiss", componentId = "bottom_sheet")
     data object DismissDialog : AynvoraAppUiEvent("app.dialog.dismiss", componentId = "dialog")
 }
@@ -159,6 +198,7 @@ class AynvoraAppViewModel(
     private val aiLifecycleManager: AiModelLifecycleManager? = null,
     private val aiModelSelector: AiModelSelector? = null,
     private val aiCapabilityDetector: AiDeviceCapabilityDetector? = null,
+    private val localIntelligence: AynvoraLocalIntelligence? = null,
     eventDispatcher: AynvoraEventDispatcher? = null,
     initialDarkTheme: Boolean = true,
 ) : AynvoraBaseViewModel<AynvoraAppUiEvent, AynvoraAppState, AynvoraEffect>(
@@ -176,7 +216,31 @@ class AynvoraAppViewModel(
             }
             viewModelScope.launch {
                 aiLifecycleManager.state.collectLatest { state ->
-                    updateState { copy(aiLifecycleState = state) }
+                    updateState {
+                        copy(
+                            aiLifecycleState = state,
+                            installedModel = if (state is AiModelLifecycleState.Ready) state.installedVariant else null
+                        )
+                    }
+                }
+            }
+        }
+
+        // Initialize local intelligence runtime state
+        if (localIntelligence != null) {
+            viewModelScope.launch {
+                localIntelligence.initialize()
+                updateState {
+                    copy(
+                        installedModel = localIntelligence.getInstalledModel(),
+                        aiExecutionMode = localIntelligence.getExecutionMode(),
+                        isNativeVerified = localIntelligence.isNativeVerified(),
+                        nativeLibraryStatus = localIntelligence.getNativeLibraryStatus(),
+                        jniStatus = localIntelligence.getJniStatus(),
+                        inferenceDiagnostics = localIntelligence.getDiagnostics(),
+                        inferenceStatus = localIntelligence.runtime.getStatus(),
+                        knowledgePacks = localIntelligence.getAllKnowledgePacks(),
+                    )
                 }
             }
         }
@@ -412,6 +476,58 @@ class AynvoraAppViewModel(
 
             is AynvoraAppUiEvent.DeleteAi -> {
                 aiLifecycleManager?.deleteInstalledModel()
+            }
+
+            is AynvoraAppUiEvent.OpenAiDiagnostics -> {
+                updateState {
+                    copy(
+                        isAiDiagnosticsOpen = true,
+                        installedModel = localIntelligence?.getInstalledModel(),
+                        aiExecutionMode = localIntelligence?.getExecutionMode()
+                            ?: AiExecutionMode.DETERMINISTIC_FALLBACK,
+                        isNativeVerified = localIntelligence?.isNativeVerified() ?: false,
+                        nativeLibraryStatus = localIntelligence?.getNativeLibraryStatus()
+                            ?: "NOT_VERIFIED",
+                        jniStatus = localIntelligence?.getJniStatus() ?: "UNLINKED",
+                        inferenceDiagnostics = localIntelligence?.getDiagnostics()
+                            ?: AiInferenceDiagnostics(),
+                        inferenceStatus = localIntelligence?.runtime?.getStatus()
+                            ?: AiInferenceStatus.UNLOADED,
+                        knowledgePacks = localIntelligence?.getAllKnowledgePacks() ?: emptyList(),
+                    )
+                }
+            }
+
+            is AynvoraAppUiEvent.CloseAiDiagnostics -> {
+                updateState { copy(isAiDiagnosticsOpen = false) }
+            }
+
+            is AynvoraAppUiEvent.LoadAiModel -> {
+                viewModelScope.launch {
+                    localIntelligence?.loadModel()
+                    updateState {
+                        copy(
+                            inferenceStatus = localIntelligence?.runtime?.getStatus()
+                                ?: AiInferenceStatus.UNLOADED,
+                            inferenceDiagnostics = localIntelligence?.getDiagnostics()
+                                ?: AiInferenceDiagnostics(),
+                        )
+                    }
+                }
+            }
+
+            is AynvoraAppUiEvent.UnloadAiModel -> {
+                viewModelScope.launch {
+                    localIntelligence?.unloadModel()
+                    updateState {
+                        copy(
+                            inferenceStatus = localIntelligence?.runtime?.getStatus()
+                                ?: AiInferenceStatus.UNLOADED,
+                            inferenceDiagnostics = localIntelligence?.getDiagnostics()
+                                ?: AiInferenceDiagnostics(),
+                        )
+                    }
+                }
             }
 
             is AynvoraAppUiEvent.DismissSheet -> {

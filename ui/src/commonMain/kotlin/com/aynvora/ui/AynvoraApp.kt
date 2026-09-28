@@ -97,6 +97,7 @@ fun AynvoraApp(
             aiLifecycleManager = koin.getOrNull<AiModelLifecycleManager>(),
             aiModelSelector = koin.getOrNull<AiModelSelector>(),
             aiCapabilityDetector = koin.getOrNull<AiDeviceCapabilityDetector>(),
+            localIntelligence = koin.getOrNull<com.aynvora.core.ai.AynvoraLocalIntelligence>(),
             eventDispatcher = koin.getOrNull<com.aynvora.core.event.AynvoraEventDispatcher>(),
             initialDarkTheme = darkTheme,
         )
@@ -158,6 +159,7 @@ private fun AynvoraAppContent(
                 AndroidInteractionSentinelRuntime.stateSnapshotProvider = {
                     QaStateSnapshot(
                         route = when {
+                            state.isAiDiagnosticsOpen -> "ai_system_details"
                             isQaDashboardOpen -> "qa_dashboard"
                             state.isAstrologyOpen -> "astrology"
                             state.isTarotOpen -> "tarot"
@@ -168,6 +170,7 @@ private fun AynvoraAppContent(
                             else -> "dashboard"
                         },
                         screen = when {
+                            state.isAiDiagnosticsOpen -> "AiDiagnosticScreen"
                             isQaDashboardOpen -> "QaSentinelDashboard"
                             state.isAstrologyOpen -> "AstrologyScreen"
                             state.isTarotOpen -> "TarotScreen"
@@ -284,6 +287,23 @@ private fun AynvoraAppContent(
                 } else if (state.isGitaOpen) {
                     com.aynvora.ui.gita.GitaRoute(
                         onClose = { onEvent(AynvoraAppUiEvent.CloseGita) },
+                    )
+                } else if (state.isAiDiagnosticsOpen) {
+                    com.aynvora.ui.ai.AiDiagnosticScreen(
+                        deviceProfile = state.deviceProfile,
+                        selectionResult = state.selectionResult,
+                        lifecycleState = state.aiLifecycleState,
+                        inferenceStatus = state.inferenceStatus,
+                        inferenceDiagnostics = state.inferenceDiagnostics,
+                        executionMode = state.aiExecutionMode,
+                        isNativeVerified = state.isNativeVerified,
+                        nativeLibraryStatus = state.nativeLibraryStatus,
+                        jniStatus = state.jniStatus,
+                        installedModel = state.installedModel,
+                        knowledgePacks = state.knowledgePacks,
+                        onLoadModelClicked = { onEvent(AynvoraAppUiEvent.LoadAiModel) },
+                        onUnloadModelClicked = { onEvent(AynvoraAppUiEvent.UnloadAiModel) },
+                        onBackClicked = { onEvent(AynvoraAppUiEvent.CloseAiDiagnostics) },
                     )
                 } else {
                     Column(
@@ -444,6 +464,7 @@ private fun AynvoraAppContent(
                             onDownloadAiClicked = { onEvent(AynvoraAppUiEvent.DownloadAi) },
                             onCancelAiClicked = { onEvent(AynvoraAppUiEvent.CancelAi) },
                             onDeleteAiClicked = { onEvent(AynvoraAppUiEvent.DeleteAi) },
+                            onAiDiagnosticsClicked = { onEvent(AynvoraAppUiEvent.OpenAiDiagnostics) },
                             onFeatureSelected = { featureId ->
                                 onEvent(AynvoraAppUiEvent.SelectFeature(featureId))
                             },

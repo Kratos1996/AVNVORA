@@ -104,6 +104,87 @@ object AynvoraEventRegistry {
                 defaultIdempotencyPolicy = AynvoraDeduplicationPolicy.DEDUP_SHORT_WINDOW,
             )
         )
+        register(
+            RegisteredEventDefinition(
+                eventId = "ai.opened",
+                eventType = AynvoraEventType.CLICK,
+                allowedFeature = null,
+                expectedPayloadClass = AynvoraEventPayload.AiOpenedPayload::class,
+                analyticsEventName = "ai_opened",
+            )
+        )
+        register(
+            RegisteredEventDefinition(
+                eventId = "ai.model_status_viewed",
+                eventType = AynvoraEventType.FEATURE_ACTION,
+                allowedFeature = null,
+                expectedPayloadClass = AynvoraEventPayload.AiModelStatusViewedPayload::class,
+                analyticsEventName = "ai_model_status_viewed",
+            )
+        )
+        register(
+            RegisteredEventDefinition(
+                eventId = "ai.model_download_started",
+                eventType = AynvoraEventType.DOWNLOAD,
+                allowedFeature = null,
+                expectedPayloadClass = AynvoraEventPayload.AiDownloadStartedPayload::class,
+                analyticsEventName = "ai_model_download_started",
+            )
+        )
+        register(
+            RegisteredEventDefinition(
+                eventId = "ai.model_download_completed",
+                eventType = AynvoraEventType.DOWNLOAD,
+                allowedFeature = null,
+                expectedPayloadClass = AynvoraEventPayload.AiDownloadCompletedPayload::class,
+                analyticsEventName = "ai_model_download_completed",
+            )
+        )
+        register(
+            RegisteredEventDefinition(
+                eventId = "ai.model_verification_completed",
+                eventType = AynvoraEventType.FEATURE_ACTION,
+                allowedFeature = null,
+                expectedPayloadClass = AynvoraEventPayload.AiVerificationCompletedPayload::class,
+                analyticsEventName = "ai_model_verification_completed",
+            )
+        )
+        register(
+            RegisteredEventDefinition(
+                eventId = "ai.inference_started",
+                eventType = AynvoraEventType.FEATURE_ACTION,
+                allowedFeature = null,
+                expectedPayloadClass = AynvoraEventPayload.AiInferenceStartedPayload::class,
+                analyticsEventName = "ai_inference_started",
+            )
+        )
+        register(
+            RegisteredEventDefinition(
+                eventId = "ai.inference_completed",
+                eventType = AynvoraEventType.FEATURE_ACTION,
+                allowedFeature = null,
+                expectedPayloadClass = AynvoraEventPayload.AiInferenceCompletedPayload::class,
+                analyticsEventName = "ai_inference_completed",
+            )
+        )
+        register(
+            RegisteredEventDefinition(
+                eventId = "ai.fallback_used",
+                eventType = AynvoraEventType.FEATURE_ACTION,
+                allowedFeature = null,
+                expectedPayloadClass = AynvoraEventPayload.AiFallbackUsedPayload::class,
+                analyticsEventName = "ai_fallback_used",
+            )
+        )
+        register(
+            RegisteredEventDefinition(
+                eventId = "ai.validation_failed",
+                eventType = AynvoraEventType.FEATURE_ACTION,
+                allowedFeature = null,
+                expectedPayloadClass = AynvoraEventPayload.AiValidationFailedPayload::class,
+                analyticsEventName = "ai_validation_failed",
+            )
+        )
 
         // ── Vedic Astrology Module ──────────────────────────────────────────
         register(

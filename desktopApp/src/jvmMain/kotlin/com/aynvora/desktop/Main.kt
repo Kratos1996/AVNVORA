@@ -44,6 +44,7 @@ val jvmDataModule = module {
         Room.databaseBuilder<AynvoraDatabase>(
             name = dbFile.absolutePath,
         )
+            .fallbackToDestructiveMigration(true)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
             .build()

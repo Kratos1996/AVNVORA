@@ -59,6 +59,32 @@ sealed interface AynvoraEventPayload {
     data class AiCancelPayload(val modelId: String = "") : AynvoraEventPayload
     data class AiDeletePayload(val modelId: String = "") : AynvoraEventPayload
     data class AiRetryPayload(val modelId: String = "") : AynvoraEventPayload
+    data class AiOpenedPayload(val screenId: String = "ai_system_details") : AynvoraEventPayload
+    data class AiModelStatusViewedPayload(val modelId: String?, val status: String) :
+        AynvoraEventPayload
+
+    data class AiDownloadStartedPayload(val modelId: String) : AynvoraEventPayload
+    data class AiDownloadCompletedPayload(val modelId: String, val sizeBytes: Long) :
+        AynvoraEventPayload
+
+    data class AiVerificationCompletedPayload(val modelId: String, val isSuccess: Boolean) :
+        AynvoraEventPayload
+
+    data class AiInferenceStartedPayload(val featureId: String, val requestId: String) :
+        AynvoraEventPayload
+
+    data class AiInferenceCompletedPayload(
+        val featureId: String,
+        val requestId: String,
+        val executionMode: String,
+        val latencyMs: Long
+    ) : AynvoraEventPayload
+
+    data class AiFallbackUsedPayload(val featureId: String, val reason: String) :
+        AynvoraEventPayload
+
+    data class AiValidationFailedPayload(val featureId: String, val reason: String) :
+        AynvoraEventPayload
 
     // Tarot payloads
     data class TarotSelectDeckPayload(val deckId: String) : AynvoraEventPayload

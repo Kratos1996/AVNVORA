@@ -2,6 +2,7 @@ package com.aynvora.ui.ai
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.aynvora.core.ai.AiDeviceProfile
 import com.aynvora.core.ai.AiModelLifecycleState
@@ -185,6 +187,30 @@ fun AiSetupCard(
                 }
                 Spacer(modifier = Modifier.height(AynvoraSpacing.space10))
             }
+
+            if (onDiagnosticsClicked != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = AynvoraSpacing.space8),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    Text(
+                        text = "⚙️ AI System Details",
+                        style = AynvoraTheme.typography.caption12.copy(
+                            fontSize = 11.ssp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AynvoraColors.Gold,
+                        ),
+                        modifier = Modifier
+                            .clip(AynvoraShapes.shape8)
+                            .clickable { onDiagnosticsClicked() }
+                            .padding(
+                                vertical = AynvoraSpacing.space4,
+                                horizontal = AynvoraSpacing.space6
+                            ),
+                    )
+                }
+            }
+
 
             // State-Specific Interactive Content
             when (lifecycleState) {

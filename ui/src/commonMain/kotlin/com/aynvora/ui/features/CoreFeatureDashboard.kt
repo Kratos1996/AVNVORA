@@ -39,6 +39,7 @@ fun CoreFeatureDashboard(
     onDownloadAiClicked: () -> Unit = {},
     onCancelAiClicked: () -> Unit = {},
     onDeleteAiClicked: () -> Unit = {},
+    onAiDiagnosticsClicked: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val translator = LocalAynvoraTranslator.current
@@ -57,6 +58,7 @@ fun CoreFeatureDashboard(
                     onDownloadClicked = onDownloadAiClicked,
                     onCancelClicked = onCancelAiClicked,
                     onDeleteClicked = onDeleteAiClicked,
+                    onDiagnosticsClicked = onAiDiagnosticsClicked,
                 )
             }
         }

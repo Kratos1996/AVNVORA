@@ -188,7 +188,8 @@ class GitaViewModel(
                     updateState {
                         copy(
                             searchResults = emptyList(),
-                            destination = if (destination == GitaDestination.Search) GitaDestination.ChapterList else destination,
+                            destination = GitaDestination.Search,
+                            isLoading = false,
                         )
                     }
                     return

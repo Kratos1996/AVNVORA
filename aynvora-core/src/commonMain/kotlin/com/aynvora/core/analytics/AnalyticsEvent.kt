@@ -577,6 +577,31 @@ sealed class AnalyticsEvent(
         params = mapOf(Param.MODEL_ID to modelId, Param.FALLBACK_REASON to fallbackReason),
     )
 
+    /** AI diagnostic or system details opened. */
+    class AiOpened(screenId: String) : AnalyticsEvent(
+        name = "ai_opened",
+        params = mapOf(Param.SCREEN_NAME to screenId),
+    )
+
+    /** AI model status viewed in developer diagnostics. */
+    class AiModelStatusViewed(modelId: String?, status: String) : AnalyticsEvent(
+        name = "ai_model_status_viewed",
+        params = mapOf(Param.MODEL_ID to (modelId ?: "none"), Param.STATUS to status),
+    )
+
+    /** AI model cryptographic verification completed. */
+    class AiModelVerificationCompleted(modelId: String, isSuccess: Boolean) : AnalyticsEvent(
+        name = "ai_model_verification_completed",
+        params = mapOf(Param.MODEL_ID to modelId, Param.IS_SUCCESS to isSuccess.toString()),
+    )
+
+    /** AI output failed safety or source validation. */
+    class AiValidationFailed(featureId: String, reason: String) : AnalyticsEvent(
+        name = "ai_validation_failed",
+        params = mapOf(Param.FEATURE_ID to featureId, Param.FAILURE_CODE to reason),
+    )
+
+
     /** Daily guidance viewed. */
     class DailyGuidanceOpened(timeOfDay: String) : AnalyticsEvent(
         name = "daily_guidance_opened",
@@ -756,6 +781,7 @@ sealed class AnalyticsEvent(
         const val FEEDBACK_TYPE = "feedback_type"
         const val TIMELINE_EVENT_TYPE = "timeline_event_type"
         const val ANALYSIS_VERSION = "analysis_version"
+        const val SCREEN_NAME = "screen_name"
     }
 
 

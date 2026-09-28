@@ -72,6 +72,121 @@ object AiEvents {
             componentId = "retry_ai_button",
             payload = AynvoraEventPayload.AiRetryPayload(modelId),
         )
+
+    fun openAi(screenId: String = "ai_system_details"): AynvoraClickEvent =
+        AynvoraClickEvent(
+            eventId = "ai.opened",
+            screenId = screenId,
+            componentId = "open_ai_button",
+            payload = AynvoraEventPayload.AiOpenedPayload(screenId),
+        )
+
+    fun modelStatusViewed(
+        modelId: String?,
+        status: String,
+        screenId: String = "ai_system_details"
+    ): AynvoraUiEvent =
+        AynvoraUiEvent(
+            eventId = "ai.model_status_viewed",
+            eventType = AynvoraEventType.FEATURE_ACTION,
+            screenId = screenId,
+            componentId = "system_details",
+            payload = AynvoraEventPayload.AiModelStatusViewedPayload(modelId, status),
+        )
+
+    fun downloadStarted(modelId: String, screenId: String = "ai_system_details"): AynvoraUiEvent =
+        AynvoraUiEvent(
+            eventId = "ai.model_download_started",
+            eventType = AynvoraEventType.DOWNLOAD,
+            screenId = screenId,
+            componentId = "download_progress",
+            payload = AynvoraEventPayload.AiDownloadStartedPayload(modelId),
+        )
+
+    fun downloadCompleted(
+        modelId: String,
+        sizeBytes: Long,
+        screenId: String = "ai_system_details"
+    ): AynvoraUiEvent =
+        AynvoraUiEvent(
+            eventId = "ai.model_download_completed",
+            eventType = AynvoraEventType.DOWNLOAD,
+            screenId = screenId,
+            componentId = "download_progress",
+            payload = AynvoraEventPayload.AiDownloadCompletedPayload(modelId, sizeBytes),
+        )
+
+    fun verificationCompleted(
+        modelId: String,
+        isSuccess: Boolean,
+        screenId: String = "ai_system_details"
+    ): AynvoraUiEvent =
+        AynvoraUiEvent(
+            eventId = "ai.model_verification_completed",
+            eventType = AynvoraEventType.FEATURE_ACTION,
+            screenId = screenId,
+            componentId = "checksum_verifier",
+            payload = AynvoraEventPayload.AiVerificationCompletedPayload(modelId, isSuccess),
+        )
+
+    fun inferenceStarted(
+        featureId: String,
+        requestId: String,
+        screenId: String = "ai_inference"
+    ): AynvoraUiEvent =
+        AynvoraUiEvent(
+            eventId = "ai.inference_started",
+            eventType = AynvoraEventType.FEATURE_ACTION,
+            screenId = screenId,
+            componentId = "ai_runtime",
+            payload = AynvoraEventPayload.AiInferenceStartedPayload(featureId, requestId),
+        )
+
+    fun inferenceCompleted(
+        featureId: String,
+        requestId: String,
+        executionMode: String,
+        latencyMs: Long,
+        screenId: String = "ai_inference"
+    ): AynvoraUiEvent =
+        AynvoraUiEvent(
+            eventId = "ai.inference_completed",
+            eventType = AynvoraEventType.FEATURE_ACTION,
+            screenId = screenId,
+            componentId = "ai_runtime",
+            payload = AynvoraEventPayload.AiInferenceCompletedPayload(
+                featureId,
+                requestId,
+                executionMode,
+                latencyMs
+            ),
+        )
+
+    fun fallbackUsed(
+        featureId: String,
+        reason: String,
+        screenId: String = "ai_inference"
+    ): AynvoraUiEvent =
+        AynvoraUiEvent(
+            eventId = "ai.fallback_used",
+            eventType = AynvoraEventType.FEATURE_ACTION,
+            screenId = screenId,
+            componentId = "fallback_engine",
+            payload = AynvoraEventPayload.AiFallbackUsedPayload(featureId, reason),
+        )
+
+    fun validationFailed(
+        featureId: String,
+        reason: String,
+        screenId: String = "ai_inference"
+    ): AynvoraUiEvent =
+        AynvoraUiEvent(
+            eventId = "ai.validation_failed",
+            eventType = AynvoraEventType.FEATURE_ACTION,
+            screenId = screenId,
+            componentId = "output_validator",
+            payload = AynvoraEventPayload.AiValidationFailedPayload(featureId, reason),
+        )
 }
 
 object TarotEvents {

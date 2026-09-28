@@ -44,7 +44,7 @@ fun Modifier.aynvoraClickable(
             val shouldDispatch = when (policy) {
                 AynvoraDeduplicationPolicy.NO_DEDUP -> true
                 AynvoraDeduplicationPolicy.DEDUP_SHORT_WINDOW -> {
-                    if (now - lastTime < 350L) {
+                    if (lastTime >= 0L && now - lastTime < 350L) {
                         false
                     } else {
                         lastClickTimeState[0] = now
@@ -53,7 +53,7 @@ fun Modifier.aynvoraClickable(
                 }
 
                 AynvoraDeduplicationPolicy.IDEMPOTENT -> {
-                    if (lastTime != 0L) {
+                    if (lastTime >= 0L) {
                         false
                     } else {
                         lastClickTimeState[0] = now

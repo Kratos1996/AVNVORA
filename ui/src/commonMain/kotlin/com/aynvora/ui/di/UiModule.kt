@@ -17,6 +17,7 @@ val uiModule: Module = module {
             aiLifecycleManager = getOrNull(),
             aiModelSelector = getOrNull(),
             aiCapabilityDetector = getOrNull(),
+            localIntelligence = getOrNull(),
             eventDispatcher = getOrNull(),
         )
     }

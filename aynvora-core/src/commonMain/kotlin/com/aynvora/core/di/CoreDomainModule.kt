@@ -88,6 +88,31 @@ val coreDomainModule: Module = module {
     single<com.aynvora.core.ai.AiInferenceEngine> { com.aynvora.core.ai.LocalNativeInferenceEngine() }
     single { com.aynvora.core.ai.AiModelLifecycleManager(get()) }
 
+    // Unified On-Device Intelligence Platform (Centralized Local Intelligence)
+    single<com.aynvora.core.ai.LocalAiRuntime> {
+        com.aynvora.core.ai.DefaultLocalAiRuntime(
+            inferenceEngine = get()
+        )
+    }
+    single { com.aynvora.core.ai.AynvoraAiOutputValidator() }
+    single<com.aynvora.core.ai.AynvoraLocalIntelligence> {
+        com.aynvora.core.ai.DefaultAynvoraLocalIntelligence(
+            runtime = get(),
+            lifecycleManager = get(),
+            outputValidator = get(),
+        )
+    }
+    single { com.aynvora.core.ai.gita.GitaReflectionPipeline(localIntelligence = get()) }
+    single { com.aynvora.core.ai.adapters.AstrologyAiAdapter(get()) }
+    single { com.aynvora.core.ai.adapters.GitaAiAdapter(get()) }
+    single { com.aynvora.core.ai.adapters.TarotAiAdapter(get()) }
+    single { com.aynvora.core.ai.adapters.NumerologyAiAdapter(get()) }
+    single { com.aynvora.core.ai.adapters.PalmistryAiAdapter(get()) }
+    single { com.aynvora.core.ai.adapters.GemstoneAiAdapter(get()) }
+    single { com.aynvora.core.ai.adapters.GarudaPuranAiAdapter(get()) }
+    single { com.aynvora.core.ai.adapters.CrossFeatureReflectionAdapter(get()) }
+
+
     // Unified Report Domain (calculation and document generation only; platform renderers stay in UI hosts)
     single { ReportGeneratorRegistry() }
     factory { GenerateReportUseCase(get(), get(), get()) }
