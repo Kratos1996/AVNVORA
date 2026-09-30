@@ -34,6 +34,24 @@ import com.aynvora.astro.varga.VargaChartResult
 import com.aynvora.astro.varga.VargaEngine
 import com.aynvora.astro.varga.VargaProfile
 import com.aynvora.astro.zodiac.ZodiacCalculator
+import com.aynvora.astro.context.AstroCalculationContext
+import com.aynvora.astro.pipeline.AstroFeaturePipeline
+import com.aynvora.astro.pipeline.CoreAstroFeatureRegistry
+import com.aynvora.astro.pipeline.AyanamsaFeatureEngine
+import com.aynvora.astro.pipeline.CoreFeatureKeys
+import com.aynvora.astro.pipeline.PlanetaryPositionFeatureEngine
+import com.aynvora.astro.pipeline.TimeFeatureEngine
+import com.aynvora.astro.pipeline.LagnaFeatureEngine
+import com.aynvora.astro.pipeline.HouseFeatureEngine
+import com.aynvora.astro.pipeline.VargaFeatureEngine
+import com.aynvora.astro.pipeline.AspectFeatureEngine
+import com.aynvora.astro.pipeline.PlanetStateFeatureEngine
+import com.aynvora.astro.pipeline.DignityFeatureEngine
+import com.aynvora.astro.pipeline.RelationshipFeatureEngine
+import com.aynvora.astro.pipeline.ShadbalaFeatureEngine
+import com.aynvora.astro.pipeline.AshtakavargaFeatureEngine
+import com.aynvora.astro.pipeline.ShodhanaFeatureEngine
+import com.aynvora.astro.pipeline.PindaFeatureEngine
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -95,6 +113,9 @@ data class CalculationResult(
     val status: String,
     val calculationModel: String = "MEEUS_VSOP87",
     val julianDay: Double = 0.0,
+    /** UTC instant produced by the single normalization performed in AstroCalculationContext. */
+    val utcTimestamp: String? = null,
+    val timezoneOffsetMinutes: Int? = null,
     val julianCenturies: Double = 0.0,
     val ayanamsaDegrees: Double = 0.0,
     val ayanamsaName: String = "LAHIRI_CHITRAPAKSHA",
@@ -111,6 +132,7 @@ data class CalculationResult(
     val ashtakavarga: AshtakavargaResult? = null,
     val shodhitaAshtakavarga: ShodhitaAshtakavargaResult? = null,
     val ashtakavargaPinda: AshtakavargaPindaResult? = null,
+    val dasha: com.aynvora.astro.dasha.VimshottariDashaTimeline? = null,
 )
 
 interface AstroEngine {
@@ -122,172 +144,51 @@ interface AstroEngine {
 
 class AynvoraAstroEngine(
     private val vargaEngine: VargaEngine = DefaultVargaEngine(),
+    private val timeResolver: (Int, Int, Int, Int, Int, Int, String) -> TimeNormalizer.NormalizedUtcTime = { year, month, day, hour, minute, second, zone ->
+        TimeNormalizer.normalize(year, month, day, hour, minute, second, zone)
+    },
 ) : AstroEngine {
+
+    suspend fun calculateFeatures(
+        birthData: BirthData,
+        config: EngineCalculationConfig,
+        featureIds: Set<String>,
+    ): com.aynvora.astro.pipeline.FeatureSetCalculation {
+        val context = AstroCalculationContext.create(birthData, config, timeResolver = timeResolver)
+        val engines = CoreAstroFeatureRegistry.engines(vargaEngine)
+        val requested = featureIds.map { id ->
+            require(engines.any { it.output.id == id }) { "No engine registered for requested feature '$id'" }
+            com.aynvora.astro.pipeline.FeatureKey<Any?>(id)
+        }.toSet()
+        return AstroFeaturePipeline(engines).calculateFeatures(context, requested)
+    }
 
     override suspend fun calculate(
         birthData: BirthData,
         config: EngineCalculationConfig,
     ): CalculationResult {
-        // Resolve date-time components
-        val y: Int
-        val m: Int
-        val d: Int
-        val h: Int
-        val min: Int
-        val s: Int
+        // Shared context normalizes the birth time once; feature outputs are reused downstream.
+        val context = AstroCalculationContext.create(birthData, config, timeResolver = timeResolver)
+        val features = AstroFeaturePipeline(CoreAstroFeatureRegistry.engines(vargaEngine)).calculate(context)
+        val normalizedTime = context.normalizedUtc
+        val jd = context.julianDay
+        val ayanamsaDegrees = features.get(CoreFeatureKeys.Ayanamsa).value
+            ?: error("Ayanamsa feature returned no value")
+        val positions = features.get(CoreFeatureKeys.PlanetaryPositions).value
+            ?: error("Planetary position feature returned no value")
+        val lagna = features.get(CoreFeatureKeys.Lagna).value ?: error("Lagna feature returned no value")
+        val houseResult = features.get(CoreFeatureKeys.Houses).value ?: error("House feature returned no value")
+        val divisionalCharts = features.get(CoreFeatureKeys.Vargas).value ?: error("Varga feature returned no value")
 
-        if (birthData.year != null && birthData.month != null && birthData.day != null &&
-            birthData.hour != null && birthData.minute != null
-        ) {
-            y = birthData.year
-            m = birthData.month
-            d = birthData.day
-            h = birthData.hour
-            min = birthData.minute
-            s = birthData.second ?: 0
-        } else {
-            // Parse ISO format YYYY-MM-DDTHH:MM:SS
-            val parts = birthData.dateTimeIso.split("T")
-            require(parts.size == 2) { "Invalid dateTimeIso format: ${birthData.dateTimeIso}" }
-            val dateParts = parts[0].split("-").map { it.toInt() }
-            val cleanTime = parts[1].removeSuffix("Z").split("+")[0].split("-")[0]
-            val timeParts = cleanTime.split(":").map { it.toInt() }
-
-            y = dateParts[0]
-            m = dateParts[1]
-            d = dateParts[2]
-            h = timeParts[0]
-            min = timeParts[1]
-            s = if (timeParts.size > 2) timeParts[2] else 0
-        }
-
-        // Time normalization to UTC and Julian Day
-        val normalizedTime = TimeNormalizer.normalize(
-            year = y,
-            month = m,
-            day = d,
-            hour = h,
-            minute = min,
-            second = s,
-            timezoneId = birthData.timeZoneId,
-        )
-        val jd = normalizedTime.julianDay
-
-        // Ayanamsa calculation
-        val ayanamsaCalculator = AyanamsaCalculator.forConvention(config.ayanamsa)
-        val ayanamsaDegrees = ayanamsaCalculator.calculate(jd)
-
-        // Celestial body calculations
-        val positions = mutableListOf<BodyPosition>()
-
-        // 1. Sun
-        val sun = SunCalculator.calculate(jd)
-        positions.add(createBodyPosition(BodyId.SUN, sun.apparentLongitude, ayanamsaDegrees, false, sun.dailyMotionDegrees))
-
-        // 2. Moon
-        val moon = MoonCalculator.calculate(jd)
-        positions.add(createBodyPosition(BodyId.MOON, moon.apparentLongitude, ayanamsaDegrees, false, moon.dailyMotionDegrees))
-
-        // 3. Mercury
-        val mercury = PlanetaryCalculator.calculate(Planet.MERCURY, jd)
-        positions.add(createBodyPosition(BodyId.MERCURY, mercury.apparentLongitude, ayanamsaDegrees, mercury.isRetrograde, mercury.dailyMotionDegrees))
-
-        // 4. Venus
-        val venus = PlanetaryCalculator.calculate(Planet.VENUS, jd)
-        positions.add(createBodyPosition(BodyId.VENUS, venus.apparentLongitude, ayanamsaDegrees, venus.isRetrograde, venus.dailyMotionDegrees))
-
-        // 5. Mars
-        val mars = PlanetaryCalculator.calculate(Planet.MARS, jd)
-        positions.add(createBodyPosition(BodyId.MARS, mars.apparentLongitude, ayanamsaDegrees, mars.isRetrograde, mars.dailyMotionDegrees))
-
-        // 6. Jupiter
-        val jupiter = PlanetaryCalculator.calculate(Planet.JUPITER, jd)
-        positions.add(createBodyPosition(BodyId.JUPITER, jupiter.apparentLongitude, ayanamsaDegrees, jupiter.isRetrograde, jupiter.dailyMotionDegrees))
-
-        // 7. Saturn
-        val saturn = PlanetaryCalculator.calculate(Planet.SATURN, jd)
-        positions.add(createBodyPosition(BodyId.SATURN, saturn.apparentLongitude, ayanamsaDegrees, saturn.isRetrograde, saturn.dailyMotionDegrees))
-
-        // 8. Rahu & 9. Ketu
-        val nodes = LunarNodesCalculator.calculate(jd)
-        positions.add(createBodyPosition(BodyId.RAHU, nodes.rahu.apparentLongitude, ayanamsaDegrees, true, nodes.rahu.dailyMotionDegrees))
-        positions.add(createBodyPosition(BodyId.KETU, nodes.ketu.apparentLongitude, ayanamsaDegrees, true, nodes.ketu.dailyMotionDegrees))
-
-        // Ascendant / Lagna calculation
-        val lagna = LagnaCalculator.calculate(
-            jd = jd,
-            latitudeDeg = birthData.latitude,
-            longitudeDeg = birthData.longitude,
-            ayanamsaDegrees = ayanamsaDegrees,
-        )
-
-        // House / Bhava calculation
-        val planetLongitudes = positions.associate { it.bodyId to it.siderealLongitude }
-        val houseCalculator = HouseSystemRegistry.forName(config.houseSystem)
-        val houseResult = houseCalculator.calculate(
-            HouseCalculationInput(
-                lagna = lagna,
-                latitudeDeg = birthData.latitude,
-                longitudeDeg = birthData.longitude,
-                ayanamsaDegrees = ayanamsaDegrees,
-                planetPositions = planetLongitudes,
-            ),
-        )
-
-        // Aspects & Conjunctions calculation
-        val aspects = AspectCalculator.calculate(positions)
-
-        // Planet states (combustion & motion states)
-        val planetStates = PlanetStateCalculator.calculate(positions)
-
-        // Divisional charts calculation
-        val divisionalCharts = if (config.requestedDivisionalCharts.isNotEmpty()) {
-            if (config.vargaRulesetId != VargaProfile.DEFAULT_RULESET_ID) {
-                throw UnsupportedOperationException("Divisional chart ruleset '${config.vargaRulesetId}' is unsupported.")
-            }
-            val vargaProfile = VargaProfile(rulesetId = config.vargaRulesetId)
-            vargaEngine.calculateMultiple(
-                positions = positions,
-                lagna = lagna,
-                charts = config.requestedDivisionalCharts,
-                profile = vargaProfile,
-            )
-        } else {
-            emptyMap()
-        }
-
-        // Planetary dignities and relationships
-        val planetaryDignities = PlanetaryDignityCalculator.calculateDignities(positions)
-        val planetaryRelationships = PlanetaryRelationshipCalculator.calculateRelationships(positions)
-
-        // Shadbala
-        val shadbala = ShadbalaCalculator.calculateShadbala(
-            positions = positions,
-            lagnaLongitude = lagna.siderealLongitude,
-            houseCusps = houseResult.houses.associate { it.houseNumber to it.cuspLongitude },
-            planetHouseOccupancy = houseResult.planetHouseOccupancy,
-            vargas = divisionalCharts,
-            vargaEngine = vargaEngine,
-            julianDay = jd.value,
-            birthHour = birthData.hour ?: 12,
-            obliquityDeg = lagna.obliquityDegrees,
-        )
-
-        val rawAshtakavarga = AshtakavargaCalculator.calculateAshtakavarga(
-            positions = positions,
-            lagna = lagna,
-            rulesetId = config.ashtakavargaRulesetId,
-        )
-
-        val shodhitaAshtakavarga = AshtakavargaShodhanaCalculator.calculateShodhana(
-            ashtakavargaResult = rawAshtakavarga,
-            positions = positions,
-        )
-
-        val ashtakavargaPinda = AshtakavargaPindaCalculator.calculatePindas(
-            shodhitaAshtakavarga = shodhitaAshtakavarga,
-            positions = positions,
-        )
+        val aspects = features.get(CoreFeatureKeys.Aspects).value ?: error("Aspects feature returned no value")
+        val planetStates = features.get(CoreFeatureKeys.PlanetStates).value ?: error("Planet states feature returned no value")
+        val planetaryDignities = features.get(CoreFeatureKeys.Dignities).value ?: error("Dignities feature returned no value")
+        val planetaryRelationships = features.get(CoreFeatureKeys.Relationships).value ?: error("Relationships feature returned no value")
+        val shadbala = features.get(CoreFeatureKeys.Shadbala).value ?: error("Shadbala feature returned no value")
+        val rawAshtakavarga = features.get(CoreFeatureKeys.Ashtakavarga).value ?: error("Ashtakavarga feature returned no value")
+        val shodhitaAshtakavarga = features.get(CoreFeatureKeys.Shodhana).value ?: error("Shodhana feature returned no value")
+        val ashtakavargaPinda = features.get(CoreFeatureKeys.Pinda).value ?: error("Pinda feature returned no value")
+        val dasha = features.get(CoreFeatureKeys.Dasha).value ?: error("Dasha feature returned no value")
 
         val ashtakavarga = rawAshtakavarga.copy(
             shodhana = shodhitaAshtakavarga,
@@ -299,6 +200,11 @@ class AynvoraAstroEngine(
             status = "CALCULATED",
             calculationModel = "MEEUS_VSOP87",
             julianDay = jd.value,
+            utcTimestamp = "%04d-%02d-%02dT%02d:%02d:%02dZ".format(
+                normalizedTime.year, normalizedTime.month, normalizedTime.day,
+                normalizedTime.hour, normalizedTime.minute, normalizedTime.second.toInt(),
+            ),
+            timezoneOffsetMinutes = normalizedTime.timezoneOffsetMinutes,
             julianCenturies = jd.julianCenturiesJ2000,
             ayanamsaDegrees = ayanamsaDegrees,
             ayanamsaName = config.ayanamsa,
@@ -315,6 +221,7 @@ class AynvoraAstroEngine(
             ashtakavarga = ashtakavarga,
             shodhitaAshtakavarga = shodhitaAshtakavarga,
             ashtakavargaPinda = ashtakavargaPinda,
+            dasha = dasha,
         )
     }
 

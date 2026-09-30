@@ -8,6 +8,9 @@ import com.aynvora.core.models.BirthData
 import com.aynvora.core.models.CalculationConfig
 import com.aynvora.core.models.ChartRequest
 import com.aynvora.core.models.ChartResult
+import com.aynvora.core.models.calculateTransitRequest
+import com.aynvora.core.models.calculatePanchangRequest
+import com.aynvora.core.models.generateKundaliSnapshot
 import com.aynvora.core.models.EngineMetadata
 import com.aynvora.core.repository.BirthProfileRepository
 import com.aynvora.core.repository.SavedChartRepository
@@ -23,11 +26,19 @@ import com.aynvora.core.result.AynvoraResult
  * and persistence infrastructure.
  */
 interface AynvoraSdk {
+    /** Grouped astrology request API for date-sensitive and selective operations. */
+    val astrology: AstrologySdkFacade get() = AstrologySdkFacade(this)
 
     /**
      * Calculates an astrological chart from a structured, validated request.
      */
     suspend fun calculateChart(request: ChartRequest): AynvoraResult<ChartResult>
+
+    /** Runs only requested registered core features and their shared dependencies. IDs are registry IDs, e.g. `vedic.dignities`. */
+    suspend fun calculateFeatures(
+        request: ChartRequest,
+        featureIds: Set<String>,
+    ): AynvoraResult<com.aynvora.core.models.AstrologyFeatureCalculation>
 
     /**
      * Convenience overload calculating chart directly from birth data and optional configuration.
@@ -204,6 +215,18 @@ interface AynvoraSdk {
     val analytics: AnalyticsTracker get() = NoOpAnalyticsTracker()
 }
 
+class AstrologySdkFacade internal constructor(private val sdk: AynvoraSdk) {
+    suspend fun calculateFeatures(request: ChartRequest, featureIds: Set<String>) = sdk.calculateFeatures(request, featureIds)
+    suspend fun calculateTransit(request: com.aynvora.core.models.TransitRequest) = sdk.calculateTransitRequest(request)
+    suspend fun calculatePanchang(request: com.aynvora.core.models.PanchangRequest) = sdk.calculatePanchangRequest(request)
+    suspend fun calculateKundali(
+        request: ChartRequest,
+        profileId: String,
+        profileName: String,
+        genderId: String? = null,
+    ) = sdk.generateKundaliSnapshot(request, profileId, profileName, genderId)
+}
+
 /**
  * Entry point factory for the AYNVORA SDK.
  */
@@ -265,6 +288,11 @@ internal class DefaultAynvoraSdk(
         }
         return result
     }
+
+    override suspend fun calculateFeatures(
+        request: ChartRequest,
+        featureIds: Set<String>,
+    ): AynvoraResult<com.aynvora.core.models.AstrologyFeatureCalculation> = adapter.executeFeatures(request, featureIds)
 
     override suspend fun calculateDivisionalChart(
         request: ChartRequest,
@@ -392,5 +420,3 @@ private fun AynvoraResult.Failure.analyticsErrorCode(): String = when (this) {
     is AynvoraResult.Failure.SyncFailure -> "sync_failure"
     is AynvoraResult.Failure.InternalFailure -> "internal_failure"
 }
-
-

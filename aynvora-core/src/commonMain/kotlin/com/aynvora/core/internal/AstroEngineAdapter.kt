@@ -359,6 +359,8 @@ internal class AstroEngineAdapter(
                     config = request.config,
                     calculationModel = rawResult.calculationModel,
                     julianDay = rawResult.julianDay,
+                    utcTimestamp = rawResult.utcTimestamp,
+                    timezoneOffsetMinutes = rawResult.timezoneOffsetMinutes,
                     ayanamsaDegrees = rawResult.ayanamsaDegrees,
                     lagna = publicLagna,
                     houses = publicHouses,
@@ -372,6 +374,7 @@ internal class AstroEngineAdapter(
                     ashtakavarga = publicAshtakavarga,
                     shodhitaAshtakavarga = publicShodhitaAshtakavarga,
                     ashtakavargaPinda = publicAshtakavargaPinda,
+                    dashaTimeline = rawResult.dasha,
                     calculationMetadata = CalculationMetadata(
                         calculationProfileId = request.config.profile.name,
                         engineVersion = rawResult.engineVersion,
@@ -407,6 +410,54 @@ internal class AstroEngineAdapter(
             AynvoraResult.Failure.InternalFailure(
                 message = e.message ?: "Calculation terminated due to an unexpected internal error.",
             )
+        }
+    }
+
+    suspend fun executeFeatures(
+        request: ChartRequest,
+        featureIds: Set<String>,
+    ): AynvoraResult<com.aynvora.core.models.AstrologyFeatureCalculation> {
+        if (featureIds.isEmpty()) return AynvoraResult.Failure.InvalidInput("featureIds", "At least one feature ID is required.")
+        if (request.config.profile != com.aynvora.core.models.CalculationProfile.STANDARD_VEDIC) {
+            return AynvoraResult.Failure.UnsupportedConfiguration("Only STANDARD_VEDIC is currently supported by the core feature pipeline.")
+        }
+        validate(request.birthData)?.let { return it }
+        val nativeEngine = engine as? AynvoraAstroEngine
+            ?: return AynvoraResult.Failure.UnsupportedConfiguration("Selective execution requires the registered core astrology pipeline.")
+        return try {
+            val birth = request.birthData
+            val coordinates = birth.place.coordinates
+            val result = nativeEngine.calculateFeatures(
+                InternalBirthData(
+                    dateTimeIso = birth.toIsoDateTimeString(),
+                    latitude = coordinates.latitude,
+                    longitude = coordinates.longitude,
+                    timeZoneId = birth.place.timezoneId,
+                    year = birth.date.year,
+                    month = birth.date.month,
+                    day = birth.date.day,
+                    hour = birth.time.hour,
+                    minute = birth.time.minute,
+                    second = birth.time.second,
+                ),
+                EngineCalculationConfig(
+                    ayanamsa = request.config.ayanamsa.name,
+                    houseSystem = request.config.houseSystem.name,
+                    profile = request.config.profile.name,
+                    vargaRulesetId = request.config.vargaRulesetId,
+                    requestedDivisionalCharts = request.config.requestedDivisionalCharts.map(::mapDivisionalChart).toSet(),
+                    ashtakavargaRulesetId = request.config.ashtakavargaRulesetId,
+                ),
+                featureIds,
+            )
+            AynvoraResult.Success(
+                com.aynvora.core.models.AstrologyFeatureCalculation(result.outputs.asMap(), result.trace),
+                metadata.copy(engineVersion = "0.3.0"),
+            )
+        } catch (error: IllegalArgumentException) {
+            AynvoraResult.Failure.UnsupportedConfiguration(error.message ?: "Requested feature is unavailable.")
+        } catch (error: Throwable) {
+            AynvoraResult.Failure.CalculationFailure("FEATURE_EXECUTION_FAILED", error.message ?: "Selective feature execution failed.")
         }
     }
 

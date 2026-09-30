@@ -26,7 +26,12 @@ class KundaliGoldenJsonTest {
 
         val decoded = KundaliSnapshotJson.decode(golden)
         assertEquals("1", decoded.schemaVersion)
+        assertEquals("planetary_positions", decoded.featureResults["planetary_positions"]?.featureId)
+        assertEquals(decoded.calculation, decoded.featureResults["planetary_positions"]?.provenance)
+        assertEquals(AstroFeatureStatus.AMBIGUOUS, decoded.featureResults["chalit"]?.status)
+        assertEquals(AstroFeatureStatus.NOT_VERIFIED, decoded.featureResults["location"]?.status)
         assertEquals(calculated.value, decoded)
+        assertEquals(emptyList(), KundaliConsistencyValidator.validate(decoded))
         assertEquals(golden, KundaliSnapshotJson.encode(decoded))
     }
 }

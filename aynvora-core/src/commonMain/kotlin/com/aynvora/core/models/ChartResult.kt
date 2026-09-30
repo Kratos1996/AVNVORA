@@ -14,6 +14,8 @@ data class ChartResult(
     val config: CalculationConfig,
     val calculationModel: String = "MEEUS_VSOP87",
     val julianDay: Double = 0.0,
+    val utcTimestamp: String? = null,
+    val timezoneOffsetMinutes: Int? = null,
     val ayanamsaDegrees: Double = 0.0,
     val lagna: LagnaDetails? = null,
     val houses: List<HouseDetails> = emptyList(),
@@ -27,9 +29,16 @@ data class ChartResult(
     val ashtakavarga: AshtakavargaResult? = null,
     val shodhitaAshtakavarga: ShodhitaAshtakavargaResult? = null,
     val ashtakavargaPinda: AshtakavargaPinda? = null,
+    val dashaTimeline: com.aynvora.astro.dasha.VimshottariDashaTimeline? = null,
     val calculationMetadata: CalculationMetadata = CalculationMetadata(
         calculationProfileId = config.profile.name,
         engineVersion = engineVersion,
         calculationModel = calculationModel,
     ),
+)
+
+/** Result of selective execution through the registered core astrology feature pipeline. */
+data class AstrologyFeatureCalculation(
+    val outputs: Map<String, com.aynvora.astro.pipeline.FeatureOutput<*>>,
+    val trace: com.aynvora.astro.pipeline.FeatureExecutionTrace,
 )

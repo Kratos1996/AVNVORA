@@ -1,6 +1,5 @@
 package com.aynvora.core.models
 
-import com.aynvora.astro.time.TimeNormalizer
 import com.aynvora.core.AynvoraSdk
 import com.aynvora.core.result.AynvoraResult
 import kotlinx.serialization.json.Json
@@ -113,16 +112,14 @@ suspend fun AynvoraSdk.generateKundaliSnapshot(
         is AynvoraResult.Failure -> calculated
         is AynvoraResult.Success -> {
             val chart = calculated.value
-            val moon = chart.planetaryPositions.firstOrNull { it.body == CelestialBody.MOON }
-            val dasha = moon?.let { calculateDasha(chart.julianDay, it.siderealLongitude, true, true) }
+            val dasha = chart.dashaTimeline
             val transit = runCatching { calculateTransit(chart.julianDay, request.config.ayanamsa.name) }.getOrNull()
             val panchang = runCatching { calculatePanchang(chart.julianDay, request.config.ayanamsa.name) }.getOrNull()
             val birth = request.birthData
-            val local = TimeNormalizer.normalize(
-                birth.date.year, birth.date.month, birth.date.day,
-                birth.time.hour, birth.time.minute, birth.time.second,
-                birth.place.timezoneId,
-            )
+            val utcTimestamp = chart.utcTimestamp
+                ?: return AynvoraResult.Failure.CalculationFailure("MISSING_NORMALIZED_INSTANT", "Engine did not return its normalized UTC instant.")
+            val timezoneOffsetMinutes = chart.timezoneOffsetMinutes
+                ?: return AynvoraResult.Failure.CalculationFailure("MISSING_TIMEZONE_OFFSET", "Engine did not return its resolved timezone offset.")
             val snapshot = KundaliSnapshot(
                 profileId = profileId,
                 profileName = profileName,
@@ -134,14 +131,20 @@ suspend fun AynvoraSdk.generateKundaliSnapshot(
                     localDate = birth.date.toIsoDateString(),
                     localTime = birth.time.toIsoTimeString(),
                     timezoneId = birth.place.timezoneId,
-                    timezoneOffsetMinutes = local.timezoneOffsetMinutes,
-                    utcTimestamp = "%04d-%02d-%02dT%02d:%02d:%02dZ".format(local.year, local.month, local.day, local.hour, local.minute, local.second.toInt()),
+                    timezoneOffsetMinutes = timezoneOffsetMinutes,
+                    utcTimestamp = utcTimestamp,
                     julianDay = chart.julianDay,
                     latitude = birth.place.coordinates.latitude,
                     longitude = birth.place.coordinates.longitude,
                     country = birth.place.country,
+                    countryCode = birth.place.countryCode,
                     state = birth.place.stateName,
+                    stateCode = birth.place.stateCode,
                     city = birth.place.cityName ?: birth.place.name,
+                    cityId = birth.place.id,
+                    locationSource = "CALLER_SUPPLIED",
+                    locationResolutionStatus = AstroFeatureStatus.NOT_VERIFIED,
+                    timezoneDataVersion = null,
                     ayanamsaId = request.config.ayanamsa.name,
                     houseSystemId = request.config.houseSystem.name,
                     calculationProfileId = request.config.profile.name,
@@ -155,10 +158,61 @@ suspend fun AynvoraSdk.generateKundaliSnapshot(
                 panchang = panchang,
                 tables = buildTables(chart),
                 availability = emptyList(),
+                featureResults = buildFeatureRecords(chart, dasha != null, transit != null, panchang != null),
             ).let { it.copy(availability = AstrologySectionCatalog.forSnapshot(it)) }
             AynvoraResult.Success(snapshot, calculated.metadata, chart.calculationMetadata)
         }
     }
+}
+
+/** Headless SDK alias for callers that use the Kundali domain term. */
+suspend fun AynvoraSdk.calculateKundali(
+    request: ChartRequest,
+    profileId: String,
+    profileName: String,
+    genderId: String? = null,
+): AynvoraResult<KundaliSnapshot> = generateKundaliSnapshot(request, profileId, profileName, genderId)
+
+/** Returns the already-calculated common chart by canonical chart ID without recalculation. */
+fun KundaliSnapshot.getChart(chartId: String): AstroChartSnapshot? = charts.firstOrNull { it.chartId == chartId }
+
+/** Stable JSON export of the complete, persisted snapshot contract. */
+fun KundaliSnapshot.exportJson(): String = KundaliSnapshotJson.encode(this)
+
+private fun buildFeatureRecords(
+    chart: ChartResult,
+    hasDasha: Boolean,
+    hasTransit: Boolean,
+    hasPanchang: Boolean,
+): Map<String, AstroFeatureRecord> {
+    val metadata = chart.calculationMetadata
+    fun record(id: String, ref: String?, dependencies: List<String> = emptyList(), status: AstroFeatureStatus = AstroFeatureStatus.SUPPORTED) =
+        AstroFeatureRecord(
+            id, "1", status, ref, dependencies, metadata,
+            warnings = if (status == AstroFeatureStatus.NOT_VERIFIED) listOf("Canonical location or timezone database resolution is not configured; source values are caller supplied.") else emptyList(),
+        )
+    return listOf(
+        record("location", "birth", status = AstroFeatureStatus.NOT_VERIFIED),
+        record("time", "birth", status = AstroFeatureStatus.SUPPORTED),
+        record("ayanamsa", "calculation", listOf("time")),
+        record("planetary_positions", "natalChart.planetaryPositions", listOf("time", "ayanamsa")),
+        record("lagna", "natalChart.lagna", listOf("time", "ayanamsa"), if (chart.lagna != null) AstroFeatureStatus.SUPPORTED else AstroFeatureStatus.PARTIAL),
+        record("houses", "natalChart.houses", listOf("lagna", "planetary_positions"), if (chart.houses.size == 12) AstroFeatureStatus.SUPPORTED else AstroFeatureStatus.PARTIAL),
+        record("varga", "charts", listOf("planetary_positions", "lagna"), if (chart.divisionalCharts.isNotEmpty()) AstroFeatureStatus.SUPPORTED else AstroFeatureStatus.PARTIAL),
+        record("dignity", "natalChart.planetaryDignities", listOf("planetary_positions")),
+        record("relationships", "natalChart.planetaryRelationships", listOf("planetary_positions")),
+        record("aspects", "natalChart.aspects", listOf("planetary_positions")),
+        record("planet_states", "natalChart.planetaryPositions", listOf("planetary_positions")),
+        record("dasha", "dasha", listOf("planetary_positions"), if (hasDasha) AstroFeatureStatus.SUPPORTED else AstroFeatureStatus.UNSUPPORTED),
+        record("transit_at_birth", "transitAtBirth", listOf("time"), if (hasTransit) AstroFeatureStatus.PARTIAL else AstroFeatureStatus.UNSUPPORTED),
+        record("panchang_at_birth", "panchang", listOf("time"), if (hasPanchang) AstroFeatureStatus.PARTIAL else AstroFeatureStatus.UNSUPPORTED),
+        record("shadbala", "natalChart.shadbala", listOf("planetary_positions")),
+        record("ashtakavarga", "natalChart.ashtakavarga", listOf("planetary_positions")),
+        record("shodhana", "natalChart.shodhitaAshtakavarga", listOf("ashtakavarga")),
+        record("pinda", "natalChart.ashtakavargaPinda", listOf("shodhana")),
+        record("grah_sthiti", "tables.grah_sthiti", listOf("planetary_positions", "houses", "dignity", "planet_states")),
+        record("chalit", "tables.chalit_table", listOf("houses"), AstroFeatureStatus.AMBIGUOUS),
+    ).associateBy { it.featureId }
 }
 
 private fun buildCharts(chart: ChartResult): List<AstroChartSnapshot> {

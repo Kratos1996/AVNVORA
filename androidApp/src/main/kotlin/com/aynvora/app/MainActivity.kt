@@ -1,16 +1,34 @@
 package com.aynvora.app
 
+import android.app.ActivityManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
+import android.os.StatFs
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.content.ContextCompat
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.aynvora.app.analytics.FirebaseAnalyticsTracker
+import com.aynvora.app.storage.AndroidPreferencesStorageDriver
+import com.aynvora.core.ai.ActualAndroidDeviceProfile
+import com.aynvora.core.ai.AiAcceleratorType
+import com.aynvora.core.ai.AiDeviceCapabilityDetector
+import com.aynvora.core.ai.AiDeviceProfile
+import com.aynvora.core.ai.AiRuntimeType
+import com.aynvora.core.ai.CpuArchitecture
+import com.aynvora.core.ai.OsPlatform
 import com.aynvora.core.analytics.AnalyticsEvent
 import com.aynvora.core.analytics.AnalyticsTracker
 import com.aynvora.data.database.AynvoraDatabase
 import com.aynvora.data.gita.GitaDataSeeder
+import com.aynvora.data.storage.StorageDriver
 import com.aynvora.qa.android.AndroidInteractionSentinelRuntime
 import com.aynvora.ui.AynvoraApp
 import com.aynvora.ui.di.aynvoraAppModules
@@ -39,8 +57,8 @@ class MainActivity : ComponentActivity() {
         if (GlobalContext.getOrNull() == null) {
             val androidModule = module {
                 single<AnalyticsTracker> { FirebaseAnalyticsTracker(this@MainActivity) }
-                single<com.aynvora.data.storage.StorageDriver> {
-                    com.aynvora.app.storage.AndroidPreferencesStorageDriver(this@MainActivity.applicationContext)
+                single<StorageDriver> {
+                    AndroidPreferencesStorageDriver(this@MainActivity.applicationContext)
                 }
                 single<AynvoraDatabase> {
                     val dbFile = applicationContext.getDatabasePath(AynvoraDatabase.DATABASE_NAME)
@@ -54,13 +72,13 @@ class MainActivity : ComponentActivity() {
                         .setQueryCoroutineContext(Dispatchers.IO)
                         .build()
                 }
-                single<com.aynvora.core.ai.AiDeviceCapabilityDetector> {
-                    object : com.aynvora.core.ai.AiDeviceCapabilityDetector {
-                        override suspend fun detectCapability(): com.aynvora.core.ai.AiDeviceProfile {
+                single<AiDeviceCapabilityDetector> {
+                    object : AiDeviceCapabilityDetector {
+                        override suspend fun detectCapability(): AiDeviceProfile {
                             val context = this@MainActivity.applicationContext
                             val activityManager =
-                                context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
-                            val memInfo = android.app.ActivityManager.MemoryInfo()
+                                context.getSystemService(ACTIVITY_SERVICE) as? ActivityManager
+                            val memInfo = ActivityManager.MemoryInfo()
                             val totalRam: Long
                             val availRam: Long
                             if (activityManager != null) {
@@ -69,48 +87,48 @@ class MainActivity : ComponentActivity() {
                                 availRam = memInfo.availMem
                             } else {
                                 totalRam =
-                                    com.aynvora.core.ai.ActualAndroidDeviceProfile.TOTAL_RAM_BYTES
+                                    ActualAndroidDeviceProfile.TOTAL_RAM_BYTES
                                 availRam =
-                                    com.aynvora.core.ai.ActualAndroidDeviceProfile.AVAILABLE_RAM_BYTES
+                                    ActualAndroidDeviceProfile.AVAILABLE_RAM_BYTES
                             }
 
                             val filesDir = context.filesDir
-                            val stat = android.os.StatFs(filesDir.absolutePath)
+                            val stat = StatFs(filesDir.absolutePath)
                             val freeStorage = stat.availableBytes
                             val totalStorage = stat.totalBytes
 
                             val primaryAbi =
-                                android.os.Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
+                                Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a"
                             val cpuArch =
                                 if (primaryAbi.contains("arm64") || primaryAbi.contains("aarch64")) {
-                                    com.aynvora.core.ai.CpuArchitecture.ARM64
+                                    CpuArchitecture.ARM64
                                 } else {
-                                    com.aynvora.core.ai.CpuArchitecture.X86_64
+                                    CpuArchitecture.X86_64
                                 }
 
-                            return com.aynvora.core.ai.AiDeviceProfile(
+                            return AiDeviceProfile(
                                 totalRamBytes = totalRam,
                                 availableRamBytes = availRam,
                                 freeStorageBytes = freeStorage,
                                 cpuArchitecture = cpuArch,
-                                osPlatform = com.aynvora.core.ai.OsPlatform.ANDROID,
-                                osVersion = "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})",
+                                osPlatform = OsPlatform.ANDROID,
+                                osVersion = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
                                 supportedRuntimes = setOf(
-                                    com.aynvora.core.ai.AiRuntimeType.GGUF,
-                                    com.aynvora.core.ai.AiRuntimeType.DETERMINISTIC_FALLBACK,
+                                    AiRuntimeType.GGUF,
+                                    AiRuntimeType.DETERMINISTIC_FALLBACK,
                                 ),
                                 supportedAccelerators = setOf(
-                                    com.aynvora.core.ai.AiAcceleratorType.CPU,
-                                    com.aynvora.core.ai.AiAcceleratorType.GPU,
+                                    AiAcceleratorType.CPU,
+                                    AiAcceleratorType.GPU,
                                 ),
                                 supportedLanguages = setOf("en", "hi", "ar"),
-                                maxSafeRamAllocationBytes = com.aynvora.core.ai.AiDeviceProfile.calculateSafeRamAllocation(
+                                maxSafeRamAllocationBytes = AiDeviceProfile.calculateSafeRamAllocation(
                                     availRam
                                 ),
-                                manufacturer = android.os.Build.MANUFACTURER,
-                                modelName = android.os.Build.MODEL,
+                                manufacturer = Build.MANUFACTURER,
+                                modelName = Build.MODEL,
                                 cpuAbi = primaryAbi,
-                                sdkInt = android.os.Build.VERSION.SDK_INT,
+                                sdkInt = Build.VERSION.SDK_INT,
                                 totalStorageBytes = totalStorage,
                             )
                         }
@@ -136,15 +154,15 @@ class MainActivity : ComponentActivity() {
                 )
                 val seeded = seeder.seedIfNeeded()
                 if (seeded) {
-                    android.util.Log.i(
+                    Log.i(
                         "AynvoraGita",
                         "Bhagavad Gita seeded: 701 verses + translations + commentaries."
                     )
                 } else {
-                    android.util.Log.d("AynvoraGita", "Bhagavad Gita already seeded — skipped.")
+                    Log.d("AynvoraGita", "Bhagavad Gita already seeded — skipped.")
                 }
             }.onFailure { e ->
-                android.util.Log.e("AynvoraGita", "Gita seeding failed: ${e.message}", e)
+                Log.e("AynvoraGita", "Gita seeding failed: ${e.message}", e)
             }
         }
 
@@ -152,27 +170,28 @@ class MainActivity : ComponentActivity() {
         analyticsTracker.track(AnalyticsEvent.AppOpened)
 
         // Register broadcast receiver for autonomous on-device AI testing (Phase 10.12)
-        val filter = android.content.IntentFilter("com.aynvora.app.RUN_AI_TEST")
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(aiTestReceiver, filter, android.content.Context.RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(aiTestReceiver, filter)
-        }
+        val filter = IntentFilter("com.aynvora.app.RUN_AI_TEST")
+        ContextCompat.registerReceiver(
+            this,
+            aiTestReceiver,
+            filter,
+            ContextCompat.RECEIVER_EXPORTED
+        )
 
         setContent { AynvoraApp() }
     }
 
-    private val aiTestReceiver = object : android.content.BroadcastReceiver() {
-        override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+    private val aiTestReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == "com.aynvora.app.RUN_AI_TEST") {
                 val testType = intent.getStringExtra("test") ?: "all"
                 appScope.launch {
                     try {
-                        android.util.Log.i("AynvoraAiTestResult", "Received broadcast to run AI tests: $testType")
+                        Log.i("AynvoraAiTestResult", "Received broadcast to run AI tests: $testType")
                         val runner = AynvoraNativeAiTestRunner(this@MainActivity.applicationContext)
                         runner.runTests(testType)
                     } catch (t: Throwable) {
-                        android.util.Log.e("AynvoraAiTestResult", "Error running AI tests: ${t.message}", t)
+                        Log.e("AynvoraAiTestResult", "Error running AI tests: ${t.message}", t)
                     }
                 }
             }

@@ -22,6 +22,8 @@ data class KundaliSnapshot(
     val panchang: PanchangSnapshot?,
     val tables: List<AstroTableSnapshot>,
     val availability: List<AstrologySectionAvailability>,
+    /** Per-feature calculation records persisted alongside the aggregate snapshot. */
+    val featureResults: Map<String, AstroFeatureRecord> = emptyMap(),
 ) {
     init {
         require(schemaVersion == CURRENT_SCHEMA_VERSION)
@@ -34,6 +36,17 @@ data class KundaliSnapshot(
 
     companion object { const val CURRENT_SCHEMA_VERSION = "1" }
 }
+
+@Serializable
+data class AstroFeatureRecord(
+    val featureId: String,
+    val featureVersion: String,
+    val status: AstroFeatureStatus,
+    val dataRef: String?,
+    val dependencyIds: List<String>,
+    val provenance: CalculationMetadata,
+    val warnings: List<String> = emptyList(),
+)
 
 @Serializable
 data class KundaliBirthDetails(
@@ -49,8 +62,14 @@ data class KundaliBirthDetails(
     val latitude: Double,
     val longitude: Double,
     val country: String? = null,
+    val countryCode: String? = null,
     val state: String? = null,
+    val stateCode: String? = null,
     val city: String,
+    val cityId: String? = null,
+    val locationSource: String = "CALLER_SUPPLIED",
+    val locationResolutionStatus: AstroFeatureStatus = AstroFeatureStatus.NOT_VERIFIED,
+    val timezoneDataVersion: String? = null,
     val ayanamsaId: String,
     val houseSystemId: String,
     val calculationProfileId: String,

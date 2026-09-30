@@ -1,5 +1,5 @@
 # AYNVORA Master UI Style Guide
-Version: 1.1
+Version: 1.2
 
 ## Colors
 Gold #C9A227; Light Gold #E4C65A; Deep Gold #8F6F16.
@@ -23,13 +23,20 @@ Scale: 40, 36, 32, 28, 24, 20, 18, 16, 14, 12, 11sp.
 ## Motion
 0, 120, 200, 300, 450, 700ms. Default interaction: 200ms.
 
-## Responsive Form Factors & Device Adaptation
-AYNVORA interfaces must natively adapt to all device form factors:
-- **Small / Compact Phone**: Width < 360dp. Maintain strict 48dp touch targets, avoid horizontal clipping.
-- **Standard Mobile**: Width 360dp - 599dp (Compact Width). Primary single-column layouts with optimized vertical scroll.
-- **Foldables (Folded & Unfolded)**: Width 600dp - 839dp (Medium Width). Support responsive dual-pane or side-by-side arrangement when unfolded; adapt smoothly to posture changes.
-- **Tablets**: Width 840dp - 1199dp (Expanded Width). Utilize multi-pane master-detail structures, side navigation rails, and balanced content margins.
-- **Desktop**: Width >= 1200dp (Large / Ultra-wide). Utilize persistent navigation, multi-column cards/panes, and maximum content width boundaries.
+## Responsive Form Factors & Device Adaptation (Mandatory)
+AYNVORA interfaces must natively adapt to all device form factors with dedicated layout paradigms:
+
+1. **Mobile (Compact Width < 600dp)**:
+   - **Paradigm**: Focused, single-column vertical scroll.
+   - **Goal**: Optimized for single-hand use, clear touch targets (>= 48dp), and readable stacked cards.
+
+2. **Foldables (Medium Width 600dp – 839dp)**:
+   - **Paradigm**: Dynamic dual-pane / side-by-side transition when unfolded.
+   - **Goal**: Seamlessly display complementary data (e.g., list on left, details on right) without requiring deep navigation stacks.
+
+3. **Tablets & Desktop (Expanded Width >= 840dp / Ultra-wide >= 1200dp)**:
+   - **Paradigm**: **Information-Dense Multi-Column Master-Detail & Grid Layouts**.
+   - **Goal**: **NEVER** stretch mobile layouts across desktop viewports. Desktop UI must look and feel like a native desktop application—displaying more data simultaneously on a single screen (e.g., sidebar navigation rails, multi-column card grids, simultaneous chart rendering alongside tabular planetary positions and commentary).
 
 ### Scalable Units (sdp & ssp)
 To preserve visual balance across device densities and screen widths without stretching or distortion:

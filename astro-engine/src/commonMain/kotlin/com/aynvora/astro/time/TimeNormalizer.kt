@@ -10,6 +10,8 @@ import kotlin.math.abs
  */
 object TimeNormalizer {
 
+    enum class LocalTimeStatus { NORMAL, AMBIGUOUS_FOLD, INVALID_DST_GAP }
+
     data class NormalizedUtcTime(
         val year: Int,
         val month: Int,
@@ -98,6 +100,38 @@ object TimeNormalizer {
             timezoneOffsetMinutes = offsetMinutes,
             julianDay = jd,
         )
+    }
+
+    /** Resolves only unambiguous civil times for zones whose transition rules are supported here. */
+    fun normalizeUnambiguous(
+        year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int = 0, timezoneId: String,
+    ): NormalizedUtcTime {
+        when (localTimeStatus(year, month, day, hour, timezoneId)) {
+            LocalTimeStatus.AMBIGUOUS_FOLD -> throw IllegalArgumentException("Local time is ambiguous during a daylight-saving fold for '$timezoneId'; provide an explicit UTC offset.")
+            LocalTimeStatus.INVALID_DST_GAP -> throw IllegalArgumentException("Local time does not exist during a daylight-saving gap for '$timezoneId'.")
+            LocalTimeStatus.NORMAL -> Unit
+        }
+        return normalize(year, month, day, hour, minute, second, timezoneId)
+    }
+
+    fun localTimeStatus(year: Int, month: Int, day: Int, hour: Int, timezoneId: String): LocalTimeStatus {
+        val zone = timezoneId.trim().lowercase()
+        if (zone in setOf("america/new_york", "us/eastern", "est", "edt", "america/chicago", "us/central", "cst", "cdt", "america/denver", "us/mountain", "mst", "mdt", "america/los_angeles", "us/pacific", "pst", "pdt", "america/anchorage")) {
+            if (month == 3 && day == getNthSundayOfMonth(year, 3, 2) && hour == 2) return LocalTimeStatus.INVALID_DST_GAP
+            if (month == 11 && day == getNthSundayOfMonth(year, 11, 1) && hour == 1) return LocalTimeStatus.AMBIGUOUS_FOLD
+        }
+        val london = zone in setOf("europe/london", "wep")
+        val centralEurope = zone in setOf("europe/paris", "europe/berlin", "europe/rome", "europe/madrid", "europe/amsterdam", "cet", "cest")
+        if (london || centralEurope) {
+            val transitionHour = if (london) 1 else 2
+            if (month == 3 && day == getLastSundayOfMonth(year, 3) && hour == transitionHour) return LocalTimeStatus.INVALID_DST_GAP
+            if (month == 10 && day == getLastSundayOfMonth(year, 10) && hour == transitionHour) return LocalTimeStatus.AMBIGUOUS_FOLD
+        }
+        if (zone in setOf("australia/sydney", "aest", "aedt")) {
+            if (month == 10 && day == getNthSundayOfMonth(year, 10, 1) && hour == 2) return LocalTimeStatus.INVALID_DST_GAP
+            if (month == 4 && day == getNthSundayOfMonth(year, 4, 1) && hour == 2) return LocalTimeStatus.AMBIGUOUS_FOLD
+        }
+        return LocalTimeStatus.NORMAL
     }
 
     /**
@@ -207,21 +241,24 @@ object TimeNormalizer {
                 // Could be +5, +05, +0530
                 val num = parts[0].toIntOrNull() ?: return null
                 if (parts[0].length <= 2) {
-                    sign * (num * 60)
+                    if (!validOffset(num, 0)) null else sign * (num * 60)
                 } else if (parts[0].length == 4) {
                     val h = num / 100
                     val m = num % 100
-                    sign * (h * 60 + m)
+                    if (!validOffset(h, m)) null else sign * (h * 60 + m)
                 } else null
             }
             2 -> {
                 val h = parts[0].toIntOrNull() ?: return null
                 val m = parts[1].toIntOrNull() ?: return null
-                sign * (h * 60 + m)
+                if (!validOffset(h, m)) null else sign * (h * 60 + m)
             }
             else -> null
         }
     }
+
+    private fun validOffset(hours: Int, minutes: Int): Boolean =
+        hours in 0..14 && minutes in 0..59 && (hours < 14 || minutes == 0)
 
     /**
      * US DST: Second Sunday in March to First Sunday in November.

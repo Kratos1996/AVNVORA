@@ -82,6 +82,8 @@ import com.aynvora.core.repository.BirthProfileRepository
 import com.aynvora.core.repository.SavedChartRepository
 import com.aynvora.core.result.AynvoraResult
 import com.aynvora.core.models.generateKundaliSnapshot
+import com.aynvora.astro.time.JulianDayFormatter
+import com.aynvora.astro.dasha.DashaPeriod
 import com.aynvora.designsystem.localization.LocalAynvoraTranslator
 import com.aynvora.designsystem.generated.resources.Res
 import kotlinx.coroutines.launch
@@ -492,7 +494,7 @@ private fun KundaliWorkspace(model: VedicAstrologyUiModel, translator: com.aynvo
                                     Text(snapshot.birth.localDate, color = muted, fontSize = 10.sp)
                                 }
                                 NorthIndianKundali(selectedChart!!)
-                                ChartLegend()
+                                SnapshotChartLegend(selectedChart!!)
                             }
                         }
                     }
@@ -508,27 +510,20 @@ private fun KundaliWorkspace(model: VedicAstrologyUiModel, translator: com.aynvo
             }
             "graha_sthiti", "graha_sthiti_all" -> {
                 val table = snapshot.tables.firstOrNull { it.sectionId == "graha_sthiti" }
-                table?.let { items(it.rows, key = { "${sectionId}_${it.id}" }) { row ->
-                    val values = row.cells
-                    DetailRow(values[0].canonicalId?.let(::bodyShort) ?: "—", values[0].canonicalId?.let(::displayCanonical) ?: row.id,
-                        values[1].canonicalId?.let(::displayCanonical) ?: "—", "${values[2].numericValue?.let { "%.3f°".format(it) } ?: "—"} · H${values[3].integerValue ?: "—"}")
-                } } ?: item { EmptyReport("Planet position rows are unavailable in this snapshot.") }
+                table?.let { item { AstrologyDataTable(it) } } ?: item { EmptyReport("Planet position rows are unavailable in this snapshot.") }
                 if (sectionId == "graha_sthiti_all") item { Text("State, retrograde and combustion markers are carried in each chart placement and natal planet state records.", color = muted, fontSize = 12.sp) }
             }
             "chalit_table" -> {
                 val table = snapshot.tables.firstOrNull { it.sectionId == "chalit_table" }
-                table?.let { items(it.rows, key = { "house_${it.id}" }) { row ->
-                    DetailRow(row.cells[0].integerValue?.toString() ?: "—", "House ${row.cells[0].integerValue ?: "—"}", row.cells[1].canonicalId?.let(::displayCanonical) ?: "—", "${row.cells[3].numericValue?.let { "%.3f°".format(it) } ?: "—"}")
-                } } ?: item { EmptyReport("House cusp rows are unavailable in this snapshot.") }
+                table?.let { item { AstrologyDataTable(it) } } ?: item { EmptyReport("House cusp rows are unavailable in this snapshot.") }
             }
             "dasha" -> {
                 val timeline = snapshot.dasha
                 if (timeline == null) item { EmptyReport("Vimshottari Dasha is unsupported for this chart.") }
                 else {
                     item { Text("${timeline.rulesetId} · starting lord ${timeline.startingLord.displayName} · balance ${"%.2f".format(timeline.balanceYearsAtBirth)} years", color = muted, fontSize = 12.sp) }
-                    items(timeline.mahadashas, key = { "dasha_${it.planet.name}_${it.startJulianDay}" }) { period ->
-                        DetailRow("${period.level}", period.planet.displayName, "${period.subPeriods.size} antardasha periods", "JD ${"%.2f".format(period.startJulianDay)}–${"%.2f".format(period.endJulianDay)}")
-                    }
+                    item { Text("Tap a period to expand its sub-periods. Dates are UTC.", color = muted, fontSize = 11.sp) }
+                    items(timeline.mahadashas, key = { "dasha_${it.planet.name}_${it.startJulianDay}" }) { period -> DashaTreePeriod(period, 0) }
                 }
             }
             "panchang" -> {
@@ -585,6 +580,10 @@ private fun KundaliWorkspace(model: VedicAstrologyUiModel, translator: com.aynvo
                         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("${varga.chartId} · ${varga.chartTypeId}", color = gold, fontWeight = FontWeight.Bold)
                             Text("${varga.status} · ${varga.placements.size} positions", color = muted, fontSize = 11.sp)
+                            if (varga.status == com.aynvora.core.models.CalculationAvailability.AVAILABLE) {
+                                NorthIndianKundali(varga)
+                                SnapshotChartLegend(varga)
+                            }
                             Text(varga.placements.joinToString("   ") { "${bodyShort(it.bodyId)} ${displayCanonical(com.aynvora.core.models.Rashi.fromIndex(it.signIndex).name)}" }, color = ink, fontSize = 12.sp)
                         }
                     }
@@ -643,59 +642,40 @@ private fun KundaliWorkspace(model: VedicAstrologyUiModel, translator: com.aynvo
 
 @Composable
 private fun NorthIndianKundali(chart: com.aynvora.core.models.AstroChartSnapshot) {
-    val gold = AynvoraTheme.colors.Gold
-    val accessibility = chart.houses.sortedBy { it.houseNumber }.joinToString("; ") { house ->
-        val occupants = chart.placements.filter { it.houseNumber == house.houseNumber }.joinToString { placement ->
-            "${displayCanonical(placement.bodyId)} ${"%.1f".format(placement.degreeInSign)} degrees${markerSuffix(placement)}"
-        }.ifBlank { "no planets" }
-        "House ${house.houseNumber}, sign ${house.signIndex?.let { com.aynvora.core.models.Rashi.fromIndex(it).displayName } ?: "unknown"}, $occupants"
-    }
-    BoxWithConstraints(
-        Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(12.dp)).background(Color(0xFFFFFCF4))
-            .semantics { contentDescription = accessibility },
+    val grouped = androidx.compose.runtime.remember(chart) { com.aynvora.core.models.AstroChartBuilder.fromSnapshot(chart) }
+    AynvoraChart(grouped)
+}
+
+@Composable
+private fun DashaTreePeriod(period: DashaPeriod, depth: Int) {
+    var expanded by remember(period.planet, period.level, period.startJulianDay) { mutableStateOf(false) }
+    val hasChildren = period.subPeriods.isNotEmpty()
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(start = (depth * 12).dp)
+            .clickable(enabled = hasChildren) { expanded = !expanded },
+        color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = if (depth == 0) 0.92f else 0.68f),
+        shape = RoundedCornerShape(12.dp),
     ) {
-        val w = maxWidth
-        val h = maxHeight
-        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
-            val stroke = 2.dp.toPx()
-            val color = Color(0xFFC89020)
-            val cx = size.width / 2f
-            val cy = size.height / 2f
-            drawRect(color, style = Stroke(width = stroke))
-            drawLine(color, Offset(cx, 0f), Offset(size.width, cy), stroke)
-            drawLine(color, Offset(size.width, cy), Offset(cx, size.height), stroke)
-            drawLine(color, Offset(cx, size.height), Offset(0f, cy), stroke)
-            drawLine(color, Offset(0f, cy), Offset(cx, 0f), stroke)
-            drawLine(color, Offset(0f, 0f), Offset(cx, cy), stroke)
-            drawLine(color, Offset(size.width, 0f), Offset(cx, cy), stroke)
-            drawLine(color, Offset(size.width, size.height), Offset(cx, cy), stroke)
-            drawLine(color, Offset(0f, size.height), Offset(cx, cy), stroke)
-        }
-        val centers = listOf(0.50f to 0.14f, 0.76f to 0.19f, 0.86f to 0.36f, 0.84f to 0.50f, 0.86f to 0.64f, 0.76f to 0.81f, 0.50f to 0.86f, 0.24f to 0.81f, 0.14f to 0.64f, 0.16f to 0.50f, 0.14f to 0.36f, 0.24f to 0.19f)
-        centers.forEachIndexed { index, (x, y) ->
-            val houseNo = index + 1
-            val house = chart.houses.firstOrNull { it.houseNumber == houseNo }
-            val sign = house?.signIndex?.let { com.aynvora.core.models.Rashi.fromIndex(it) }
-            val occupants = chart.placements.filter { it.houseNumber == houseNo }
-            Column(
-                Modifier.offset(x = w * x - 36.dp, y = h * y - 26.dp).size(width = 72.dp, height = 54.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text("${houseNo.toString().padStart(2, '0')} · ${sign?.index?.plus(1) ?: "—"}", color = Color(0xFF6F6550), fontSize = 9.sp, fontWeight = FontWeight.Medium, maxLines = 1)
-                Text(
-                    occupants.joinToString(" ") { "${bodyShort(it.bodyId)}${markerSuffix(it)}" }.ifBlank { if (houseNo == 1) "Lagna" else "·" },
-                    color = if (houseNo == 1) gold else Color(0xFF25233A), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1,
-                )
-                if (occupants.isNotEmpty()) Text(occupants.joinToString(" ") { "${"%.0f".format(it.degreeInSign)}°" }, color = Color(0xFF725A22), fontSize = 8.sp, maxLines = 1)
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(if (hasChildren) if (expanded) "▾" else "▸" else "·", color = AynvoraTheme.colors.GoldLight, fontSize = 13.sp)
+            Column(Modifier.weight(1f).padding(start = 8.dp)) {
+                Text("${period.planet.displayName} · ${when (period.level) { 1 -> "Mahadasha"; 2 -> "Antardasha"; else -> "Pratyantardasha" }}", color = AynvoraTheme.colors.TextLight, fontSize = if (depth == 0) 14.sp else 12.sp, fontWeight = FontWeight.SemiBold)
+                Text("${JulianDayFormatter.utcTimestamp(period.startJulianDay)}  –  ${JulianDayFormatter.utcTimestamp(period.endJulianDay)}", color = AynvoraTheme.colors.TextLightSecondary, fontSize = 10.sp)
             }
+            if (hasChildren) Text("${period.subPeriods.size}", color = AynvoraTheme.colors.GoldLight, fontSize = 10.sp)
+        }
+    }
+    if (expanded && hasChildren) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 4.dp)) {
+            period.subPeriods.forEach { child -> DashaTreePeriod(child, depth + 1) }
         }
     }
 }
 
 @Composable
-private fun ChartLegend() {
-    Text("℞ Retrograde   ☼ Combust   ↑ Exalted   ↓ Debilitated   ◆ Vargottama", color = AynvoraTheme.colors.TextLightSecondary, fontSize = 10.sp)
+private fun SnapshotChartLegend(chart: com.aynvora.core.models.AstroChartSnapshot) {
+    val grouped = androidx.compose.runtime.remember(chart) { com.aynvora.core.models.AstroChartBuilder.fromSnapshot(chart) }
+    if (grouped is com.aynvora.core.models.AstroChartBuildResult.Valid) AynvoraChartLegend(grouped.chart)
 }
 
 private fun markerSuffix(position: com.aynvora.core.models.AstroChartPlacement): String = buildString {

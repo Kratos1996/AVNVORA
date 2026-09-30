@@ -16,6 +16,8 @@ import com.aynvora.core.models.CombustionState
 import com.aynvora.core.models.Coordinates
 import com.aynvora.core.models.HouseSystem
 import com.aynvora.core.models.generateKundaliSnapshot
+import com.aynvora.core.models.TransitRequest
+import com.aynvora.core.models.PanchangRequest
 import com.aynvora.core.models.PlanetMotionState
 import com.aynvora.core.result.AynvoraResult
 import kotlinx.coroutines.runBlocking
@@ -150,6 +152,48 @@ class AynvoraSdkAstroTest {
         val rahuState = chart.planetStates.first { it.body == CelestialBody.RAHU }
         assertEquals(CombustionState.NOT_APPLICABLE, rahuState.combustionState)
         assertEquals(PlanetMotionState.RETROGRADE, rahuState.motionState)
+    }
+
+    @Test
+    fun transitUsesRequestedInstantRatherThanNatalBirthInstant() = runBlocking {
+        val location = sampleBirthData().place
+        val requestedDate = BirthDate(2024, 4, 8)
+        val requestedTime = BirthTime(18, 30, 0)
+        val result = sdk.astrology.calculateTransit(TransitRequest(requestedDate, requestedTime, location))
+        assertIs<AynvoraResult.Success<com.aynvora.core.models.TransitFeatureResult>>(result)
+        assertEquals("2024-04-08", result.value.instant.localDate)
+        assertEquals("18:30:00", result.value.instant.localTime)
+        assertEquals("2024-04-08T13:00:00Z", result.value.instant.utcTimestamp)
+        assertEquals(result.value.instant.julianDay, result.value.snapshot.julianDay, 1e-9)
+        assertTrue(result.value.snapshot.julianDay > 2460000.0)
+        assertEquals(com.aynvora.core.models.AstroResolutionStatus.NOT_VERIFIED, result.value.instant.resolutionStatus)
+    }
+
+    @Test
+    fun panchangUsesRequestedLocalDateAndExplicitNoon() = runBlocking {
+        val location = sampleBirthData().place
+        val result = sdk.astrology.calculatePanchang(PanchangRequest(BirthDate(2024, 4, 8), location))
+        assertIs<AynvoraResult.Success<com.aynvora.core.models.PanchangFeatureResult>>(result)
+        assertEquals("2024-04-08", result.value.localDate)
+        assertEquals("12:00:00", result.value.evaluatedLocalTime)
+        assertEquals(28.6139, result.value.snapshot.observerLatitudeDeg)
+        assertEquals(77.2090, result.value.snapshot.observerLongitudeDeg)
+        assertEquals(330, result.value.snapshot.timezoneOffsetMinutes)
+    }
+
+    @Test
+    fun publicSelectiveApiExecutesSharedRegisteredDependenciesOnce() = runBlocking {
+        val result = sdk.calculateFeatures(
+            ChartRequest(sampleBirthData()),
+            setOf("vedic.dignities", "vedic.relationships", "vedic.vargas", "vedic.dasha", "vedic.chalit"),
+        )
+        assertIs<AynvoraResult.Success<com.aynvora.core.models.AstrologyFeatureCalculation>>(result)
+        assertEquals(5, result.value.trace.requestedFeatures.size)
+        assertEquals(result.value.trace.executionOrder.size, result.value.trace.executionOrder.distinct().size)
+        assertEquals(result.value.trace.executionOrder.size, result.value.trace.executedOnceCount)
+        assertTrue(result.value.trace.executionOrder.contains("core.planetary_positions"))
+        assertTrue(result.value.trace.executionOrder.contains("vedic.dasha"))
+        assertEquals(com.aynvora.astro.pipeline.FeatureStatus.AMBIGUOUS, result.value.outputs["vedic.chalit"]?.status)
     }
 
     @Test
