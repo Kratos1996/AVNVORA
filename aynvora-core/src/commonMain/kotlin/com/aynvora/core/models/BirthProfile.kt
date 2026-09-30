@@ -17,6 +17,8 @@ data class BirthProfile(
     val notes: String? = null,
     val createdAtEpochMs: Long,
     val updatedAtEpochMs: Long,
+    /** Last successful open time, used for stable recent-first ordering. */
+    val lastOpenedAtEpochMs: Long? = null,
 ) {
     init {
         require(id.isNotBlank()) { "Birth profile ID cannot be blank" }

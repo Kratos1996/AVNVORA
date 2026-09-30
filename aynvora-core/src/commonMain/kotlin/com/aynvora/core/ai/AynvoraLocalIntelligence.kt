@@ -123,6 +123,7 @@ interface AynvoraLocalIntelligence {
     fun getNativeLibraryStatus(): String = runtime.getNativeLibraryStatus()
     fun getJniStatus(): String = runtime.getJniStatus()
     fun getDiagnostics(): AiInferenceDiagnostics
+    fun getLastPromptDiagnostics(): AynvoraPromptDiagnostics? = null
     fun getKnowledgePack(featureId: CoreFeatureId): AynvoraKnowledgePack?
     fun registerKnowledgePack(pack: AynvoraKnowledgePack)
     fun getAllKnowledgePacks(): List<AynvoraKnowledgePack>
@@ -141,6 +142,9 @@ class DefaultAynvoraLocalIntelligence(
     private val mutex = Mutex()
     private val knowledgePacks = mutableMapOf<CoreFeatureId, AynvoraKnowledgePack>()
     private var lastInferenceDurationMs: Long = 0L
+    private var lastPromptDiagnostics: AynvoraPromptDiagnostics? = null
+
+    override fun getLastPromptDiagnostics(): AynvoraPromptDiagnostics? = lastPromptDiagnostics
 
     init {
         // Register default feature knowledge packs
@@ -241,17 +245,29 @@ class DefaultAynvoraLocalIntelligence(
 
         // 2. Build structured grounding prompt
         val pack = getKnowledgePack(request.featureId)
-        val systemPrompt = buildSystemPrompt(request, pack, loadedModel)
-        val userPrompt = buildUserPrompt(request, pack)
+        val retrievedEvidence = request.evidence.ifEmpty {
+            pack?.retrieveRelevantEvidence(request.question, request.userContext) ?: emptyList()
+        }
+        val prompt = AynvoraAiContextBuilder.build(
+            feature = request.featureId,
+            question = request.question,
+            explicitContext = listOfNotNull(
+                request.userContext.statedSituation?.let { "SITUATION" to it },
+                request.userContext.statedGoal?.let { "GOAL" to it },
+                request.userContext.selectedAreaOfReflection?.let { "AREA" to it },
+            ),
+            evidence = retrievedEvidence,
+        )
+        lastPromptDiagnostics = prompt.diagnostics
 
         val generationRequest = AiGenerationRequest(
             requestId = request.requestId,
-            systemPrompt = systemPrompt,
-            userPrompt = userPrompt,
+            systemPrompt = prompt.system,
+            userPrompt = prompt.user,
             temperature = 0.6f,
-            maxTokens = 512,
+            maxTokens = request.maxTokens.coerceIn(1, 512),
             language = request.locale,
-            evidenceProvenance = request.evidence.map {
+            evidenceProvenance = retrievedEvidence.map {
                 AiProvenance(
                     sourceDomain = it.domain.name,
                     calculationRulesetOrEdition = it.provenance.rulesetOrEdition,
@@ -289,6 +305,8 @@ class DefaultAynvoraLocalIntelligence(
                             provenance = generationRequest.evidenceProvenance,
                             reflectiveSynthesis = if (request.responseMode == AynvoraResponseMode.CROSS_FEATURE_REFLECTION) validation.sanitizedText else null,
                             domainSections = mapOf(request.featureId.name to validation.sanitizedText),
+                            generatedTokenCount = generationResult.value.tokensGenerated,
+                            promptDiagnostics = prompt.diagnostics,
                         )
                         return AynvoraResult.Success(response)
                     }

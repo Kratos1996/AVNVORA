@@ -127,4 +127,31 @@ class JulianDayTest {
         assertEquals(0, normUtc.timezoneOffsetMinutes)
         assertEquals(12, normUtc.hour)
     }
+
+    @Test
+    fun testTimeNormalizerCuratedNewYorkDstFoldAndGapBehavior() {
+        // Resolver semantics, not a claim that the nonexistent wall time is a real local instant:
+        // a fold hour resolves to the pre-transition DST offset; a gap hour resolves to the
+        // post-transition DST offset. There is no caller-supplied fold/gap discriminator.
+        val fold = TimeNormalizer.normalize(2024, 11, 3, 1, 30, 0, "America/New_York")
+        assertEquals(-240, fold.timezoneOffsetMinutes)
+        assertEquals(5, fold.hour)
+        assertEquals(30, fold.minute)
+
+        val gap = TimeNormalizer.normalize(2024, 3, 10, 2, 30, 0, "America/New_York")
+        assertEquals(-240, gap.timezoneOffsetMinutes)
+        assertEquals(6, gap.hour)
+        assertEquals(30, gap.minute)
+    }
+
+    @Test
+    fun testGregorianCalendarRejectsInvalidCivilDatesAndAcceptsLeapDay() {
+        assertEquals(29, TimeNormalizer.normalize(2024, 2, 29, 12, 0, 0, "UTC").day)
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            TimeNormalizer.normalize(2023, 2, 29, 12, 0, 0, "UTC")
+        }
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            JulianDay.fromUtcCalendar(2024, 4, 31)
+        }
+    }
 }

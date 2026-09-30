@@ -136,6 +136,28 @@ class RepositoryTest {
     }
 
     @Test
+    fun savedKundaliProfilesSortByRecentOpenAndDeleteSnapshotTogether() = runBlocking {
+        val older = BirthProfile("kundali_old", "Older", sampleBirthData(), createdAtEpochMs = 100, updatedAtEpochMs = 200, lastOpenedAtEpochMs = 300)
+        val newer = BirthProfile("kundali_new", "Newer", sampleBirthData().copy(date = BirthDate(1996, 1, 2)), createdAtEpochMs = 100, updatedAtEpochMs = 250, lastOpenedAtEpochMs = 500)
+        assertIs<AynvoraResult.Success<BirthProfile>>(repos.birthProfiles.saveBirthProfile(older))
+        assertIs<AynvoraResult.Success<BirthProfile>>(repos.birthProfiles.saveBirthProfile(newer))
+        val config = CalculationConfig()
+        val firstChart = SavedChart("chart_old", older.id, config, "1.0", 200, cachedResultJson = "{\"snapshot\":1}")
+        val secondChart = SavedChart("chart_new", newer.id, config, "1.0", 250, cachedResultJson = "{\"snapshot\":2}")
+        repos.savedCharts.saveChart(firstChart)
+        repos.savedCharts.saveChart(secondChart)
+
+        val ordered = repos.birthProfiles.getAllBirthProfiles()
+        assertIs<AynvoraResult.Success<List<BirthProfile>>>(ordered)
+        assertEquals(listOf("kundali_new", "kundali_old"), ordered.value.map { it.id })
+
+        assertIs<AynvoraResult.Success<Unit>>(repos.birthProfiles.deleteBirthProfile(older.id))
+        val remaining = repos.savedCharts.getAllSavedCharts()
+        assertIs<AynvoraResult.Success<List<SavedChart>>>(remaining)
+        assertEquals(listOf("chart_new"), remaining.value.map { it.id })
+    }
+
+    @Test
     fun testSavedChartLifecycleAndFilter() {
         runBlocking {
             val chartRepo = repos.savedCharts

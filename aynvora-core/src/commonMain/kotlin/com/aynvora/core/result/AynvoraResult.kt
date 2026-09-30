@@ -1,6 +1,7 @@
 package com.aynvora.core.result
 
 import com.aynvora.core.models.EngineMetadata
+import com.aynvora.core.models.CalculationMetadata
 
 /**
  * Deterministic outcome of an AYNVORA SDK operation.
@@ -18,6 +19,8 @@ sealed interface AynvoraResult<out T> {
             buildNumber = "1",
             isDeterministic = true,
         ),
+        /** Calculation conventions and source identity when the value is an astrology result. */
+        val calculationMetadata: CalculationMetadata? = null,
     ) : AynvoraResult<T>
 
     /**
@@ -114,4 +117,3 @@ inline fun <T> AynvoraResult<T>.onFailure(action: (failure: AynvoraResult.Failur
     if (this is AynvoraResult.Failure) action(this)
     return this
 }
-

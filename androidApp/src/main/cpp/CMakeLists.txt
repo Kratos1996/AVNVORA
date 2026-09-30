@@ -5,6 +5,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Android debug APKs are used for on-device native runtime verification. Keep
+# symbols for diagnostics, but optimize llama.cpp kernels so model prefill and
+# token generation remain representative and complete in a useful time.
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_C_FLAGS_DEBUG "-O3 -g")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O3 -g")
+endif()
+
 set(LLAMA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../native/llama.cpp)
 
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libs" FORCE)

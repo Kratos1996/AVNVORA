@@ -108,6 +108,7 @@ class CalculateBirthChartTool(
                                 isRetrievedFact = true,
                             ),
                             isSuccess = true,
+                            calculationMetadata = chartResult.value.calculationMetadata,
                         )
                     )
                 }

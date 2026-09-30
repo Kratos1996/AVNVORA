@@ -27,6 +27,7 @@ class AiNativeRuntimeVerificationTest {
         var shouldFailLoad: Boolean = false,
         var shouldTimeout: Boolean = false,
         var generatedText: String = "Contemplative reflection produced by native llama.cpp tensor execution.",
+        var reportedGeneratedTokenCount: Int? = null,
     ) : NativeLibraryBridge {
         val allocatedHandles = mutableSetOf<Long>()
         val releasedHandles = mutableSetOf<Long>()
@@ -65,6 +66,8 @@ class AiNativeRuntimeVerificationTest {
             releasedHandles.add(handle)
             allocatedHandles.remove(handle)
         }
+
+        override fun generatedTokenCount(handle: Long): Int? = reportedGeneratedTokenCount
     }
 
     @Test
@@ -195,6 +198,45 @@ class AiNativeRuntimeVerificationTest {
         assertEquals(AiExecutionMode.LOCAL_NATIVE, response.executionMode)
         assertTrue(response.isOfflineExecution)
         assertEquals("STOP", response.finishReason)
+    }
+
+    @Test
+    fun timeoutSignalsNativeCancellationAndReturnsTypedFailure(): Unit = runBlocking {
+        val bridge = TestNativeBridge(shouldTimeout = true)
+        val engine = LocalNativeInferenceEngine(
+            nativeRuntime = LlamaNativeRuntimeDriver(bridge),
+            availableRamProvider = { 8L * 1024L * 1024L * 1024L },
+            inferenceTimeoutMs = 50,
+        )
+        engine.load(testVariant, "/data/models/qwen.gguf")
+
+        val result = engine.generate(AiGenerationRequest("timeout_req", "system", "user"))
+
+        assertTrue(result is AynvoraResult.Failure.CalculationFailure)
+        assertEquals(AiRuntimeErrorCode.INFERENCE_TIMEOUT.name, (result as AynvoraResult.Failure.CalculationFailure).code)
+        assertTrue(bridge.cancelledHandle != null, "watchdog must signal the active native handle")
+    }
+
+    @Test
+    fun testNativeDriverUsesRuntimeTokenCountInsteadOfWordCount(): Unit = runBlocking {
+        val bridge = TestNativeBridge(
+            generatedText = "One two three four",
+            reportedGeneratedTokenCount = 2,
+        )
+        val driver = LlamaNativeRuntimeDriver(bridge)
+        val loaded = driver.loadModel("/data/models/qwen.gguf", 2048)
+        assertTrue(loaded is NativeModelHandleResult.Success)
+
+        val result = driver.generate(
+            handle = (loaded as NativeModelHandleResult.Success).handle,
+            prompt = "test prompt",
+            maxTokens = 8,
+            temperature = 0f,
+            onTokenGenerated = { true },
+        )
+
+        assertTrue(result is NativeInferenceResult.Success)
+        assertEquals(2, (result as NativeInferenceResult.Success).tokensGenerated)
     }
 
     @Test

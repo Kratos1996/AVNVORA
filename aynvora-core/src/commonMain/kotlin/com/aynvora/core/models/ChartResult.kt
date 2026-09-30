@@ -27,5 +27,9 @@ data class ChartResult(
     val ashtakavarga: AshtakavargaResult? = null,
     val shodhitaAshtakavarga: ShodhitaAshtakavargaResult? = null,
     val ashtakavargaPinda: AshtakavargaPinda? = null,
+    val calculationMetadata: CalculationMetadata = CalculationMetadata(
+        calculationProfileId = config.profile.name,
+        engineVersion = engineVersion,
+        calculationModel = calculationModel,
+    ),
 )
-

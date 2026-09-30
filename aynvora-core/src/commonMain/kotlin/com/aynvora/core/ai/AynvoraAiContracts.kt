@@ -119,6 +119,7 @@ data class AynvoraAiRequest(
     val evidenceGraph: EvidenceGraph? = null,
     val userContext: AynvoraUserContext,
     val question: String,
+    val maxTokens: Int = 512,
     val locale: String = "en",
     val responseMode: AynvoraResponseMode = AynvoraResponseMode.REFLECTIVE,
     val safetyConstraints: List<AynvoraSafetyConstraint> = listOf(
@@ -155,4 +156,6 @@ data class AynvoraAiResponse(
     val provenance: List<AiProvenance> = emptyList(),
     val reflectiveSynthesis: String? = null,
     val domainSections: Map<String, String> = emptyMap(),
+    val generatedTokenCount: Int = 0,
+    val promptDiagnostics: AynvoraPromptDiagnostics? = null,
 )

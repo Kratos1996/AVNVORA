@@ -1,6 +1,7 @@
 package com.aynvora.astro.dasha
 
 import com.aynvora.astro.zodiac.ZodiacCalculator
+import com.aynvora.astro.provenance.CalculationMetadata
 import kotlinx.serialization.Serializable
 
 /**
@@ -64,6 +65,12 @@ data class VimshottariDashaTimeline(
     val startingLord: DashaPlanet,
     val balanceYearsAtBirth: Double,
     val mahadashas: List<DashaPeriod>,
+    val calculationMetadata: CalculationMetadata = CalculationMetadata(
+        calculationProfileId = rulesetId,
+        calculationModel = "VIMSHOTTARI_DASHA",
+        ephemerisSourceId = "PARASHARA_VIMSHOTTARI_RULES_V1",
+        conventions = mapOf("days_per_dasha_year" to DashaPlanet.DAYS_PER_YEAR.toString()),
+    ),
 ) {
     /**
      * Finds the active Mahadasha and Antardasha for a target Julian Day.

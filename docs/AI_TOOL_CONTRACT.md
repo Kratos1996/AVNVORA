@@ -64,3 +64,13 @@ data class AiProvenance(
    reflections) cannot be passed to unauthorized tools.
 3. **No Direct Room DAO Access**: Tools invoke public domain SDK facades or domain use cases, never
    Room DAOs or internal database entities.
+
+## 5. Calculation authority boundary — Calculation Contract V1
+
+`astro-engine` is the single calculation authority (`ASTRO_ENGINE = SINGLE CALCULATION AUTHORITY`). The `calculateBirthChart` tool must call the public `AynvoraSdk` facade and return its structured result with `CalculationMetadata` intact. That metadata identifies contract version, calculation profile, engine version, model label, source ID, data-version availability and redistribution status. A missing data version or unsupported profile must remain explicit.
+
+AI may explain, summarize and synthesize verified tool results. It must not independently calculate or derive planetary positions, Lagna/houses, sign or Nakshatra/Pada, Dasha dates, transits, Panchang values, aspects, dignity, Varga, Shadbala or Ashtakavarga. It must not silently round, correct, override or reconcile engine values. Unsupported/ambiguous results must be passed to the user as unsupported/ambiguous, not completed by model inference.
+
+The tool request/result should preserve the exact `CalculationProfile`, ayanamsha, house system, Varga/Ashtakavarga ruleset IDs and input timestamp/timezone used. UI language, platform, locale and AI prompt must not choose or mutate these settings. Any future astronomy calculation tool follows the same rule: calculate in `astro-engine`, return typed facts and source/version metadata, then allow AI explanation only.
+
+Gemstone, Palmistry, Numerology, Gita and other domain tools follow their own deterministic/retrieval authorities. This phase does not add or expand AI integrations; it only freezes this boundary for future tool work.

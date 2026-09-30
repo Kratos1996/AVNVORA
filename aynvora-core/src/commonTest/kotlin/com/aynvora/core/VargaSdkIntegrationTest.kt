@@ -43,6 +43,9 @@ class VargaSdkIntegrationTest {
             val result = sdk.calculateDivisionalChart(request, DivisionalChart.D9)
 
             assertIs<AynvoraResult.Success<DivisionalChartResult>>(result)
+            assertEquals("V1", result.calculationMetadata?.contractVersion)
+            assertEquals("STANDARD_VEDIC", result.calculationMetadata?.calculationProfileId)
+            assertEquals("LAHIRI_CHITRAPAKSHA", result.calculationMetadata?.conventions?.get("ayanamsa"))
             val d9 = result.value
             assertEquals(DivisionalChart.D9, d9.chart)
             assertEquals("PARASHARA_CLASSICAL_V1", d9.rulesetId)

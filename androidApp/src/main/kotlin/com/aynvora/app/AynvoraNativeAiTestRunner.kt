@@ -4,13 +4,13 @@ import android.app.ActivityManager
 import android.content.Context
 import android.util.Log
 import com.aynvora.core.ai.AiExecutionMode
+import com.aynvora.core.ai.AiGenerationRequest
+import com.aynvora.core.ai.AiInferenceEngine
 import com.aynvora.core.ai.AiInferenceStatus
 import com.aynvora.core.ai.AiRuntimeErrorCode
 import com.aynvora.core.ai.AynvoraAiOutputValidator
-import com.aynvora.core.ai.AynvoraAiRequest
 import com.aynvora.core.ai.AynvoraAiResponse
 import com.aynvora.core.ai.AynvoraLocalIntelligence
-import com.aynvora.core.ai.AynvoraResponseMode
 import com.aynvora.core.ai.AynvoraUserContext
 import com.aynvora.core.ai.adapters.AstrologyAiAdapter
 import com.aynvora.core.ai.adapters.CrossFeatureReflectionAdapter
@@ -56,6 +56,7 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
     suspend fun runTests(testFilter: String = "all"): String = withContext(Dispatchers.IO) {
         val koin = GlobalContext.get()
         val intelligence = koin.get<AynvoraLocalIntelligence>()
+        val inferenceEngine = koin.get<AiInferenceEngine>()
         val gitaPipeline = koin.get<GitaReflectionPipeline>()
         val astrologyAdapter = koin.get<AstrologyAiAdapter>()
         val gitaAdapter = koin.get<GitaAiAdapter>()
@@ -87,13 +88,13 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
 
         // ── TEST 1: SELF TEST (Very small prompt) ───────────────────────────
         if (testFilter == "all" || testFilter == "self_test") {
-            val res = runSelfTest(intelligence)
+            val res = runSelfTest(inferenceEngine)
             resultsArray.put(res)
         }
 
         // ── TEST 2: BHAGAVAD GITA (Step 13) ─────────────────────────────────
         if (testFilter == "all" || testFilter == "gita") {
-            val res = runGitaTest(gitaPipeline)
+            val res = runGitaTest(gitaPipeline, intelligence)
             resultsArray.put(res)
         }
 
@@ -153,37 +154,49 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
         reportJson
     }
 
-    private suspend fun runSelfTest(intelligence: AynvoraLocalIntelligence): JSONObject {
+    private suspend fun runSelfTest(inferenceEngine: AiInferenceEngine): JSONObject {
         val testName = "SELF_TEST"
         val start = System.currentTimeMillis()
         val memBefore = getMemoryMb()
-
-        val req = AynvoraAiRequest(
-            requestId = "selftest_${System.currentTimeMillis()}",
-            featureId = CoreFeatureId.GITA,
-            knowledgePackId = "kp_gita_canonical_v1",
-            rulesetId = "CANONICAL_GITA_TRADITION",
-            userContext = AynvoraUserContext(question = "Hello! State your contemplative purpose in 5 words:"),
-            question = "Hello! State your contemplative purpose in 5 words:",
-            locale = "en",
-            responseMode = AynvoraResponseMode.REFLECTIVE,
+        val result = inferenceEngine.generate(
+            AiGenerationRequest(
+                requestId = "selftest_${System.currentTimeMillis()}",
+                systemPrompt = "Reply briefly and plainly.",
+                userPrompt = "Say hello in five words.",
+                maxTokens = 16,
+                temperature = 0.0f,
+            ),
         )
-
-        val result = intelligence.synthesize(req)
         val duration = System.currentTimeMillis() - start
         val memAfter = getMemoryMb()
-
-        return formatTestResult(testName, result, duration, memBefore, memAfter)
+        val obj = JSONObject()
+        obj.put("testName", testName)
+        obj.put("durationMs", duration)
+        obj.put("memBeforeMb", memBefore)
+        obj.put("memAfterMb", memAfter)
+        when (result) {
+            is AynvoraResult.Success -> {
+                obj.put("success", result.value.tokensGenerated > 0 && result.value.text.isNotBlank())
+                obj.put("executionMode", result.value.executionMode.name)
+                obj.put("tokenCount", result.value.tokensGenerated)
+                obj.put("responseText", result.value.text)
+            }
+            is AynvoraResult.Failure -> {
+                obj.put("success", false)
+                obj.put("error", result.message)
+            }
+        }
+        return obj
     }
 
-    private suspend fun runGitaTest(pipeline: GitaReflectionPipeline): JSONObject {
+    private suspend fun runGitaTest(pipeline: GitaReflectionPipeline, intelligence: AynvoraLocalIntelligence): JSONObject {
         val testName = "BHAGAVAD_GITA_CAREER_REFLECTION"
         val start = System.currentTimeMillis()
         val memBefore = getMemoryMb()
 
         val userContext = AynvoraUserContext(
-            question = "Can you help me reflect on this using the Bhagavad Gita?",
-            userSituation = "I am confused about my career direction.",
+            question = "How can I reflect on this using the Bhagavad Gita?",
+            statedSituation = "I feel confused about my career direction.",
         )
 
         val result = pipeline.reflect(userContext)
@@ -200,17 +213,28 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             is AynvoraResult.Success -> {
                 val value = result.value
                 val aiRes = value.aiResponse
-                val tokens = aiRes.responseText.split("\\s+".toRegex()).filter { it.isNotBlank() }.size
-                val tps = if (duration > 0) (tokens.toFloat() / (duration / 1000f)) else 0f
+                val tokens = aiRes.generatedTokenCount
+                val perf = intelligence.getDiagnostics()
+                val prompt = aiRes.promptDiagnostics ?: intelligence.getLastPromptDiagnostics()
                 obj.put("success", true)
                 obj.put("executionMode", aiRes.executionMode.name)
                 obj.put("validationStatus", aiRes.validationStatus.name)
                 obj.put("fallbackUsed", aiRes.fallbackUsed)
                 obj.put("selectedVerses", value.selectedVerses.map { "BG ${it.chapter}.${it.verse}" }.joinToString())
                 obj.put("tokenCount", tokens)
-                obj.put("tokensPerSec", tps)
+                obj.put("promptBytes", prompt?.promptBytes ?: JSONObject.NULL)
+                obj.put("estimatedPromptTokens", prompt?.estimatedPromptTokens ?: JSONObject.NULL)
+                obj.put("evidenceCount", prompt?.evidenceCount ?: JSONObject.NULL)
+                obj.put("uniqueEvidenceCount", prompt?.uniqueEvidenceCount ?: JSONObject.NULL)
+                obj.put("systemBytes", prompt?.systemInstructionBytes ?: JSONObject.NULL)
+                obj.put("evidenceBytes", prompt?.evidenceTextBytes ?: JSONObject.NULL)
+                obj.put("sourceMetadataBytes", prompt?.sourceMetadataBytes ?: JSONObject.NULL)
+                obj.put("userContextBytes", prompt?.userContextBytes ?: JSONObject.NULL)
+                obj.put("questionBytes", prompt?.questionBytes ?: JSONObject.NULL)
+                obj.put("nativeGenerationLatencyMs", perf.lastInferenceDurationMs.takeIf { it > 0 } ?: aiRes.latencyMs)
+                obj.put("tokensPerSec", perf.tokensPerSecond)
                 obj.put("responseText", aiRes.responseText)
-                Log.i(TAG, "[$testName] SUCCESS: mode=${aiRes.executionMode.name}, tokens=$tokens, speed=${"%.2f".format(tps)} t/s")
+                Log.i(TAG, "[$testName] SUCCESS: mode=${aiRes.executionMode.name}, nativeTokens=$tokens, promptBytes=${prompt?.promptBytes}, estimatedPromptTokens=${prompt?.estimatedPromptTokens}, promptEstimateSections=${prompt?.sectionEstimatedTokens}, generationMs=${perf.lastInferenceDurationMs}, speed=${perf.tokensPerSecond} t/s")
                 Log.i(TAG, "[$testName] Text: ${aiRes.responseText}")
             }
             is AynvoraResult.Failure -> {
@@ -231,7 +255,7 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             EvidenceItem(
                 evidenceId = "astro_saturn_10",
                 domain = CoreFeatureId.ASTROLOGY,
-                category = EvidenceCategory.CALCULATED_POSITION,
+                category = EvidenceCategory.FACT,
                 ruleId = "PLANET_SATURN_HOUSE_10",
                 summary = "Saturn is placed in the 10th House (Karma Bhava) in Capricorn (own sign).",
                 provenance = EvidenceProvenance(
@@ -278,10 +302,10 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             )
         )
 
-        val result = adapter.synthesizeExplanation(
+        val result = adapter.explainSpread(
             question = "Reflect on The Hermit card for introspective guidance.",
             userContext = AynvoraUserContext(question = "Introspective guidance"),
-            evidence = evidence,
+            cardEvidence = evidence,
         )
 
         val duration = System.currentTimeMillis() - start
@@ -297,7 +321,7 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             EvidenceItem(
                 evidenceId = "num_lifepath_7",
                 domain = CoreFeatureId.NUMEROLOGY,
-                category = EvidenceCategory.MATHEMATICAL_RESULT,
+                category = EvidenceCategory.FACT,
                 ruleId = "NUM_LP_07",
                 summary = "Life Path Number is 7 (derived from 1996-07-11: 1+1+7+1+9+9+6 = 34 -> 7). Analytical, seeker of truth.",
                 provenance = EvidenceProvenance(
@@ -311,7 +335,7 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             )
         )
 
-        val result = adapter.explainNumbers(
+        val result = adapter.explainNumberProfile(
             question = "What is the contemplative significance of Life Path 7?",
             userContext = AynvoraUserContext(question = "Life Path 7"),
             numberEvidence = evidence,
@@ -330,7 +354,7 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             EvidenceItem(
                 evidenceId = "palm_heartline_curved",
                 domain = CoreFeatureId.PALMISTRY,
-                category = EvidenceCategory.OBSERVED_FEATURE,
+                category = EvidenceCategory.FACT,
                 ruleId = "PALM_HEART_JUPITER",
                 summary = "Heart line curves smoothly upward ending beneath the Mount of Jupiter.",
                 provenance = EvidenceProvenance(
@@ -344,10 +368,10 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             )
         )
 
-        val result = adapter.explainPalmFeatures(
+        val result = adapter.explainLineObservations(
             question = "Reflect on a heart line extending towards the Mount of Jupiter.",
             userContext = AynvoraUserContext(question = "Heart line to Jupiter"),
-            featuresEvidence = evidence,
+            lineEvidence = evidence,
         )
 
         val duration = System.currentTimeMillis() - start
@@ -377,10 +401,10 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             )
         )
 
-        val result = adapter.explainRecommendation(
+        val result = adapter.explainCompatibility(
             question = "What is the traditional contemplative significance of Blue Sapphire (Neelam)?",
             userContext = AynvoraUserContext(question = "Blue Sapphire"),
-            gemEvidence = evidence,
+            gemstoneEvidence = evidence,
         )
 
         val duration = System.currentTimeMillis() - start
@@ -396,7 +420,7 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             EvidenceItem(
                 evidenceId = "garuda_karma_dharma",
                 domain = CoreFeatureId.GARUDA_PURAN,
-                category = EvidenceCategory.SCRIPTURAL_QUOTE,
+                category = EvidenceCategory.TRADITIONAL_RULE,
                 ruleId = "GP_SARODDHARA_CH02",
                 summary = "Every action (Karma) bears natural fruition; righteous conduct (Dharma) protects the soul through transitions.",
                 provenance = EvidenceProvenance(
@@ -429,7 +453,7 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             EvidenceItem(
                 evidenceId = "cross_astro_saturn",
                 domain = CoreFeatureId.ASTROLOGY,
-                category = EvidenceCategory.CALCULATED_POSITION,
+                category = EvidenceCategory.FACT,
                 ruleId = "PLANET_SATURN_HOUSE_10",
                 summary = "Saturn in 10th House indicates responsibility, patience, and diligent labor in one's vocation.",
                 provenance = EvidenceProvenance(
@@ -447,7 +471,7 @@ class AynvoraNativeAiTestRunner(private val context: Context) {
             EvidenceItem(
                 evidenceId = "cross_gita_duty",
                 domain = CoreFeatureId.GITA,
-                category = EvidenceCategory.SCRIPTURAL_QUOTE,
+                category = EvidenceCategory.TRADITIONAL_RULE,
                 ruleId = "BG_02_47",
                 summary = "BG 2.47: You have a right to perform your prescribed duty, but you are not entitled to the fruits of action.",
                 provenance = EvidenceProvenance(

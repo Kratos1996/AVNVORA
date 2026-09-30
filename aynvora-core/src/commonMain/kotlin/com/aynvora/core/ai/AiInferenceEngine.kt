@@ -2,8 +2,11 @@ package com.aynvora.core.ai
 
 import com.aynvora.core.result.AynvoraResult
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -157,6 +160,8 @@ interface NativeLibraryBridge {
         onTokenGenerated: (String) -> Boolean,
     ): String
 
+    fun generatedTokenCount(handle: Long): Int? = null
+
     fun cancel(handle: Long)
     fun release(handle: Long)
 }
@@ -248,7 +253,7 @@ class LlamaNativeRuntimeDriver(
             }
             return try {
                 val handle = bridge.load(modelPath, contextLength, threads)
-                if (handle <= 0L) {
+                if (handle == 0L || handle == -1L) {
                     NativeModelHandleResult.Failure(
                         AiRuntimeErrorCode.NATIVE_MODEL_LOAD_FAILED,
                         "Native llama runtime failed to initialize model handle from $modelPath",
@@ -279,7 +284,7 @@ class LlamaNativeRuntimeDriver(
         temperature: Float,
         onTokenGenerated: (String) -> Boolean,
     ): NativeInferenceResult {
-        if (handle <= 0L || !activeHandles.contains(handle)) {
+        if (handle == 0L || handle == -1L || !activeHandles.contains(handle)) {
             return NativeInferenceResult.Failure(
                 AiRuntimeErrorCode.NATIVE_INVALID_HANDLE,
                 "Invalid or stale native model handle: $handle",
@@ -290,7 +295,8 @@ class LlamaNativeRuntimeDriver(
             return try {
                 val outputText =
                     bridge.generate(handle, prompt, maxTokens, temperature, onTokenGenerated)
-                val tokenCount = outputText.split(" ").filter { it.isNotBlank() }.size
+                val tokenCount = bridge.generatedTokenCount(handle)
+                    ?: outputText.split(" ").filter { it.isNotBlank() }.size
                 NativeInferenceResult.Success(
                     text = outputText,
                     tokensGenerated = tokenCount,
@@ -339,7 +345,7 @@ class LlamaNativeRuntimeDriver(
 class LocalNativeInferenceEngine(
     private val nativeRuntime: NativeAiRuntime = LlamaNativeRuntimeDriver(),
     private val availableRamProvider: () -> Long = { ActualAndroidDeviceProfile.AVAILABLE_RAM_BYTES },
-    private val inferenceTimeoutMs: Long = 10_000L,
+    private val inferenceTimeoutMs: Long = 45_000L,
 ) : AiInferenceEngine {
 
     private val mutex = Mutex()
@@ -534,21 +540,31 @@ class LocalNativeInferenceEngine(
                     request.maxTokens.coerceAtMost(currentModel.defaultContextLength - estimatedPromptTokens)
 
                 val genStartTime = System.currentTimeMillis()
-                val generationResult = withTimeoutOrNull(inferenceTimeoutMs) {
+                val generationResult = coroutineScope {
+                    val timeoutReached = CompletableDeferred<Unit>()
+                    val watchdog = launch(Dispatchers.Default) {
+                        delay(inferenceTimeoutMs)
+                        if (timeoutReached.complete(Unit)) nativeRuntime.cancel(handle)
+                    }
+                    try {
                     if (cancelledRequestIds.contains(request.requestId)) {
-                        return@withTimeoutOrNull NativeInferenceResult.Failure(
+                        return@coroutineScope NativeInferenceResult.Failure(
                             AiRuntimeErrorCode.INFERENCE_CANCELLED,
                             "Request cancelled before generation started",
                         )
                     }
 
-                    nativeRuntime.generate(
+                    val generated = nativeRuntime.generate(
                         handle = handle,
                         prompt = formattedPrompt,
                         maxTokens = safeMaxTokens,
                         temperature = request.temperature,
                         onTokenGenerated = { !cancelledRequestIds.contains(request.requestId) },
                     )
+                    if (timeoutReached.isCompleted) null else generated
+                    } finally {
+                        watchdog.cancel()
+                    }
                 }
 
                 if (generationResult == null) {

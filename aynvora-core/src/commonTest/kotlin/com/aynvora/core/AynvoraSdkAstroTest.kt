@@ -7,12 +7,15 @@ import com.aynvora.core.models.BirthDate
 import com.aynvora.core.models.BirthPlace
 import com.aynvora.core.models.BirthTime
 import com.aynvora.core.models.CalculationConfig
+import com.aynvora.core.models.CalculationProfile
 import com.aynvora.core.models.CelestialBody
 import com.aynvora.core.models.ChartRequest
 import com.aynvora.core.models.ChartResult
+import com.aynvora.core.models.CommercialRedistributionStatus
 import com.aynvora.core.models.CombustionState
 import com.aynvora.core.models.Coordinates
 import com.aynvora.core.models.HouseSystem
+import com.aynvora.core.models.generateKundaliSnapshot
 import com.aynvora.core.models.PlanetMotionState
 import com.aynvora.core.result.AynvoraResult
 import kotlinx.coroutines.runBlocking
@@ -54,6 +57,18 @@ class AynvoraSdkAstroTest {
         assertEquals("0.3.0", chart.engineVersion)
         assertEquals("CALCULATED", chart.calculationStatus)
         assertEquals("MEEUS_VSOP87", chart.calculationModel)
+        assertEquals("V1", chart.calculationMetadata.contractVersion)
+        assertEquals("STANDARD_VEDIC", chart.calculationMetadata.calculationProfileId)
+        assertEquals(chart.engineVersion, chart.calculationMetadata.engineVersion)
+        assertEquals(chart.calculationModel, chart.calculationMetadata.calculationModel)
+        assertEquals("ANALYTICAL_MEEUS_SIMON_FORMULAE", chart.calculationMetadata.ephemerisSourceId)
+        assertEquals(null, chart.calculationMetadata.ephemerisDataVersion)
+        assertEquals(
+            CommercialRedistributionStatus.NOT_VERIFIED,
+            chart.calculationMetadata.commercialRedistributionStatus,
+        )
+        assertEquals("LAHIRI_CHITRAPAKSHA", chart.calculationMetadata.conventions["ayanamsa"])
+        assertEquals("WHOLE_SIGN", chart.calculationMetadata.conventions["house_system"])
 
         // J2000.0 epoch check
         assertEquals(2451545.0, chart.julianDay, 1e-4)
@@ -178,6 +193,35 @@ class AynvoraSdkAstroTest {
     }
 
     @Test
+    fun kundaliSnapshotIsCompleteVersionedAndDeterministicJson() = runBlocking {
+        val request = ChartRequest(
+            birthData = sampleBirthData(),
+            config = CalculationConfig(requestedDivisionalCharts = com.aynvora.core.models.DivisionalChart.entries.toSet()),
+        )
+        val first = sdk.generateKundaliSnapshot(request, "fixture-j2000", "J2000 fixture", "UNSPECIFIED")
+        val second = sdk.generateKundaliSnapshot(request, "fixture-j2000", "J2000 fixture", "UNSPECIFIED")
+        assertIs<AynvoraResult.Success<com.aynvora.core.models.KundaliSnapshot>>(first)
+        assertIs<AynvoraResult.Success<com.aynvora.core.models.KundaliSnapshot>>(second)
+        val snapshot = first.value
+        assertEquals("1", snapshot.schemaVersion)
+        assertEquals("2000-01-01", snapshot.birth.localDate)
+        assertEquals("2000-01-01T12:00:00Z", snapshot.birth.utcTimestamp)
+        assertEquals(12, snapshot.natalChart.houses.size)
+        assertEquals(9, snapshot.natalChart.planetaryPositions.size)
+        assertEquals(12, snapshot.charts.first { it.chartId == "D1" }.houses.size)
+        assertTrue(snapshot.charts.any { it.chartId == "D9" })
+        assertNotNull(snapshot.dasha)
+        assertNotNull(snapshot.panchang)
+        assertTrue(snapshot.tables.any { it.sectionId == "graha_sthiti" })
+        assertTrue(snapshot.tables.any { it.sectionId == "chalit_table" })
+        assertEquals(com.aynvora.core.models.CalculationAvailability.UNSUPPORTED, snapshot.availability.first { it.sectionId == "kp" }.availability)
+        assertEquals(com.aynvora.core.models.CalculationAvailability.UNSUPPORTED, snapshot.availability.first { it.sectionId == "varshaphal" }.availability)
+        val encoded = com.aynvora.core.models.KundaliSnapshotJson.encode(snapshot)
+        assertEquals(encoded, com.aynvora.core.models.KundaliSnapshotJson.encode(second.value))
+        assertEquals(snapshot, com.aynvora.core.models.KundaliSnapshotJson.decode(encoded))
+    }
+
+    @Test
     fun testUnsupportedAyanamsaReturnsFailureWithoutSilentFallback() = runBlocking {
         val request = ChartRequest(
             birthData = sampleBirthData(),
@@ -203,5 +247,41 @@ class AynvoraSdkAstroTest {
         val result = sdk.calculateChart(request)
         assertIs<AynvoraResult.Failure.UnsupportedConfiguration>(result)
         assertTrue(result.message.contains("Placidus"))
+    }
+
+    @Test
+    fun unimplementedCalculationProfilesFailExplicitly() = runBlocking {
+        for (profile in listOf(CalculationProfile.SURYA_SIDDHANTA, CalculationProfile.DRIG_GANITA)) {
+            val outcome = sdk.calculateChart(
+                ChartRequest(sampleBirthData(), CalculationConfig(profile = profile)),
+            )
+            assertIs<AynvoraResult.Failure.UnsupportedConfiguration>(outcome)
+            assertTrue(outcome.message.contains(profile.name))
+        }
+    }
+
+    @Test
+    fun sdkAdapterPreservesEngineLongitudesWithoutIndependentRounding() = runBlocking {
+        val config = CalculationConfig(ayanamsa = AyanamsaConvention.TROPICAL, houseSystem = HouseSystem.EQUAL_HOUSE)
+        val publicResult = sdk.calculateChart(ChartRequest(sampleBirthData(), config))
+        assertIs<AynvoraResult.Success<ChartResult>>(publicResult)
+        val rawResult = com.aynvora.astro.AynvoraAstroEngine().calculate(
+            com.aynvora.astro.BirthData(
+                dateTimeIso = sampleBirthData().toIsoDateTimeString(),
+                latitude = 28.6139,
+                longitude = 77.2090,
+                timeZoneId = "Asia/Kolkata",
+                year = 2000,
+                month = 1,
+                day = 1,
+                hour = 17,
+                minute = 30,
+                second = 0,
+            ),
+            com.aynvora.astro.EngineCalculationConfig(ayanamsa = "TROPICAL", houseSystem = "EQUAL_HOUSE"),
+        )
+        assertEquals(rawResult.positions.map { it.tropicalLongitude }, publicResult.value.planetaryPositions.map { it.tropicalLongitude })
+        assertEquals(rawResult.positions.map { it.siderealLongitude }, publicResult.value.planetaryPositions.map { it.siderealLongitude })
+        assertEquals(rawResult.houses.map { it.cuspLongitude }, publicResult.value.houses.map { it.cuspLongitude })
     }
 }

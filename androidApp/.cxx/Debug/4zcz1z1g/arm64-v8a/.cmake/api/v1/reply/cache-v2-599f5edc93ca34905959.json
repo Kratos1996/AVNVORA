@@ -307,11 +307,11 @@
 				},
 				{
 					"name" : "HELPSTRING",
-					"value" : "Flags used by the compiler during debug builds."
+					"value" : "Optimized debug C++ flags"
 				}
 			],
 			"type" : "STRING",
-			"value" : ""
+			"value" : "-O3 -g"
 		},
 		{
 			"name" : "CMAKE_CXX_FLAGS_MINSIZEREL",
@@ -435,11 +435,11 @@
 				},
 				{
 					"name" : "HELPSTRING",
-					"value" : "Flags used by the compiler during debug builds."
+					"value" : "Optimized debug C flags"
 				}
 			],
 			"type" : "STRING",
-			"value" : ""
+			"value" : "-O3 -g"
 		},
 		{
 			"name" : "CMAKE_C_FLAGS_MINSIZEREL",
@@ -1535,10 +1535,10 @@
 			[
 				{
 					"name" : "HELPSTRING",
-					"value" : "The CMake toolchain file"
+					"value" : "No help, variable specified on the command line."
 				}
 			],
-			"type" : "FILEPATH",
+			"type" : "UNINITIALIZED",
 			"value" : "/Users/ishant/Library/Android/sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake"
 		},
 		{

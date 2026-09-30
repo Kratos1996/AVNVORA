@@ -147,6 +147,7 @@ class BirthProfileRepositoryImpl(
         val container = (containerResult as AynvoraResult.Success).value
         return try {
             val list = container.birthProfiles.values.map { it.toDomain() }
+                .sortedWith(compareByDescending<BirthProfile> { it.lastOpenedAtEpochMs ?: it.updatedAtEpochMs }.thenBy { it.id })
             AynvoraResult.Success(list)
         } catch (e: Exception) {
             AynvoraResult.Failure.CorruptedData(
@@ -177,6 +178,7 @@ class BirthProfileRepositoryImpl(
         val updateResult = storageEngine.updateContainer { container ->
             container.copy(
                 birthProfiles = container.birthProfiles - id,
+                savedCharts = container.savedCharts.filterValues { it.birthProfileId != id },
             )
         }
 

@@ -9,6 +9,7 @@ import com.aynvora.astro.planets.PlanetaryCalculator
 import com.aynvora.astro.planets.PlanetaryCalculator.Planet
 import com.aynvora.astro.planets.SunCalculator
 import com.aynvora.astro.time.JulianDay
+import com.aynvora.astro.provenance.CalculationMetadata
 import kotlinx.serialization.Serializable
 
 /**
@@ -19,6 +20,11 @@ data class TransitSnapshot(
     val julianDay: Double,
     val ayanamsaDegrees: Double,
     val planetaryPositions: List<BodyPosition>,
+    val calculationMetadata: CalculationMetadata = CalculationMetadata(
+        calculationProfileId = "TRANSIT_ANALYTICAL_V1",
+        calculationModel = "TRANSIT_ANALYTICAL_BODY_MODEL",
+        conventions = mapOf("ayanamsa_convention" to "UNSPECIFIED"),
+    ),
 ) {
     fun findBody(bodyId: BodyId): BodyPosition? =
         planetaryPositions.find { it.bodyId == bodyId }
@@ -46,6 +52,11 @@ data class TransitTimeline(
     val endJulianDay: Double,
     val sampleStepDays: Double,
     val snapshots: List<TransitSnapshot>,
+    val calculationMetadata: CalculationMetadata = snapshots.firstOrNull()?.calculationMetadata
+        ?: CalculationMetadata(
+            calculationProfileId = "TRANSIT_ANALYTICAL_V1",
+            calculationModel = "TRANSIT_ANALYTICAL_BODY_MODEL",
+        ),
 )
 
 /**
@@ -177,6 +188,11 @@ object TransitCalculator {
             julianDay = jd,
             ayanamsaDegrees = ayanamsaDegrees,
             planetaryPositions = positions,
+            calculationMetadata = CalculationMetadata(
+                calculationProfileId = "TRANSIT_ANALYTICAL_V1",
+                calculationModel = "TRANSIT_ANALYTICAL_BODY_MODEL",
+                conventions = mapOf("ayanamsa_convention" to ayanamsaConvention.uppercase()),
+            ),
         )
     }
 

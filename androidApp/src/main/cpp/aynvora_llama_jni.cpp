@@ -7,6 +7,8 @@
 #include <memory>
 #include <sstream>
 #include <unistd.h>
+#include <chrono>
+#include <mutex>
 
 #include "llama.h"
 
@@ -22,9 +24,16 @@ struct AynvoraNativeContext {
     std::string modelPath;
     int nCtx = 2048;
     int nThreads = 4;
+    int generatedTokenCount = 0;
 };
 
 static std::atomic<bool> s_backend_initialized{false};
+static std::mutex s_generation_mutex;
+
+static bool llama_abort_requested(void* data) {
+    auto* nativeCtx = static_cast<AynvoraNativeContext*>(data);
+    return nativeCtx == nullptr || nativeCtx->cancelled.load();
+}
 
 static void ensure_backend_init() {
     bool expected = false;
@@ -134,6 +143,7 @@ Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeLoad(
     nativeCtx->nCtx = nCtx;
     nativeCtx->nThreads = nThreads;
     nativeCtx->cancelled.store(false);
+    llama_set_abort_callback(ctx, llama_abort_requested, nativeCtx);
 
     LOGI("nativeLoad: successfully loaded model and created context. Handle: %p", nativeCtx);
     return reinterpret_cast<jlong>(nativeCtx);
@@ -148,7 +158,7 @@ Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeGenerate(
         jint jMaxTokens,
         jfloat jTemperature) {
 
-    if (jHandle <= 0) {
+    if (jHandle == 0 || jHandle == -1) {
         LOGE("nativeGenerate: invalid handle %lld", (long long)jHandle);
         return env->NewStringUTF("");
     }
@@ -159,14 +169,24 @@ Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeGenerate(
         return env->NewStringUTF("");
     }
 
-    nativeCtx->cancelled.store(false);
+    std::unique_lock<std::mutex> generationLock(s_generation_mutex, std::try_to_lock);
+    if (!generationLock.owns_lock()) {
+        LOGW("nativeGenerate: rejected overlapping inference request");
+        return env->NewStringUTF("\x01AYNVORA_BUSY");
+    }
 
+    nativeCtx->cancelled.store(false);
     const char* promptCStr = env->GetStringUTFChars(jPrompt, nullptr);
     if (!promptCStr) {
         return env->NewStringUTF("");
     }
     std::string prompt(promptCStr);
     env->ReleaseStringUTFChars(jPrompt, promptCStr);
+
+    const auto inferenceStart = std::chrono::steady_clock::now();
+    auto firstTokenTime = inferenceStart;
+    bool hasFirstToken = false;
+    nativeCtx->generatedTokenCount = 0;
 
     LOGI("nativeGenerate: prompt length = %zu, maxTokens = %d, temp = %.2f",
          prompt.length(), (int)jMaxTokens, (float)jTemperature);
@@ -210,16 +230,28 @@ Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeGenerate(
     llama_kv_cache_clear(nativeCtx->ctx);
 
     // 3. Batch evaluation of prompt
-    int batchSize = 512;
+    int batchSize = 64;
     llama_batch batch = llama_batch_init(batchSize, 0, 1);
+    const auto promptDecodeStart = std::chrono::steady_clock::now();
+    LOGI("nativeGenerate: starting prompt decode tokens=%d batch_size=%d", nTokens, batchSize);
 
     for (int i = 0; i < nTokens; i++) {
+        if (nativeCtx->cancelled.load()) {
+            LOGI("nativeGenerate: cancelled during prompt prefill at token=%d/%d", i, nTokens);
+            llama_batch_free(batch);
+            return env->NewStringUTF("");
+        }
         batch_add(batch, promptTokens[i], i, {0}, false);
         if (batch.n_tokens == batchSize || i == nTokens - 1) {
             if (i == nTokens - 1) {
                 batch.logits[batch.n_tokens - 1] = true;
             }
             if (llama_decode(nativeCtx->ctx, batch) != 0) {
+                if (nativeCtx->cancelled.load()) {
+                    LOGI("nativeGenerate: llama_decode aborted during prompt prefill");
+                    llama_batch_free(batch);
+                    return env->NewStringUTF("");
+                }
                 LOGE("nativeGenerate: llama_decode failed on prompt evaluation");
                 llama_batch_free(batch);
                 return env->NewStringUTF("");
@@ -227,6 +259,13 @@ Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeGenerate(
             batch_clear(batch);
         }
     }
+    if (nativeCtx->cancelled.load()) {
+        llama_batch_free(batch);
+        return env->NewStringUTF("");
+    }
+    const auto promptDecodeEnd = std::chrono::steady_clock::now();
+    LOGI("nativeGenerate: prompt decode completed ms=%lld",
+         (long long) std::chrono::duration_cast<std::chrono::milliseconds>(promptDecodeEnd - promptDecodeStart).count());
 
     // 4. Token generation loop
     std::ostringstream responseStream;
@@ -236,6 +275,7 @@ Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeGenerate(
 
     std::vector<llama_token_data> candidates;
     candidates.reserve(nVocab);
+    LOGI("nativeGenerate: entering token generation max_tokens=%d vocab=%d", maxGenerate, nVocab);
 
     for (int genCount = 0; genCount < maxGenerate; ++genCount) {
         if (nativeCtx->cancelled.load()) {
@@ -270,6 +310,16 @@ Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeGenerate(
             break;
         }
 
+        if (genCount == 0) {
+            LOGI("nativeGenerate: first output token sampled id=%d", nextToken);
+        }
+
+        if (!hasFirstToken) {
+            firstTokenTime = std::chrono::steady_clock::now();
+            hasFirstToken = true;
+        }
+        nativeCtx->generatedTokenCount++;
+
         char pieceBuf[256];
         int pieceLen = llama_token_to_piece(nativeCtx->model, nextToken, pieceBuf, sizeof(pieceBuf), 0, false);
         if (pieceLen > 0) {
@@ -284,13 +334,36 @@ Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeGenerate(
             LOGE("nativeGenerate: failed to decode generated token %d", nextToken);
             break;
         }
+        if (genCount == 0) {
+            LOGI("nativeGenerate: first output token decoded");
+        }
     }
 
     llama_batch_free(batch);
 
     std::string resultStr = responseStream.str();
-    LOGI("nativeGenerate: completed, produced %zu chars", resultStr.length());
+    const auto inferenceEnd = std::chrono::steady_clock::now();
+    const auto totalMs = std::chrono::duration_cast<std::chrono::milliseconds>(inferenceEnd - inferenceStart).count();
+    const auto firstTokenMs = hasFirstToken
+            ? std::chrono::duration_cast<std::chrono::milliseconds>(firstTokenTime - inferenceStart).count()
+            : -1;
+    const double tokensPerSecond = totalMs > 0
+            ? (nativeCtx->generatedTokenCount * 1000.0 / totalMs)
+            : 0.0;
+    LOGI("nativeGenerate: completed chars=%zu tokens=%d first_token_ms=%lld total_ms=%lld tokens_per_sec=%.2f",
+         resultStr.length(), nativeCtx->generatedTokenCount,
+         (long long) firstTokenMs, (long long) totalMs, tokensPerSecond);
     return env->NewStringUTF(resultStr.c_str());
+}
+
+JNIEXPORT jint JNICALL
+Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeGeneratedTokenCount(
+        JNIEnv* /* env */,
+        jobject /* thiz */,
+        jlong jHandle) {
+    if (jHandle == 0 || jHandle == -1) return 0;
+    auto* nativeCtx = reinterpret_cast<AynvoraNativeContext*>(jHandle);
+    return nativeCtx ? nativeCtx->generatedTokenCount : 0;
 }
 
 JNIEXPORT void JNICALL
@@ -298,7 +371,7 @@ Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeCancel(
         JNIEnv* /* env */,
         jobject /* thiz */,
         jlong jHandle) {
-    if (jHandle > 0) {
+    if (jHandle != 0 && jHandle != -1) {
         auto* nativeCtx = reinterpret_cast<AynvoraNativeContext*>(jHandle);
         if (nativeCtx) {
             LOGI("nativeCancel: setting cancelled=true");
@@ -312,7 +385,7 @@ Java_com_aynvora_core_ai_RealLlamaJniBridge_nativeRelease(
         JNIEnv* /* env */,
         jobject /* thiz */,
         jlong jHandle) {
-    if (jHandle > 0) {
+    if (jHandle != 0 && jHandle != -1) {
         auto* nativeCtx = reinterpret_cast<AynvoraNativeContext*>(jHandle);
         if (nativeCtx) {
             LOGI("nativeRelease: releasing context %p", nativeCtx);

@@ -50,8 +50,8 @@ class TranslationCompletenessTest {
 
     @Test
     fun testCanonicalKeyCountBaseline() {
-        // Exactly 1,137 unique canonical keys (1,114 baseline + 23 Phase 8.2 Gemstone keys)
-        assertEquals(1137, canonicalEnKeys.size, "English canonical key count must be exactly 1137")
+        // Existing canonical keys plus nine localized Gemstone image names.
+        assertEquals(1146, canonicalEnKeys.size, "English canonical key count must be exactly 1146")
     }
 
     @Test
@@ -109,7 +109,7 @@ class TranslationCompletenessTest {
                 placeholderErrors,
                 "Locale ${locale.localeId} has $placeholderErrors placeholder errors"
             )
-            assertEquals(1137, catalogKeys.size, "Locale ${locale.localeId} key count must be 1137")
+            assertEquals(1146, catalogKeys.size, "Locale ${locale.localeId} key count must be 1146")
         }
         println("==================================================\n")
     }

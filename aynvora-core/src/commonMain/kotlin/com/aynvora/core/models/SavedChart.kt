@@ -28,6 +28,12 @@ data class SavedChart(
     val schemaVersion: Int = CURRENT_SCHEMA_VERSION,
     val status: ChartCalculationStatus = ChartCalculationStatus.COMPLETED,
     val cachedResultJson: String? = null,
+    val snapshotSchemaVersion: String? = null,
+    val calculationContractVersion: String? = null,
+    val createdAtEpochMs: Long = calculationTimestampEpochMs,
+    val updatedAtEpochMs: Long = calculationTimestampEpochMs,
+    val lastOpenedAtEpochMs: Long? = null,
+    val identityFingerprint: String? = null,
 ) {
     init {
         require(id.isNotBlank()) { "Chart ID cannot be blank" }

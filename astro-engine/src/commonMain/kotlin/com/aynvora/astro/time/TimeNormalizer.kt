@@ -36,6 +36,9 @@ object TimeNormalizer {
         require(year in 1..9999) { "Year must be in range 1..9999, got: $year" }
         require(month in 1..12) { "Month must be in range 1..12, got: $month" }
         require(day in 1..31) { "Day must be in range 1..31, got: $day" }
+        require(day <= getDaysInMonth(year, month)) {
+            "Day $day is invalid for Gregorian month $month in year $year"
+        }
         require(hour in 0..23) { "Hour must be in range 0..23, got: $hour" }
         require(minute in 0..59) { "Minute must be in range 0..59, got: $minute" }
         require(second in 0..59) { "Second must be in range 0..59, got: $second" }

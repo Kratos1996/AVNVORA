@@ -1,8 +1,19 @@
 package com.aynvora.ui.astrology
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,14 +22,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,718 +51,711 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.aynvora.astro.AstroEngine
-import com.aynvora.astro.AynvoraAstroEngine
-import com.aynvora.astro.BirthData
-import com.aynvora.astro.BodyId
-import com.aynvora.astro.BodyPosition
-import com.aynvora.astro.CalculationResult
-import com.aynvora.astro.EngineCalculationConfig
-import com.aynvora.astro.houses.HousePosition
-import com.aynvora.core.event.AynvoraClickEvent
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.sp
 import com.aynvora.designsystem.AynvoraTheme
-import com.aynvora.designsystem.adaptive.sdp
-import com.aynvora.designsystem.adaptive.ssp
-import com.aynvora.designsystem.components.AynvoraButton
-import com.aynvora.designsystem.components.AynvoraButtonVariant
-import com.aynvora.designsystem.components.AynvoraCard
-import com.aynvora.designsystem.components.AynvoraCardVariant
+import com.aynvora.designsystem.components.AynvoraLogo
+import com.aynvora.designsystem.components.AynvoraLogoVariant
+import com.aynvora.core.AynvoraSdk
+import com.aynvora.core.analytics.AnalyticsEvent
+import com.aynvora.core.analytics.AnalyticsTracker
+import com.aynvora.core.models.BirthData
+import com.aynvora.core.models.BirthDate
+import com.aynvora.core.models.BirthPlace
+import com.aynvora.core.models.BirthProfile
+import com.aynvora.core.models.BirthTime
+import com.aynvora.core.models.CalculationConfig
+import com.aynvora.core.models.ChartRequest
+import com.aynvora.core.models.ChartResult
+import com.aynvora.core.models.KundaliSnapshotJson
+import com.aynvora.core.models.KundaliIdentity
+import com.aynvora.core.models.SavedChart
+import com.aynvora.core.repository.BirthProfileRepository
+import com.aynvora.core.repository.SavedChartRepository
+import com.aynvora.core.result.AynvoraResult
+import com.aynvora.core.models.generateKundaliSnapshot
 import com.aynvora.designsystem.localization.LocalAynvoraTranslator
-import com.aynvora.qa.android.qaAction
-import com.aynvora.qa.core.models.QaActionId
+import com.aynvora.designsystem.generated.resources.Res
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.koin.compose.currentKoinScope
 
-/**
- * Top-level route composable for the Vedic Astrology feature.
- * Connects directly to [AynvoraAstroEngine] to calculate deterministic natal charts,
- * Graha positions, Bhavas (Houses), Lagna, and Nakshatra placements.
- */
+private data class LocalCity(
+    val id: String, val city: String, val stateCode: String, val state: String,
+    val countryCode: String, val country: String, val lat: Double, val lon: Double, val timezone: String,
+)
+
+/** Dedicated, offline-first birth profile entry point. All chart computation remains in AynvoraSdk. */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 @Composable
-fun AstrologyRoute(
-    onClose: () -> Unit,
-    modifier: Modifier = Modifier,
-    engine: AstroEngine = remember { AynvoraAstroEngine() },
-) {
-    val isDark = AynvoraTheme.isDark
+fun AstrologyRoute(onClose: () -> Unit, modifier: Modifier = Modifier) {
+    val koin = currentKoinScope()
+    val sdk = remember(koin) { koin.getOrNull<AynvoraSdk>() }
+    val profiles = remember(koin) { koin.getOrNull<BirthProfileRepository>() }
+    val charts = remember(koin) { koin.getOrNull<SavedChartRepository>() }
+    val analytics = remember(koin) { koin.getOrNull<AnalyticsTracker>() }
     val translator = LocalAynvoraTranslator.current
     val scope = rememberCoroutineScope()
+    var cities by remember { mutableStateOf<List<LocalCity>>(emptyList()) }
+    var name by remember { mutableStateOf("") }
+    var dateMillis by remember { mutableStateOf<Long?>(null) }
+    var hour by remember { mutableStateOf<Int?>(null) }
+    var minute by remember { mutableStateOf<Int?>(null) }
+    var selected by remember { mutableStateOf<LocalCity?>(null) }
+    var gender by remember { mutableStateOf("") }
+    var picker by remember { mutableStateOf("") }
+    var query by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var loading by remember { mutableStateOf(false) }
+    var result by remember { mutableStateOf<VedicAstrologyUiModel?>(null) }
+    var savedProfiles by remember { mutableStateOf<List<BirthProfile>>(emptyList()) }
+    var deleteCandidate by remember { mutableStateOf<BirthProfile?>(null) }
+    var profilesLoaded by remember { mutableStateOf(false) }
+    // Saved Kundalis are the entry state; no saved records leads to the create-first screen.
+    var showForm by remember { mutableStateOf(false) }
 
-    val bgColor = if (isDark) AynvoraTheme.colors.CosmicBlack else AynvoraTheme.colors.Ivory
-    val primaryText = if (isDark) AynvoraTheme.colors.TextLight else AynvoraTheme.colors.TextDark
-    val secondaryText =
-        if (isDark) AynvoraTheme.colors.TextLightSecondary else AynvoraTheme.colors.TextSecondary
-
-    // Birth Data Input Form State
-    var birthDate by remember { mutableStateOf("1995-10-15") }
-    var birthTime by remember { mutableStateOf("14:30:00") }
-    var latitudeStr by remember { mutableStateOf("28.6139") }
-    var longitudeStr by remember { mutableStateOf("77.2090") }
-    var locationName by remember { mutableStateOf("New Delhi, India") }
-    var timeZoneId by remember { mutableStateOf("Asia/Kolkata") }
-
-    var isCalculating by remember { mutableStateOf(false) }
-    var calculationResult by remember { mutableStateOf<CalculationResult?>(null) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    fun runCalculation() {
-        scope.launch {
-            isCalculating = true
-            errorMessage = null
-            try {
-                val dateParts = birthDate.split("-").map { it.trim().toInt() }
-                val timeParts = birthTime.split(":").map { it.trim().toInt() }
-                val lat = latitudeStr.trim().toDouble()
-                val lon = longitudeStr.trim().toDouble()
-
-                val birthData = BirthData(
-                    dateTimeIso = "${birthDate}T${birthTime}Z",
-                    latitude = lat,
-                    longitude = lon,
-                    timeZoneId = timeZoneId,
-                    year = dateParts[0],
-                    month = dateParts[1],
-                    day = dateParts[2],
-                    hour = timeParts[0],
-                    minute = timeParts[1],
-                    second = if (timeParts.size > 2) timeParts[2] else 0,
-                )
-
-                val result = engine.calculate(birthData, EngineCalculationConfig())
-                calculationResult = result
-            } catch (e: Exception) {
-                errorMessage = "Calculation error: ${e.message ?: "Invalid birth parameters"}"
-            } finally {
-                isCalculating = false
-            }
-        }
-    }
-
-    // Auto-calculate on initial entry for immediate presentation
     LaunchedEffect(Unit) {
-        if (calculationResult == null) {
-            runCalculation()
+        analytics?.track(AnalyticsEvent.AstrologyInputOpened)
+        val text = Res.readBytes("files/locations.tsv").decodeToString()
+        cities = text.lineSequence().mapNotNull { line ->
+            val f = line.split('\t')
+            if (f.size != 9) return@mapNotNull null
+            val lat = f[6].toDoubleOrNull() ?: return@mapNotNull null
+            val lon = f[7].toDoubleOrNull() ?: return@mapNotNull null
+            LocalCity(f[0], f[1], f[2], f[3], f[4], f[5], lat, lon, f[8])
+        }.toList()
+        savedProfiles = ((profiles?.getAllBirthProfiles() as? AynvoraResult.Success<*>)?.value as? List<BirthProfile>).orEmpty()
+        if (savedProfiles.isEmpty()) showForm = true
+        profilesLoaded = true
+    }
+
+    val title = when (picker) { "country" -> "Select country"; "state" -> "Select state/region"; "city" -> "Select city"; else -> "" }
+    val logoMotion = rememberInfiniteTransition(label = "astrology-logo")
+    val logoScale by logoMotion.animateFloat(
+        initialValue = 0.96f,
+        targetValue = 1.04f,
+        animationSpec = infiniteRepeatable(tween(1_800), repeatMode = RepeatMode.Reverse),
+        label = "logo-pulse",
+    )
+
+    PlatformBackHandler {
+        when {
+            picker.isNotEmpty() -> picker = ""
+            deleteCandidate != null -> deleteCandidate = null
+            result != null -> { result = null; showForm = false }
+            showForm -> showForm = false
+            else -> onClose()
         }
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(bgColor)
-            .padding(horizontal = 16.sdp, vertical = 12.sdp),
+        modifier.fillMaxSize().background(
+            Brush.verticalGradient(
+                listOf(AynvoraTheme.colors.CosmicBlack, AynvoraTheme.colors.CosmicNavy, AynvoraTheme.colors.CosmicBlack),
+            ),
+        ),
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // ── Header Bar ────────────────────────────────────────────────────────
-            AstrologyTopBar(
-                onClose = onClose,
-                isDark = isDark,
-                primaryText = primaryText,
-            )
-
-            Spacer(modifier = Modifier.height(12.sdp))
-
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(14.sdp),
-            ) {
-                // ── Birth Input Form Card ─────────────────────────────────────────
-                item(key = "input_form") {
-                    AstrologyInputCard(
-                        birthDate = birthDate,
-                        onBirthDateChange = { birthDate = it },
-                        birthTime = birthTime,
-                        onBirthTimeChange = { birthTime = it },
-                        latitudeStr = latitudeStr,
-                        onLatitudeChange = { latitudeStr = it },
-                        longitudeStr = longitudeStr,
-                        onLongitudeChange = { longitudeStr = it },
-                        locationName = locationName,
-                        isCalculating = isCalculating,
-                        onCalculate = { runCalculation() },
-                        isDark = isDark,
-                        primaryText = primaryText,
-                        secondaryText = secondaryText,
-                    )
-                }
-
-                if (errorMessage != null) {
-                    item(key = "error_message") {
-                        Text(
-                            text = errorMessage ?: "",
-                            color = AynvoraTheme.colors.Error,
-                            style = AynvoraTheme.typography.body14,
-                            modifier = Modifier.padding(horizontal = 4.sdp),
-                        )
-                    }
-                }
-
-                // ── Calculation Results Section ───────────────────────────────────
-                val result = calculationResult
-                if (result != null) {
-                    // Lagna (Ascendant) Card
-                    item(key = "lagna_card") {
-                        LagnaCard(
-                            result = result,
-                            isDark = isDark,
-                            primaryText = primaryText,
-                            secondaryText = secondaryText,
-                        )
-                    }
-
-                    // Planetary Positions (Grahas) Card
-                    item(key = "grahas_header") {
-                        Text(
-                            text = "ग्रह स्थिति • Planetary Positions (Grahas)",
-                            style = AynvoraTheme.typography.title18.copy(fontSize = 17.ssp),
-                            color = AynvoraTheme.colors.Gold,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-
-                    items(result.positions, key = { it.bodyId.name }) { position ->
-                        GrahaPositionRow(
-                            position = position,
-                            isDark = isDark,
-                            primaryText = primaryText,
-                            secondaryText = secondaryText,
-                        )
-                    }
-
-                    // Houses (Bhavas) Card
-                    if (result.houses.isNotEmpty()) {
-                        item(key = "houses_header") {
-                            Text(
-                                text = "द्वादश भाव • 12 Bhavas (Houses)",
-                                style = AynvoraTheme.typography.title18.copy(fontSize = 17.ssp),
-                                color = AynvoraTheme.colors.Gold,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-
-                        item(key = "houses_grid") {
-                            HousesSummaryCard(
-                                houses = result.houses,
-                                isDark = isDark,
-                                primaryText = primaryText,
-                                secondaryText = secondaryText,
-                            )
-                        }
-                    }
-
-                    // Classical Provenance & Guarantee Footer
-                    item(key = "provenance_footer") {
-                        AstrologyProvenanceFooter(
-                            engineVersion = result.engineVersion,
-                            calculationModel = result.calculationModel,
-                            ayanamsaName = result.ayanamsaName,
-                            isDark = isDark,
-                            secondaryText = secondaryText,
-                        )
-                    }
-                }
-
-                item(key = "bottom_spacer") {
-                    Spacer(modifier = Modifier.height(24.sdp))
-                }
-            }
-        }
-    }
-}
-
-// ── Top Bar Composable ────────────────────────────────────────────────────────
-
-@Composable
-private fun AstrologyTopBar(
-    onClose: () -> Unit,
-    isDark: Boolean,
-    primaryText: Color,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+      Column(
+        Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+      ) {
         Row(
+            Modifier.fillMaxWidth().padding(top = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f),
         ) {
-            AynvoraButton(
-                text = "✕",
-                variant = AynvoraButtonVariant.Outlined,
-                onClick = onClose,
-                modifier = Modifier
-                    .qaAction(QaActionId.ASTROLOGY_CLOSE)
-                    .semantics { contentDescription = "Close Vedic Astrology" },
-            )
-
-            Spacer(modifier = Modifier.width(12.sdp))
-
-            Column {
-                Text(
-                    text = "AYNVORA Vedic Astrology",
-                    style = AynvoraTheme.typography.title20,
-                    color = AynvoraTheme.colors.Gold,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "Deterministic Natal Kundli & Planetary Ephemeris",
-                    style = AynvoraTheme.typography.caption12,
-                    color = if (isDark) AynvoraTheme.colors.TextLightSecondary else AynvoraTheme.colors.TextSecondary,
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(AynvoraTheme.colors.Gold.copy(alpha = 0.15f))
-                .border(
-                    width = 1.dp,
-                    color = AynvoraTheme.colors.Gold.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(8.dp),
-                )
-                .padding(horizontal = 8.sdp, vertical = 4.sdp),
-        ) {
-            Text(
-                text = "🪐 Vedic",
-                style = AynvoraTheme.typography.caption12.copy(fontSize = 11.ssp),
-                color = AynvoraTheme.colors.Gold,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-    }
-}
-
-// ── Birth Input Form Card ─────────────────────────────────────────────────────
-
-@Composable
-private fun AstrologyInputCard(
-    birthDate: String,
-    onBirthDateChange: (String) -> Unit,
-    birthTime: String,
-    onBirthTimeChange: (String) -> Unit,
-    latitudeStr: String,
-    onLatitudeChange: (String) -> Unit,
-    longitudeStr: String,
-    onLongitudeChange: (String) -> Unit,
-    locationName: String,
-    isCalculating: Boolean,
-    onCalculate: () -> Unit,
-    isDark: Boolean,
-    primaryText: Color,
-    secondaryText: Color,
-) {
-    AynvoraCard(
-        modifier = Modifier.fillMaxWidth(),
-        variant = AynvoraCardVariant.Elevated,
-        containerColor = if (isDark) AynvoraTheme.colors.CosmicNavy else AynvoraTheme.colors.White,
-        contentColor = primaryText,
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "जन्म विवरण • Birth Details",
-                style = AynvoraTheme.typography.title18.copy(fontSize = 16.ssp),
-                color = AynvoraTheme.colors.Gold,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(modifier = Modifier.height(4.sdp))
-            Text(
-                text = "Location: $locationName",
-                style = AynvoraTheme.typography.caption12,
-                color = secondaryText,
-            )
-
-            Spacer(modifier = Modifier.height(10.sdp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.sdp),
+            Box(
+                Modifier.size(46.dp)
+                    .clip(CircleShape)
+                    .background(AynvoraTheme.colors.CosmicIndigo)
+                    .border(1.dp, AynvoraTheme.colors.Gold.copy(alpha = 0.55f), CircleShape)
+                    .clickable(onClick = { if (result != null) { result = null; showForm = false } else if (showForm) showForm = false else onClose() })
+                    .semantics { contentDescription = "Back to home" },
+                contentAlignment = Alignment.Center,
             ) {
-                OutlinedTextField(
-                    value = birthDate,
-                    onValueChange = onBirthDateChange,
-                    label = { Text("Date (YYYY-MM-DD)") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AynvoraTheme.colors.Gold,
-                        unfocusedBorderColor = AynvoraTheme.colors.Gold.copy(alpha = 0.3f),
-                        focusedLabelColor = AynvoraTheme.colors.Gold,
-                    ),
-                )
-
-                OutlinedTextField(
-                    value = birthTime,
-                    onValueChange = onBirthTimeChange,
-                    label = { Text("Time (HH:MM:SS)") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AynvoraTheme.colors.Gold,
-                        unfocusedBorderColor = AynvoraTheme.colors.Gold.copy(alpha = 0.3f),
-                        focusedLabelColor = AynvoraTheme.colors.Gold,
-                    ),
-                )
+                Text("‹", color = AynvoraTheme.colors.GoldLight, fontSize = 32.sp, fontWeight = FontWeight.Light)
             }
-
-            Spacer(modifier = Modifier.height(8.sdp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.sdp),
+            Box(
+                Modifier.padding(start = 14.dp).size(62.dp)
+                    .clip(CircleShape)
+                    .background(AynvoraTheme.colors.CosmicIndigo)
+                    .border(1.dp, AynvoraTheme.colors.Gold.copy(alpha = 0.25f + (logoScale - 0.96f) * 4f), CircleShape),
+                contentAlignment = Alignment.Center,
             ) {
-                OutlinedTextField(
-                    value = latitudeStr,
-                    onValueChange = onLatitudeChange,
-                    label = { Text("Latitude") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AynvoraTheme.colors.Gold,
-                        unfocusedBorderColor = AynvoraTheme.colors.Gold.copy(alpha = 0.3f),
-                        focusedLabelColor = AynvoraTheme.colors.Gold,
-                    ),
-                )
-
-                OutlinedTextField(
-                    value = longitudeStr,
-                    onValueChange = onLongitudeChange,
-                    label = { Text("Longitude") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AynvoraTheme.colors.Gold,
-                        unfocusedBorderColor = AynvoraTheme.colors.Gold.copy(alpha = 0.3f),
-                        focusedLabelColor = AynvoraTheme.colors.Gold,
-                    ),
+                AynvoraLogo(
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = logoScale
+                        scaleY = logoScale
+                    },
+                    size = 46.dp,
+                    variant = AynvoraLogoVariant.Transparent,
+                    contentDescription = "Animated Aynvora astrology logo",
                 )
             }
-
-            Spacer(modifier = Modifier.height(14.sdp))
-
-            AynvoraButton(
-                text = if (isCalculating) "Calculating Kundli..." else "Calculate Chart • कुंडली गणना करें",
-                variant = AynvoraButtonVariant.Primary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .qaAction(QaActionId.ASTROLOGY_CALCULATE),
-                enabled = !isCalculating,
-                event = AynvoraClickEvent(
-                    eventId = "astrology.calculate_clicked",
-                    screenId = "astrology",
-                    componentId = "calculate_chart_button",
-                ),
-                onClick = onCalculate,
-            )
-        }
-    }
-}
-
-// ── Lagna (Ascendant) Card ────────────────────────────────────────────────────
-
-@Composable
-private fun LagnaCard(
-    result: CalculationResult,
-    isDark: Boolean,
-    primaryText: Color,
-    secondaryText: Color,
-) {
-    val lagna = result.lagna
-
-    AynvoraCard(
-        modifier = Modifier.fillMaxWidth(),
-        variant = AynvoraCardVariant.Elevated,
-        containerColor = if (isDark) AynvoraTheme.colors.CosmicNavy else AynvoraTheme.colors.White,
-        contentColor = primaryText,
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "लग्न • Ascendant (Lagna)",
-                    style = AynvoraTheme.typography.title18.copy(fontSize = 16.ssp),
-                    color = AynvoraTheme.colors.Gold,
-                    fontWeight = FontWeight.Bold,
-                )
-                if (lagna != null) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(AynvoraTheme.colors.CelestialBlue.copy(alpha = 0.15f))
-                            .padding(horizontal = 8.sdp, vertical = 3.sdp),
-                    ) {
-                        Text(
-                            text = lagna.rashiName,
-                            style = AynvoraTheme.typography.caption12.copy(fontSize = 11.ssp),
-                            color = AynvoraTheme.colors.CelestialBlue,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.sdp))
-
-            if (lagna != null) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Column {
-                        Text(
-                            text = "Rashi Degree",
-                            style = AynvoraTheme.typography.caption12,
-                            color = secondaryText
-                        )
-                        Text(
-                            text = formatDegree(lagna.degreeInRashi),
-                            style = AynvoraTheme.typography.body14,
-                            color = primaryText,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                    Column {
-                        Text(
-                            text = "Nakshatra",
-                            style = AynvoraTheme.typography.caption12,
-                            color = secondaryText
-                        )
-                        Text(
-                            text = "${lagna.nakshatraName} (Pada ${lagna.pada})",
-                            style = AynvoraTheme.typography.body14,
-                            color = primaryText,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                    Column {
-                        Text(
-                            text = "Sidereal Longitude",
-                            style = AynvoraTheme.typography.caption12,
-                            color = secondaryText
-                        )
-                        Text(
-                            text = formatDegree(lagna.siderealLongitude),
-                            style = AynvoraTheme.typography.body14,
-                            color = primaryText,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                }
-            } else {
-                Text(
-                    text = "Lagna calculated from geographical coordinates and exact local sidereal time.",
-                    style = AynvoraTheme.typography.body14,
-                    color = secondaryText,
-                )
+            Column(Modifier.padding(start = 12.dp)) {
+                Text("AYNVORA", color = AynvoraTheme.colors.GoldLight, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(if (result != null) "YOUR KUNDALI" else "VEDIC ASTROLOGY", color = AynvoraTheme.colors.TextLightSecondary, fontSize = 11.sp)
             }
         }
-    }
-}
-
-// ── Graha Position Row ────────────────────────────────────────────────────────
-
-@Composable
-private fun GrahaPositionRow(
-    position: BodyPosition,
-    isDark: Boolean,
-    primaryText: Color,
-    secondaryText: Color,
-) {
-    val sanskritName = getGrahaSanskritName(position.bodyId)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(if (isDark) AynvoraTheme.colors.CosmicNavy.copy(alpha = 0.7f) else AynvoraTheme.colors.White)
-            .border(
-                width = 1.dp,
-                color = AynvoraTheme.colors.Gold.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(10.dp),
-            )
-            .padding(horizontal = 12.sdp, vertical = 10.sdp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1.2f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = position.bodyId.name,
-                    style = AynvoraTheme.typography.body14,
-                    color = AynvoraTheme.colors.Gold,
-                    fontWeight = FontWeight.Bold,
-                )
-                if (position.isRetrograde) {
-                    Spacer(modifier = Modifier.width(4.sdp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(AynvoraTheme.colors.Error.copy(alpha = 0.2f))
-                            .padding(horizontal = 4.sdp, vertical = 1.sdp),
-                    ) {
-                        Text(
-                            text = "R (वक्र)",
-                            style = AynvoraTheme.typography.caption12.copy(fontSize = 9.ssp),
-                            color = AynvoraTheme.colors.Error,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
-            Text(
-                text = sanskritName,
-                style = AynvoraTheme.typography.caption12,
-                color = secondaryText,
-            )
+        if (result == null) Column(Modifier.padding(top = 10.dp, bottom = 2.dp)) {
+            Text("YOUR COSMIC BLUEPRINT", color = AynvoraTheme.colors.GoldLight, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            Text("A map of your\nunique sky.", color = AynvoraTheme.colors.TextLight, fontSize = 30.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold)
+            Text("Enter your birth details to begin your Vedic chart.", color = AynvoraTheme.colors.TextLightSecondary, fontSize = 14.sp)
         }
-
-        Column(modifier = Modifier.weight(1.3f)) {
-            Text(
-                text = position.rashiName,
-                style = AynvoraTheme.typography.body14,
-                color = primaryText,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = formatDegree(position.degreeInRashi),
-                style = AynvoraTheme.typography.caption12,
-                color = secondaryText,
-            )
-        }
-
-        Column(modifier = Modifier.weight(1.5f), horizontalAlignment = Alignment.End) {
-            Text(
-                text = position.nakshatraName,
-                style = AynvoraTheme.typography.body14,
-                color = primaryText,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = "Pada ${position.pada} • ${formatDegree(position.degreeInNakshatra)}",
-                style = AynvoraTheme.typography.caption12,
-                color = secondaryText,
-            )
-        }
-    }
-}
-
-// ── Houses Summary Card ───────────────────────────────────────────────────────
-
-@Composable
-private fun HousesSummaryCard(
-    houses: List<HousePosition>,
-    isDark: Boolean,
-    primaryText: Color,
-    secondaryText: Color,
-) {
-    AynvoraCard(
-        modifier = Modifier.fillMaxWidth(),
-        variant = AynvoraCardVariant.Outlined,
-        containerColor = if (isDark) AynvoraTheme.colors.CosmicNavy else AynvoraTheme.colors.SoftGold,
-        contentColor = primaryText,
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            for (chunk in houses.chunked(3)) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.sdp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    for (house in chunk) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Bhava ${house.houseNumber}",
-                                style = AynvoraTheme.typography.caption12,
-                                color = AynvoraTheme.colors.Gold,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = house.rashiName,
-                                style = AynvoraTheme.typography.body14.copy(fontSize = 12.ssp),
-                                color = primaryText,
-                            )
-                            Text(
-                                text = formatDegree(house.degreeInRashi),
-                                style = AynvoraTheme.typography.caption12.copy(fontSize = 10.ssp),
-                                color = secondaryText,
-                            )
+        if (result == null && !showForm) {
+            Text(if (savedProfiles.isEmpty()) "Create your first Kundali" else "Previous Kundalis", color = AynvoraTheme.colors.TextLight, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            if (!profilesLoaded) Text("Loading saved Kundalis…", color = AynvoraTheme.colors.TextLightSecondary)
+            if (savedProfiles.isEmpty()) Text("Your saved birth charts will appear here.", color = AynvoraTheme.colors.TextLightSecondary)
+            Button(onClick = { error = null; showForm = true }, Modifier.fillMaxWidth()) { Text("New Kundali") }
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(savedProfiles, key = { it.id }) { profile ->
+                    Surface(color = AynvoraTheme.colors.CosmicIndigo, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(profile.name, color = AynvoraTheme.colors.TextLight, fontWeight = FontWeight.SemiBold)
+                                Text("${profile.date.toIsoDateString()} · ${profile.time.toIsoTimeString().take(5)} · ${profile.place.name}", color = AynvoraTheme.colors.TextLightSecondary, fontSize = 12.sp)
+                            }
+                            Button(enabled = !loading, onClick = {
+                                loading = true
+                                scope.launch {
+                                    val saved = (charts?.getChartsForBirthProfile(profile.id) as? AynvoraResult.Success<*>)?.value as? List<SavedChart>
+                                    val chart = saved?.firstOrNull { it.cachedResultJson != null }
+                                    if (chart?.cachedResultJson == null) {
+                                        error = "This saved Kundali has no stored snapshot. It was not recalculated. Create a new profile to calculate again."
+                                    } else {
+                                        runCatching { VedicAstrologyJsonUiAdapter.map(chart.cachedResultJson!!) }
+                                            .onSuccess { model ->
+                                                if (model.snapshot.profileId != profile.id) error = "Saved Kundali profile does not match this record."
+                                                else {
+                                                    result = model
+                                                    name = profile.name
+                                                    val now = System.currentTimeMillis()
+                                                    profiles?.saveBirthProfile(profile.copy(lastOpenedAtEpochMs = now))
+                                                    charts?.saveChart(chart.copy(lastOpenedAtEpochMs = now))
+                                                    savedProfiles = ((profiles?.getAllBirthProfiles() as? AynvoraResult.Success<*>)?.value as? List<BirthProfile>).orEmpty()
+                                                }
+                                            }
+                                            .onFailure { error = "Saved Kundali snapshot is incompatible or corrupted. It was not recalculated." }
+                                    }
+                                    loading = false
+                                }
+                            }) { Text("Open") }
+                            IconButton(onClick = { deleteCandidate = profile }, enabled = !loading) {
+                                Text("×", color = AynvoraTheme.colors.Error, fontSize = 22.sp, modifier = Modifier.semantics { contentDescription = "Delete ${profile.name}" })
+                            }
                         }
                     }
                 }
-                if (chunk != houses.chunked(3).last()) {
-                    HorizontalDivider(
-                        color = AynvoraTheme.colors.Gold.copy(alpha = 0.1f),
-                        modifier = Modifier.padding(vertical = 4.sdp),
-                    )
+            }
+            error?.let { Text(it, color = AynvoraTheme.colors.Error) }
+        } else if (result == null) {
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                item {
+                    Text("BIRTH DETAILS  ·  STEP 1 OF 1", color = AynvoraTheme.colors.GoldLight, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
+                item { OutlinedTextField(name, { name = it.take(80) }, Modifier.fillMaxWidth(), label = { Text("Name") }, singleLine = true) }
+                item { Button(onClick = { analytics?.track(AnalyticsEvent.BirthDatePickerOpened); picker = "date" }, Modifier.fillMaxWidth()) { Text(dateMillis?.let(::formatDate) ?: "Date of birth") } }
+                item { Button(onClick = { analytics?.track(AnalyticsEvent.BirthTimePickerOpened); picker = "time" }, Modifier.fillMaxWidth()) { Text(if (hour != null && minute != null) "%02d:%02d".format(hour, minute) else "Exact time of birth") } }
+                item { Button(onClick = { analytics?.track(AnalyticsEvent.BirthLocationPickerOpened); picker = "country"; query = "" }, Modifier.fillMaxWidth()) { Text(selected?.let { "${it.city}, ${it.state}, ${it.country}" } ?: "Birth location") } }
+                item { Text("Gender (optional)", color = AynvoraTheme.colors.TextLight) }
+                item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("Male", "Female", "Prefer not to say").forEach { Button(onClick = { gender = it }) { Text(if (gender == it) "✓ $it" else it) } } } }
+                item { Text("Calculation profile: Standard Vedic · Lahiri · Equal House", color = AynvoraTheme.colors.TextLightSecondary) }
+                item { error?.let { Text(it, color = AynvoraTheme.colors.Error) } }
+                item { Button(enabled = !loading, onClick = {
+                    val place = selected
+                    val millis = dateMillis
+                    val h = hour; val m = minute
+                    val validation = when {
+                        name.trim().length !in 1..80 -> "Enter a name (1–80 characters)."
+                        millis == null -> "Select a birth date."
+                        h == null || m == null -> "Select an exact birth time."
+                        place == null -> "Select a birth city."
+                        place.timezone.isBlank() -> "The selected city has no timezone. Choose a different city."
+                        else -> null
+                    }
+                    if (validation != null) { error = validation; return@Button }
+                    if (sdk == null) { error = "Astrology service is unavailable."; return@Button }
+                    loading = true; error = null
+                    analytics?.track(AnalyticsEvent.KundaliGenerationStarted)
+                    scope.launch {
+                        try {
+                            val date = fromEpochDay((millis!! / 86_400_000L).toInt())
+                            val bday = BirthData(BirthDate(date.first, date.second, date.third), BirthTime(h!!, m!!), BirthPlace(
+                                name = place!!.city, coordinates = com.aynvora.core.models.Coordinates(place.lat, place.lon),
+                                timezoneId = place.timezone, country = place.country, id = place.id,
+                                countryCode = place.countryCode, stateName = place.state, stateCode = place.stateCode, cityName = place.city,
+                            ))
+                            val config = fullHoroscopeConfig()
+                            val profileId = KundaliIdentity.profileId(bday, config)
+                            val duplicate = savedProfiles.firstOrNull { it.id == profileId }
+                                ?: savedProfiles.firstOrNull { it.birthData == bday }
+                            if (duplicate != null) {
+                                error = "A Kundali with these birth details already exists. Open it from Previous Kundalis."
+                                showForm = false
+                                loading = false
+                                return@launch
+                            }
+                            when (val calculated = sdk.generateKundaliSnapshot(
+                                ChartRequest(bday, config), profileId, name.trim(), gender.ifBlank { null },
+                            )) {
+                                is AynvoraResult.Success -> {
+                                    val json = KundaliSnapshotJson.encode(calculated.value)
+                                    val now = System.currentTimeMillis()
+                                    val profile = BirthProfile(profileId, name.trim(), bday, createdAtEpochMs = now, updatedAtEpochMs = now, lastOpenedAtEpochMs = now)
+                                    val chart = SavedChart(
+                                        id = "chart_$profileId", birthProfileId = profileId, calculationConfig = calculated.value.natalChart.config,
+                                        engineVersion = calculated.value.natalChart.engineVersion, calculationTimestampEpochMs = now,
+                                        cachedResultJson = json, snapshotSchemaVersion = calculated.value.schemaVersion,
+                                        calculationContractVersion = calculated.value.calculation.contractVersion,
+                                        createdAtEpochMs = now, updatedAtEpochMs = now, lastOpenedAtEpochMs = now,
+                                        identityFingerprint = KundaliIdentity.fingerprint(bday, config),
+                                    )
+                                    val profileSave = profiles?.saveBirthProfile(profile)
+                                    val chartSave = charts?.saveChart(chart)
+                                    if (profiles == null || charts == null || profileSave !is AynvoraResult.Success<*> || chartSave !is AynvoraResult.Success<*>) {
+                                        error = "Kundali was calculated but could not be saved locally. Check storage and try again."
+                                    } else {
+                                        savedProfiles = ((profiles.getAllBirthProfiles() as? AynvoraResult.Success<*>)?.value as? List<BirthProfile>).orEmpty()
+                                        result = VedicAstrologyJsonUiAdapter.map(json)
+                                        analytics?.track(AnalyticsEvent.KundaliGenerationSuccess)
+                                    }
+                                }
+                                is AynvoraResult.Failure -> { error = "Unable to generate Kundali: ${calculated.message}"; analytics?.track(AnalyticsEvent.KundaliGenerationFailure) }
+                            }
+                        } catch (_: Exception) { error = "Unable to generate Kundali. Check the details and try again."; analytics?.track(AnalyticsEvent.KundaliGenerationFailure) }
+                        finally { loading = false }
+                    }
+                }, modifier = Modifier.fillMaxWidth()) { Text(if (loading) "Calculating…" else "GET HOROSCOPE") } }
+            }
+        } else {
+            KundaliWorkspace(model = result!!, translator = translator, modifier = Modifier.weight(1f))
+        }
+      }
+    }
+
+    when (picker) {
+        "date" -> {
+            val state = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
+            DatePickerDialog(onDismissRequest = { picker = "" }, confirmButton = { TextButton(onClick = { dateMillis = state.selectedDateMillis; picker = "" }) { Text("OK") } }, dismissButton = { TextButton(onClick = { picker = "" }) { Text("Cancel") } }) { DatePicker(state) }
+        }
+        "time" -> {
+            val state = rememberTimePickerState(initialHour = hour ?: 12, initialMinute = minute ?: 0, is24Hour = true)
+            AlertDialog(onDismissRequest = { picker = "" }, confirmButton = { TextButton(onClick = { hour = state.hour; minute = state.minute; picker = "" }) { Text("OK") } }, dismissButton = { TextButton(onClick = { picker = "" }) { Text("Cancel") } }, text = { TimePicker(state) })
+        }
+        "country", "state", "city" -> AlertDialog(onDismissRequest = { picker = "" }, title = { Text(title) }, text = {
+            Column {
+                OutlinedTextField(query, { query = it }, label = { Text("Search") }, singleLine = true)
+                LazyColumn(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    val options = when (picker) {
+                        "country" -> cities.map { it.countryCode to it.country }.distinctBy { it.first }.filter { it.second.contains(query, true) }.sortedBy { it.second }.take(500)
+                        "state" -> cities.filter { it.countryCode == selected?.countryCode }.map { it.stateCode to it.state }.distinctBy { it.first }.filter { it.second.contains(query, true) }.sortedBy { it.second }.take(500)
+                        else -> cities.filter { it.countryCode == selected?.countryCode && it.stateCode == selected?.stateCode && it.city.contains(query, true) }.sortedBy { it.city }.take(100).map { it.id to "${it.city} · ${it.state} · ${it.country}" }
+                    }
+                    items(options) { option -> Text(option.second, Modifier.fillMaxWidth().clickable {
+                        when (picker) {
+                            "country" -> { selected = LocalCity("", "", "", "", option.first, option.second, 0.0, 0.0, ""); picker = "state" }
+                            "state" -> { selected = selected!!.copy(stateCode = option.first, state = option.second); picker = "city" }
+                            else -> {
+                                val match = cities.firstOrNull { it.countryCode == selected?.countryCode && it.stateCode == selected?.stateCode && it.id == option.first }
+                                if (match != null) { selected = match; analytics?.track(AnalyticsEvent.BirthLocationSelected) }
+                                picker = ""
+                            }
+                        }
+                        query = ""
+                    }.padding(10.dp)) }
+                }
+            }
+        }, confirmButton = { TextButton(onClick = { picker = "" }) { Text("Close") } })
+    }
+
+    deleteCandidate?.let { profile ->
+        AlertDialog(
+            onDismissRequest = { deleteCandidate = null },
+            title = { Text("Delete saved Kundali?") },
+            text = { Text("${profile.name} and its saved chart snapshot will be deleted from this device.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleteCandidate = null
+                    loading = true
+                    scope.launch {
+                        val chartsForProfile = (charts?.getChartsForBirthProfile(profile.id) as? AynvoraResult.Success<*>)?.value as? List<SavedChart>
+                        chartsForProfile.orEmpty().forEach { charts?.deleteChart(it.id) }
+                        val deleted = profiles?.deleteBirthProfile(profile.id)
+                        if (deleted is AynvoraResult.Success<*>) {
+                            savedProfiles = ((profiles.getAllBirthProfiles() as? AynvoraResult.Success<*>)?.value as? List<BirthProfile>).orEmpty()
+                            error = null
+                        } else error = "Unable to delete this saved Kundali."
+                        loading = false
+                    }
+                }) { Text("Delete", color = AynvoraTheme.colors.Error) }
+            },
+            dismissButton = { TextButton(onClick = { deleteCandidate = null }) { Text("Cancel") } },
+        )
+    }
+}
+
+private fun formatDate(millis: Long): String {
+    val (y, m, d) = fromEpochDay((millis / 86_400_000L).toInt())
+    return "%04d-%02d-%02d".format(y, m, d)
+}
+
+private fun fullHoroscopeConfig() = CalculationConfig(
+    requestedDivisionalCharts = com.aynvora.core.models.DivisionalChart.entries.toSet(),
+)
+
+@Composable
+private fun KundaliWorkspace(model: VedicAstrologyUiModel, translator: com.aynvora.localization.translation.AynvoraTranslator, modifier: Modifier = Modifier) {
+    val snapshot = model.snapshot
+    val chart = snapshot.natalChart
+    var sectionId by remember(snapshot.profileId) { mutableStateOf("home") }
+    val pages = model.sections
+    val selectedPage = pages.firstOrNull { it.sectionId == sectionId } ?: pages.first()
+    val title: (String) -> String = { key -> translator.get(com.aynvora.core.localization.RawLocalizationKey(key)) }
+    val selectedChartId = when (sectionId) {
+        "navamsha" -> "D9"
+        "chandra" -> "MOON"
+        else -> "D1"
+    }
+    val selectedChart = snapshot.charts.firstOrNull { it.chartId == selectedChartId }
+    val ink = AynvoraTheme.colors.TextLight
+    val muted = AynvoraTheme.colors.TextLightSecondary
+    val gold = AynvoraTheme.colors.GoldLight
+
+    LazyColumn(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        item {
+            Column(Modifier.padding(top = 5.dp)) {
+                Text("YOUR BIRTH CHART", color = gold, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
+                Text(snapshot.profileName, color = ink, fontSize = 27.sp, fontWeight = FontWeight.Bold)
+                Text("${snapshot.birth.city}  ·  ${snapshot.birth.localDate}", color = muted, fontSize = 13.sp)
+            }
+        }
+        item {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                pages.forEach { page ->
+                    val active = sectionId == page.sectionId
+                    Surface(
+                        modifier = Modifier.clip(RoundedCornerShape(50)).clickable { sectionId = page.sectionId },
+                        color = if (active) AynvoraTheme.colors.Gold else AynvoraTheme.colors.CosmicIndigo,
+                        shape = RoundedCornerShape(50),
+                    ) {
+                        Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(title(page.titleKey), color = if (active) AynvoraTheme.colors.CosmicBlack else ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            if (page.availability == com.aynvora.core.models.CalculationAvailability.UNSUPPORTED || page.availability == com.aynvora.core.models.CalculationAvailability.COMING_SOON)
+                                Text("·", color = if (active) AynvoraTheme.colors.CosmicBlack else muted, fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+        }
+        item { Text(title(selectedPage.titleKey), color = ink, fontSize = 21.sp, fontWeight = FontWeight.Bold) }
+        when (sectionId) {
+            "home" -> {
+                item { Text("Choose a Kundali section", color = muted, fontSize = 13.sp) }
+                items(pages.filter { it.sectionId != "home" }.chunked(2)) { rowPages ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        rowPages.forEach { page ->
+                            val available = page.availability == com.aynvora.core.models.CalculationAvailability.AVAILABLE || page.availability == com.aynvora.core.models.CalculationAvailability.PARTIAL
+                            Surface(
+                                modifier = Modifier.weight(1f).clickable { sectionId = page.sectionId },
+                                color = if (available) AynvoraTheme.colors.CosmicIndigo else AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.45f),
+                                shape = RoundedCornerShape(16.dp),
+                            ) {
+                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                                    Text(title(page.titleKey), color = ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(page.availability.name, color = if (available) gold else muted, fontSize = 10.sp)
+                                }
+                            }
+                        }
+                        if (rowPages.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+            "lagna", "navamsha", "chandra", "chalit" -> {
+                val supported = selectedChart != null && selectedChart.status != com.aynvora.core.models.CalculationAvailability.UNSUPPORTED
+                if (!supported) item { EmptyReport("This chart is not included in the saved calculation snapshot.") }
+                else {
+                    item {
+                        Surface(color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.92f), shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Column {
+                                        Text(selectedChart!!.chartTypeId.replace('_', ' '), color = gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                                        Text("North Indian · ${selectedChart.zodiacModeId}", color = muted, fontSize = 11.sp)
+                                    }
+                                    Text(snapshot.birth.localDate, color = muted, fontSize = 10.sp)
+                                }
+                                NorthIndianKundali(selectedChart!!)
+                                ChartLegend()
+                            }
+                        }
+                    }
+                    item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SummaryCard("ASCENDANT", chart.lagna?.rashiPosition?.rashi?.displayName ?: "Unavailable", chart.lagna?.nakshatraPosition?.nakshatra?.displayName ?: "Lagna", Modifier.weight(1f))
+                        SummaryCard("PLANETS", selectedChart!!.placements.size.toString(), "calculated placements", Modifier.weight(1f))
+                    } }
+                    item { Text("Planetary positions", color = ink, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+                    items(selectedChart!!.placements, key = { "${selectedChart.chartId}_${it.bodyId}" }) { p ->
+                        DetailRow(bodyShort(p.bodyId), displayCanonical(p.bodyId), displayCanonical(p.nakshatraId), "${"%.2f".format(p.degreeInSign)}° · H${p.houseNumber ?: "—"}${markerSuffix(p)}")
+                    }
+                }
+            }
+            "graha_sthiti", "graha_sthiti_all" -> {
+                val table = snapshot.tables.firstOrNull { it.sectionId == "graha_sthiti" }
+                table?.let { items(it.rows, key = { "${sectionId}_${it.id}" }) { row ->
+                    val values = row.cells
+                    DetailRow(values[0].canonicalId?.let(::bodyShort) ?: "—", values[0].canonicalId?.let(::displayCanonical) ?: row.id,
+                        values[1].canonicalId?.let(::displayCanonical) ?: "—", "${values[2].numericValue?.let { "%.3f°".format(it) } ?: "—"} · H${values[3].integerValue ?: "—"}")
+                } } ?: item { EmptyReport("Planet position rows are unavailable in this snapshot.") }
+                if (sectionId == "graha_sthiti_all") item { Text("State, retrograde and combustion markers are carried in each chart placement and natal planet state records.", color = muted, fontSize = 12.sp) }
+            }
+            "chalit_table" -> {
+                val table = snapshot.tables.firstOrNull { it.sectionId == "chalit_table" }
+                table?.let { items(it.rows, key = { "house_${it.id}" }) { row ->
+                    DetailRow(row.cells[0].integerValue?.toString() ?: "—", "House ${row.cells[0].integerValue ?: "—"}", row.cells[1].canonicalId?.let(::displayCanonical) ?: "—", "${row.cells[3].numericValue?.let { "%.3f°".format(it) } ?: "—"}")
+                } } ?: item { EmptyReport("House cusp rows are unavailable in this snapshot.") }
+            }
+            "dasha" -> {
+                val timeline = snapshot.dasha
+                if (timeline == null) item { EmptyReport("Vimshottari Dasha is unsupported for this chart.") }
+                else {
+                    item { Text("${timeline.rulesetId} · starting lord ${timeline.startingLord.displayName} · balance ${"%.2f".format(timeline.balanceYearsAtBirth)} years", color = muted, fontSize = 12.sp) }
+                    items(timeline.mahadashas, key = { "dasha_${it.planet.name}_${it.startJulianDay}" }) { period ->
+                        DetailRow("${period.level}", period.planet.displayName, "${period.subPeriods.size} antardasha periods", "JD ${"%.2f".format(period.startJulianDay)}–${"%.2f".format(period.endJulianDay)}")
+                    }
+                }
+            }
+            "panchang" -> {
+                val p = snapshot.panchang
+                if (p == null) item { EmptyReport("Panchang data is unavailable in this snapshot.") }
+                else {
+                    item { DetailRow("ति", "Tithi", p.tithi.name, "${"%.1f".format(p.tithiElapsedDegrees)}° elapsed") }
+                    item { DetailRow("न", "Nakshatra", p.nakshatraName, "${"%.2f".format(p.nakshatraDegree)}°") }
+                    item { DetailRow("यो", "Yoga", p.yoga.name, "${p.profileId}") }
+                    item { DetailRow("क", "Karana", p.karana.name, "") }
+                    item { DetailRow("वा", "Vara", p.vara.name, p.varaConvention.name) }
+                    item { DetailRow("सूर्य", "Sunrise / sunset", "Not returned by current Panchang engine", "—") }
+                    item { Text("Paksha: ${p.tithi.paksha} · Vara convention: ${p.varaConvention.name}", color = muted, fontSize = 12.sp) }
+                }
+            }
+            "ashtakavarga", "prastara_ashtakavarga", "shodhita_ashtakavarga" -> {
+                val av = chart.ashtakavarga
+                val reduced = chart.shodhitaAshtakavarga
+                if (sectionId == "shodhita_ashtakavarga" && reduced != null) {
+                    item { Text("${reduced.rulesetId} · Trikona and Ekadhipatya Shodhana", color = muted, fontSize = 12.sp) }
+                    items(reduced.shodhitaSarvashtakavarga.signScores, key = { "shodhita_${it.rashi.name}" }) { score ->
+                        DetailRow((score.rashi.index + 1).toString(), displayCanonical(score.rashi.name), "Raw ${score.rawTotalBindus} · Trikona ${score.trikonaTotalBindus}", "${score.shodhitaTotalBindus}")
+                    }
+                } else if (av != null) {
+                    item { Text("${av.rulesetId} · ${av.sarvashtakavarga.grandTotalBindus} total bindus", color = muted, fontSize = 12.sp) }
+                    items(av.sarvashtakavarga.signScores, key = { "sav_${it.rashi.name}" }) { score ->
+                        DetailRow((score.rashi.index + 1).toString(), displayCanonical(score.rashi.name), "Sarvashtakavarga · ${score.totalRekhas} rekhas", "${score.totalBindus} bindus")
+                    }
+                    item { Text("Bhinnashtakavarga contributor charts: ${av.bhinnashtakavarga.size}", color = muted, fontSize = 12.sp) }
+                } else item { EmptyReport("Ashtakavarga data is explicitly unsupported for this calculation.") }
+            }
+            "shadbala", "pindabala" -> {
+                if (sectionId == "shadbala") {
+                    items(chart.shadbala, key = { "shadbala_${it.body.name}" }) { strength ->
+                        DetailRow(bodyShort(strength.body.name), displayCanonical(strength.body.name), strength.completeness.name, strength.totalRupas?.let { "${"%.2f".format(it)} rūpas" } ?: "Unavailable")
+                    }
+                    if (chart.shadbala.isEmpty()) item { EmptyReport("Shadbala is unavailable in this snapshot.") }
+                } else {
+                    val pinda = chart.ashtakavargaPinda
+                    if (pinda == null) item { EmptyReport("Pinda data is unsupported for this chart.") }
+                    else {
+                        item { DetailRow("R", "Rāśi Pinda", pinda.completeness.name, "${pinda.totalRasiPinda}") }
+                        item { DetailRow("G", "Graha Pinda", pinda.completeness.name, "${pinda.totalGrahaPinda}") }
+                        item { DetailRow("S", "Shodhya Pinda", pinda.completeness.name, "${pinda.totalShodhyaPinda}") }
+                        items(pinda.planetaryPindas.entries.sortedBy { it.key.ordinal }, key = { "pinda_${it.key.name}" }) { row ->
+                            DetailRow(bodyShort(row.key.name), displayCanonical(row.key.name), "Rāśi · Graha · Shodhya", "${row.value.rasiPinda} · ${row.value.grahaPinda} · ${row.value.shodhyaPinda}")
+                        }
+                    }
+                }
+            }
+            "shodashavarga" -> {
+                items(snapshot.charts.filter { it.chartId.startsWith("D") }.sortedBy { it.chartId.drop(1).toIntOrNull() ?: 0 }, key = { it.chartId }) { varga ->
+                    Surface(color = AynvoraTheme.colors.CosmicIndigo, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("${varga.chartId} · ${varga.chartTypeId}", color = gold, fontWeight = FontWeight.Bold)
+                            Text("${varga.status} · ${varga.placements.size} positions", color = muted, fontSize = 11.sp)
+                            Text(varga.placements.joinToString("   ") { "${bodyShort(it.bodyId)} ${displayCanonical(com.aynvora.core.models.Rashi.fromIndex(it.signIndex).name)}" }, color = ink, fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+            "relationships" -> {
+                item { Text("Planetary aspects", color = gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold) }
+                items(chart.aspects, key = { "aspect_${it.firstBody.name}_${it.secondBody.name}_${it.type.name}" }) { a -> DetailRow(a.type.name.take(2), "${displayCanonical(a.firstBody.name)} · ${displayCanonical(a.secondBody.name)}", "${a.type.name} · orb ${"%.2f".format(a.orb)}°", "${"%.2f".format(a.actualSeparation)}°") }
+                item { Text("Natural relationships", color = gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold) }
+                items(chart.planetaryRelationships.take(60), key = { "relation_${it.sourceBody.name}_${it.targetBody.name}_${it.chart.name}" }) { r -> DetailRow(bodyShort(r.sourceBody.name), "${displayCanonical(r.sourceBody.name)} → ${displayCanonical(r.targetBody.name)}", "${r.naturalRelationship.name} · ${r.temporaryRelationship.name}", r.compoundRelationship.name) }
+            }
+            "janam_vivaran", "personal_details" -> {
+                item { DetailRow("नाम", "Name", "Birth profile", snapshot.birth.profileName) }
+                item { DetailRow("दिन", "Date", "Local birth date", snapshot.birth.localDate) }
+                item { DetailRow("समय", "Time", "Local birth time", snapshot.birth.localTime) }
+                item { DetailRow("UTC", "Normalized time", snapshot.birth.timezoneId, snapshot.birth.utcTimestamp) }
+                item { DetailRow("स्थान", "Place", snapshot.birth.country ?: "", snapshot.birth.city) }
+                item { DetailRow("क्षेत्र", "Region", "Latitude · longitude", "${snapshot.birth.state ?: "—"} · ${"%.4f".format(snapshot.birth.latitude)}, ${"%.4f".format(snapshot.birth.longitude)}") }
+                item { DetailRow("अयन", "Ayanāṁśa", snapshot.birth.ayanamsaId, "${"%.4f".format(chart.ayanamsaDegrees)}°") }
+                item { DetailRow("गृह", "House system", snapshot.birth.houseSystemId, snapshot.birth.calculationProfileId) }
+                item { DetailRow("नोड", "Node convention", "Calculation metadata", snapshot.birth.nodeConventionId) }
+            }
+            "gochar" -> {
+                val transit = snapshot.transitAtBirth
+                if (transit == null) item { EmptyReport("Transit calculation is unsupported for this snapshot.") }
+                else {
+                    item { Text("Transit snapshot at recorded birth time · JD ${transit.julianDay}", color = muted, fontSize = 12.sp) }
+                    items(transit.planetaryPositions, key = { "transit_${it.bodyId.name}" }) { p -> DetailRow(bodyShort(p.bodyId.name), displayCanonical(p.bodyId.name), "${p.rashiName} · ${p.nakshatraName}", "${"%.3f".format(p.degreeInRashi)}°${if (p.isRetrograde) " ℞" else ""}") }
+                    item { Text("This is a historical transit snapshot at birth time, not a current-date forecast.", color = muted, fontSize = 11.sp) }
+                }
+            }
+            "avakahada" -> {
+                item { DetailRow("लग्न", "Lagna", "Ascendant sign", chart.lagna?.rashiPosition?.rashi?.name?.let(::displayCanonical) ?: "Unavailable") }
+                item { DetailRow("नक्ष", "Janma nakshatra", "Moon mansion", chart.planetaryPositions.firstOrNull { it.body == com.aynvora.core.models.CelestialBody.MOON }?.nakshatraPosition?.nakshatra?.name?.let(::displayCanonical) ?: "Unavailable") }
+                item { DetailRow("पद", "Pada", "Moon nakshatra quarter", chart.planetaryPositions.firstOrNull { it.body == com.aynvora.core.models.CelestialBody.MOON }?.nakshatraPosition?.pada?.toString() ?: "—") }
+                item { DetailRow("चंद्र", "Moon sign", "Janma rāśi", chart.planetaryPositions.firstOrNull { it.body == com.aynvora.core.models.CelestialBody.MOON }?.rashiPosition?.rashi?.name?.let(::displayCanonical) ?: "Unavailable") }
+            }
+            "phaladesh", "kp", "lal_kitab", "varshaphal", "karakansha", "swansha", "yogas", "cloud", "pdf_report", "ask_question", "reports" -> {
+                val status = selectedPage.availability
+                val message = if (status == com.aynvora.core.models.CalculationAvailability.UNSUPPORTED || status == com.aynvora.core.models.CalculationAvailability.COMING_SOON)
+                    "This section is marked ${status.name} by the calculation snapshot. No placeholder astrology values are generated."
+                else "This report view is partial. Open the available chart and table pages for the source values."
+                item { EmptyReport(message) }
+                if (sectionId == "reports" || sectionId == "pdf_report") {
+                    item { DetailRow("D1", "Rāśi chart", "Primary birth chart", if (chart.lagna != null) "Ready" else "Unavailable") }
+                    item { DetailRow("D9", "Navamsha", "Divisional chart", if (snapshot.charts.any { it.chartId == "D9" && it.status == com.aynvora.core.models.CalculationAvailability.AVAILABLE }) "Ready" else "Unsupported") }
+                    item { DetailRow("GR", "Graha positions", "${chart.planetaryPositions.size} bodies", "Ready") }
+                    item { DetailRow("BH", "Bhava cusps", "${chart.houses.size} houses", "Ready") }
+                }
+            }
+            else -> item { EmptyReport("This section has no data reference in the current snapshot.") }
+        }
+        item { Spacer(Modifier.height(12.dp)) }
+    }
+}
+
+@Composable
+private fun NorthIndianKundali(chart: com.aynvora.core.models.AstroChartSnapshot) {
+    val gold = AynvoraTheme.colors.Gold
+    val accessibility = chart.houses.sortedBy { it.houseNumber }.joinToString("; ") { house ->
+        val occupants = chart.placements.filter { it.houseNumber == house.houseNumber }.joinToString { placement ->
+            "${displayCanonical(placement.bodyId)} ${"%.1f".format(placement.degreeInSign)} degrees${markerSuffix(placement)}"
+        }.ifBlank { "no planets" }
+        "House ${house.houseNumber}, sign ${house.signIndex?.let { com.aynvora.core.models.Rashi.fromIndex(it).displayName } ?: "unknown"}, $occupants"
+    }
+    BoxWithConstraints(
+        Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(12.dp)).background(Color(0xFFFFFCF4))
+            .semantics { contentDescription = accessibility },
+    ) {
+        val w = maxWidth
+        val h = maxHeight
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            val stroke = 2.dp.toPx()
+            val color = Color(0xFFC89020)
+            val cx = size.width / 2f
+            val cy = size.height / 2f
+            drawRect(color, style = Stroke(width = stroke))
+            drawLine(color, Offset(cx, 0f), Offset(size.width, cy), stroke)
+            drawLine(color, Offset(size.width, cy), Offset(cx, size.height), stroke)
+            drawLine(color, Offset(cx, size.height), Offset(0f, cy), stroke)
+            drawLine(color, Offset(0f, cy), Offset(cx, 0f), stroke)
+            drawLine(color, Offset(0f, 0f), Offset(cx, cy), stroke)
+            drawLine(color, Offset(size.width, 0f), Offset(cx, cy), stroke)
+            drawLine(color, Offset(size.width, size.height), Offset(cx, cy), stroke)
+            drawLine(color, Offset(0f, size.height), Offset(cx, cy), stroke)
+        }
+        val centers = listOf(0.50f to 0.14f, 0.76f to 0.19f, 0.86f to 0.36f, 0.84f to 0.50f, 0.86f to 0.64f, 0.76f to 0.81f, 0.50f to 0.86f, 0.24f to 0.81f, 0.14f to 0.64f, 0.16f to 0.50f, 0.14f to 0.36f, 0.24f to 0.19f)
+        centers.forEachIndexed { index, (x, y) ->
+            val houseNo = index + 1
+            val house = chart.houses.firstOrNull { it.houseNumber == houseNo }
+            val sign = house?.signIndex?.let { com.aynvora.core.models.Rashi.fromIndex(it) }
+            val occupants = chart.placements.filter { it.houseNumber == houseNo }
+            Column(
+                Modifier.offset(x = w * x - 36.dp, y = h * y - 26.dp).size(width = 72.dp, height = 54.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text("${houseNo.toString().padStart(2, '0')} · ${sign?.index?.plus(1) ?: "—"}", color = Color(0xFF6F6550), fontSize = 9.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+                Text(
+                    occupants.joinToString(" ") { "${bodyShort(it.bodyId)}${markerSuffix(it)}" }.ifBlank { if (houseNo == 1) "Lagna" else "·" },
+                    color = if (houseNo == 1) gold else Color(0xFF25233A), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1,
+                )
+                if (occupants.isNotEmpty()) Text(occupants.joinToString(" ") { "${"%.0f".format(it.degreeInSign)}°" }, color = Color(0xFF725A22), fontSize = 8.sp, maxLines = 1)
             }
         }
     }
 }
 
-// ── Provenance Footer ─────────────────────────────────────────────────────────
+@Composable
+private fun ChartLegend() {
+    Text("℞ Retrograde   ☼ Combust   ↑ Exalted   ↓ Debilitated   ◆ Vargottama", color = AynvoraTheme.colors.TextLightSecondary, fontSize = 10.sp)
+}
+
+private fun markerSuffix(position: com.aynvora.core.models.AstroChartPlacement): String = buildString {
+    if (position.retrograde) append("℞")
+    if (position.combust) append("☼")
+    if (position.exalted == true) append("↑")
+    if (position.debilitated == true) append("↓")
+    if (position.vargottama == true) append("◆")
+}
+
+private fun displayCanonical(value: String?): String = value?.lowercase()?.replace('_', ' ')?.split(' ')?.joinToString(" ") { it.replaceFirstChar(Char::uppercase) } ?: "Unavailable"
 
 @Composable
-private fun AstrologyProvenanceFooter(
-    engineVersion: String,
-    calculationModel: String,
-    ayanamsaName: String,
-    isDark: Boolean,
-    secondaryText: Color,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                if (isDark) AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.5f) else AynvoraTheme.colors.SoftGold.copy(
-                    alpha = 0.5f
-                )
-            )
-            .padding(12.sdp),
-    ) {
-        Column {
-            Text(
-                text = "✓ 100% Deterministic Engine • Zero LLM Hallucination",
-                style = AynvoraTheme.typography.caption12,
-                color = AynvoraTheme.colors.Success,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(modifier = Modifier.height(2.sdp))
-            Text(
-                text = "Engine: $engineVersion | Model: $calculationModel | Ayanamsa: $ayanamsaName | Local Offline Calculation",
-                style = AynvoraTheme.typography.caption12.copy(fontSize = 10.ssp),
-                color = secondaryText,
-            )
+private fun EmptyReport(message: String) {
+    Surface(color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.72f), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+        Text(message, color = AynvoraTheme.colors.TextLightSecondary, fontSize = 13.sp, modifier = Modifier.padding(16.dp))
+    }
+}
+
+@Composable
+private fun SummaryCard(label: String, value: String, detail: String, modifier: Modifier = Modifier) {
+    Surface(modifier, color = AynvoraTheme.colors.CosmicIndigo, shape = RoundedCornerShape(16.dp)) {
+        Column(Modifier.padding(14.dp)) {
+            Text(label, color = AynvoraTheme.colors.GoldLight, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(value, color = AynvoraTheme.colors.TextLight, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(detail, color = AynvoraTheme.colors.TextLightSecondary, fontSize = 11.sp)
         }
     }
 }
 
-private fun formatDegree(deg: Double): String {
-    val d = deg.toInt()
-    val m = ((deg - d) * 60).toInt()
-    val s = ((((deg - d) * 60) - m) * 60).toInt()
-    return "$d° $m' $s\""
+@Composable
+private fun DetailRow(mark: String, title: String, subtitle: String, value: String) {
+    Surface(color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.85f), shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(mark, color = AynvoraTheme.colors.GoldLight, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.size(42.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, color = AynvoraTheme.colors.TextLight, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Text(subtitle, color = AynvoraTheme.colors.TextLightSecondary, fontSize = 11.sp)
+            }
+            Text(value, color = AynvoraTheme.colors.TextLight, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+        }
+    }
 }
 
-private fun getGrahaSanskritName(bodyId: BodyId): String {
-    return when (bodyId) {
-        BodyId.SUN -> "सूर्य (Surya)"
-        BodyId.MOON -> "चन्द्र (Chandra)"
-        BodyId.MARS -> "मङ्गल (Mangala)"
-        BodyId.MERCURY -> "बुध (Budha)"
-        BodyId.JUPITER -> "गुरु (Guru / Brihaspati)"
-        BodyId.VENUS -> "शुक्र (Shukra)"
-        BodyId.SATURN -> "शनि (Shani)"
-        BodyId.RAHU -> "राहु (Rahu)"
-        BodyId.KETU -> "केतु (Ketu)"
-    }
+private fun bodyShort(body: String): String = when (body) {
+    "SUN" -> "Su"; "MOON" -> "Mo"; "MERCURY" -> "Me"; "VENUS" -> "Ve"; "MARS" -> "Ma"
+    "JUPITER" -> "Ju"; "SATURN" -> "Sa"; "RAHU" -> "Ra"; "KETU" -> "Ke"; else -> body.take(2)
+}
+
+// Proleptic Gregorian civil date conversion from Unix epoch days.
+private fun fromEpochDay(days: Int): Triple<Int, Int, Int> {
+    val z = days + 719468
+    val era = if (z >= 0) z / 146097 else (z - 146096) / 146097
+    val doe = z - era * 146097
+    val yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
+    var y = yoe + era * 400
+    val doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
+    val mp = (5 * doy + 2) / 153
+    val d = doy - (153 * mp + 2) / 5 + 1
+    val m = mp + if (mp < 10) 3 else -9
+    if (m <= 2) y++
+    return Triple(y, m, d)
 }

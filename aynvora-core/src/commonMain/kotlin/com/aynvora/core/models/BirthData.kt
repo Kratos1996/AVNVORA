@@ -64,6 +64,10 @@ data class BirthPlace(
     val timezoneId: String,
     val country: String? = null,
     val id: String? = null,
+    val countryCode: String? = null,
+    val stateName: String? = null,
+    val stateCode: String? = null,
+    val cityName: String? = null,
 ) {
     init {
         require(timezoneId.isNotBlank()) { "Timezone ID cannot be blank" }

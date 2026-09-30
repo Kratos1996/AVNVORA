@@ -570,11 +570,11 @@ private fun NavaratnaCellView(
             .padding(vertical = 10.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(
-            modifier = Modifier
-                .size(28.sdp)
-                .clip(CircleShape)
-                .background(parseHexColor(cell.colorHex)),
+        val descriptor = GemstoneCatalog.findByType(cell.gemstoneType)
+        GemstonePhoto(
+            descriptor = descriptor,
+            modifier = Modifier.size(42.sdp),
+            shape = CircleShape,
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
@@ -623,12 +623,10 @@ private fun GemstoneCatalogView(
                     modifier = Modifier.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    val cell = NavaratnaMatrix.getCellForGem(desc.type)
-                    Box(
-                        modifier = Modifier
-                            .size(36.sdp)
-                            .clip(CircleShape)
-                            .background(parseHexColor(cell?.colorHex ?: "#C9A227")),
+                    GemstonePhoto(
+                        descriptor = desc,
+                        modifier = Modifier.size(56.sdp),
+                        shape = RoundedCornerShape(10.dp),
                     )
                     Spacer(modifier = Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
@@ -717,6 +715,14 @@ private fun GemstoneDetailView(
                     )
                 }
             }
+        }
+
+        item {
+            GemstonePhoto(
+                descriptor = descriptor,
+                modifier = Modifier.fillMaxWidth().height(240.dp),
+                shape = RoundedCornerShape(16.dp),
+            )
         }
 
         item {
@@ -1075,11 +1081,19 @@ private fun AddGemstoneFormCard(
                             .clickable { onTypeChange(gemType) }
                             .padding(horizontal = 10.dp, vertical = 6.dp),
                     ) {
-                        Text(
-                            text = gemType.sanskritName,
-                            style = AynvoraTheme.typography.caption12.copy(fontWeight = FontWeight.Bold),
-                            color = if (isSel) Color(0xFF11141D) else if (isDark) Color.White else Color.Black,
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            GemstonePhoto(
+                                descriptor = GemstoneCatalog.findByType(gemType),
+                                modifier = Modifier.size(24.sdp),
+                                shape = CircleShape,
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = gemType.sanskritName,
+                                style = AynvoraTheme.typography.caption12.copy(fontWeight = FontWeight.Bold),
+                                color = if (isSel) Color(0xFF11141D) else if (isDark) Color.White else Color.Black,
+                            )
+                        }
                     }
                 }
             }
@@ -1238,11 +1252,19 @@ private fun GemstoneCompatibilityView(
                                     .clickable { onGem1Change(gem) }
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
                             ) {
-                                Text(
-                                    text = gem.sanskritName,
-                                    style = AynvoraTheme.typography.caption12,
-                                    color = if (isSel) Color(0xFF11141D) else if (isDark) Color.White else Color.Black,
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    GemstonePhoto(
+                                        descriptor = GemstoneCatalog.findByType(gem),
+                                        modifier = Modifier.size(24.sdp),
+                                        shape = CircleShape,
+                                    )
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = gem.sanskritName,
+                                        style = AynvoraTheme.typography.caption12,
+                                        color = if (isSel) Color(0xFF11141D) else if (isDark) Color.White else Color.Black,
+                                    )
+                                }
                             }
                         }
                     }
@@ -1267,11 +1289,19 @@ private fun GemstoneCompatibilityView(
                                     .clickable { onGem2Change(gem) }
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
                             ) {
-                                Text(
-                                    text = gem.sanskritName,
-                                    style = AynvoraTheme.typography.caption12,
-                                    color = if (isSel) Color(0xFF11141D) else if (isDark) Color.White else Color.Black,
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    GemstonePhoto(
+                                        descriptor = GemstoneCatalog.findByType(gem),
+                                        modifier = Modifier.size(24.sdp),
+                                        shape = CircleShape,
+                                    )
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = gem.sanskritName,
+                                        style = AynvoraTheme.typography.caption12,
+                                        color = if (isSel) Color(0xFF11141D) else if (isDark) Color.White else Color.Black,
+                                    )
+                                }
                             }
                         }
                     }
@@ -1513,11 +1543,17 @@ private fun GemstoneRecommendationsView(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            GemstonePhoto(
+                                descriptor = desc,
+                                modifier = Modifier.size(48.sdp),
+                                shape = RoundedCornerShape(8.dp),
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = rec.title,
+                                modifier = Modifier.weight(1f),
                                 style = AynvoraTheme.typography.title18.copy(
                                     fontSize = 15.ssp,
                                     fontWeight = FontWeight.Bold

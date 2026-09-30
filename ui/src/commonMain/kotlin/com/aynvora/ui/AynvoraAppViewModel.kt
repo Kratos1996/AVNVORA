@@ -556,7 +556,7 @@ class AynvoraAppViewModel(
                                 "gita" -> {
                                     val userContext = com.aynvora.core.ai.AynvoraUserContext(
                                         question = "Can you help me reflect on this using the Bhagavad Gita?",
-                                        userSituation = "I am confused about my career direction.",
+                                        statedSituation = "I am confused about my career direction.",
                                     )
                                     val pack = intelligence.getKnowledgePack(com.aynvora.core.feature.CoreFeatureId.GITA)
                                     val evidence = pack?.retrieveRelevantEvidence(userContext.question, userContext) ?: emptyList()

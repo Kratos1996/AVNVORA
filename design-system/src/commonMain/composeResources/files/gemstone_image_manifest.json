@@ -1,0 +1,21 @@
+{
+  "catalog": "com.aynvora.core.gemstone.GemstoneCatalog.NAVARATNA",
+  "asset_policy": "Only the existing user-provided Desktop gemstone images were copied. No replacement or generated images were introduced.",
+  "access_date": "2026-09-28",
+  "provenance_status": "NOT_VERIFIED",
+  "license_status": "NOT_VERIFIED",
+  "items": [
+    { "canonical_id": "gem_ruby", "filename": "drawable/gem_ruby.webp", "source_page": "https://www.navratan.com/categories/ruby-manik-stone", "source_asset_url": null, "creator": null, "license": "NOT_VERIFIED", "attribution_requirement": "NOT_VERIFIED", "notes": "Source page recorded in the accompanying Desktop source manifest; exact image origin is not documented." },
+    { "canonical_id": "gem_pearl", "filename": "drawable/gem_natural_pearl.webp", "source_page": "https://www.navratan.com/categories/pearl-moti-stone", "source_asset_url": null, "creator": null, "license": "NOT_VERIFIED", "attribution_requirement": "NOT_VERIFIED", "notes": "Source page recorded in the accompanying Desktop source manifest; exact image origin is not documented." },
+    { "canonical_id": "gem_red_coral", "filename": "drawable/gem_red_coral.webp", "source_page": "https://www.navratan.com/categories/coral-moonga", "source_asset_url": null, "creator": null, "license": "NOT_VERIFIED", "attribution_requirement": "NOT_VERIFIED", "notes": "Source page recorded in the accompanying Desktop source manifest; exact image origin is not documented." },
+    { "canonical_id": "gem_emerald", "filename": "drawable/gem_emerald.jpg", "source_page": "https://www.navratan.com/categories/emerald-panna", "source_asset_url": null, "creator": null, "license": "NOT_VERIFIED", "attribution_requirement": "NOT_VERIFIED", "notes": "Source page recorded in the accompanying Desktop source manifest; exact image origin is not documented." },
+    { "canonical_id": "gem_yellow_sapphire", "filename": "drawable/gem_yellow_sapphire.webp", "source_page": "https://www.navratan.com/categories/yellow-sapphire-pukhraj", "source_asset_url": null, "creator": null, "license": "NOT_VERIFIED", "attribution_requirement": "NOT_VERIFIED", "notes": "Source page recorded in the accompanying Desktop source manifest; exact image origin is not documented." },
+    { "canonical_id": "gem_diamond", "filename": "drawable/gem_diamond.jpg", "source_page": "https://www.navratan.com/categories/diamond-heera", "source_asset_url": null, "creator": "EXIF names AnatolyM; authorship not independently verified", "license": "NOT_VERIFIED", "attribution_requirement": "NOT_VERIFIED", "notes": "EXIF description identifies this as a 3D image; real-photograph status is not verified." },
+    { "canonical_id": "gem_blue_sapphire", "filename": "drawable/gem_blue_sapphire.jpg", "source_page": "https://www.navratan.com/categories/blue-sapphire-neelam", "source_asset_url": null, "creator": null, "license": "NOT_VERIFIED", "attribution_requirement": "NOT_VERIFIED", "notes": "Source page recorded in the accompanying Desktop source manifest; exact image origin is not documented." },
+    { "canonical_id": "gem_hessonite", "filename": "drawable/gem_hessonite.webp", "source_page": "https://www.navratan.com/categories/hessonite-gomed", "source_asset_url": null, "creator": null, "license": "NOT_VERIFIED", "attribution_requirement": "NOT_VERIFIED", "notes": "Source page recorded in the accompanying Desktop source manifest; exact image origin is not documented." },
+    { "canonical_id": "gem_cats_eye", "filename": "drawable/gem_cats_eye.webp", "source_page": "https://www.navratan.com/categories/cats-eye-lehsunia", "source_asset_url": null, "creator": null, "license": "NOT_VERIFIED", "attribution_requirement": "NOT_VERIFIED", "notes": "Source page recorded in the accompanying Desktop source manifest; exact image origin is not documented." }
+  ],
+  "unmatched_source_assets": [
+    { "filename": "white_coral_stone_img.webp", "status": "NOT_IN_CATALOG", "notes": "Not copied into production resources because the current GemstoneCatalog has no white-coral canonical ID." }
+  ]
+}

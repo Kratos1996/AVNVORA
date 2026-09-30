@@ -111,6 +111,20 @@ class AnalyticsTrackerTest {
     }
 
     @Test
+    fun kundaliFlowEvents_arePiiFree() {
+        listOf(
+            AnalyticsEvent.AstrologyInputOpened,
+            AnalyticsEvent.BirthDatePickerOpened,
+            AnalyticsEvent.BirthTimePickerOpened,
+            AnalyticsEvent.BirthLocationPickerOpened,
+            AnalyticsEvent.BirthLocationSelected,
+            AnalyticsEvent.KundaliGenerationStarted,
+            AnalyticsEvent.KundaliGenerationSuccess,
+            AnalyticsEvent.KundaliGenerationFailure,
+        ).forEach { assertTrue(it.params.isEmpty(), "${it.name} must not carry user input") }
+    }
+
+    @Test
     fun birthProfileSaved_hasNoParams() {
         assertTrue(AnalyticsEvent.BirthProfileSaved.params.isEmpty())
     }

@@ -2,6 +2,7 @@ package com.aynvora.ui.ai
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -166,7 +167,8 @@ fun AiDiagnosticScreen(
             item {
                 DiagnosticCard(title = "RUNTIME") {
                     DiagnosticRow("Runtime Name", "llama.cpp On-Device Runtime")
-                    DiagnosticRow("Runtime Version", "b3600-android (pinned tag b3600)")
+                    DiagnosticRow("Runtime Version", "Upstream revision unavailable")
+                    DiagnosticRow("SOURCE_PROVENANCE_STATUS", "PARTIAL")
                     DiagnosticRow("Execution Mode", executionMode.name)
                     DiagnosticRow("Native Library Status", nativeLibraryStatus)
                     DiagnosticRow("JNI Status", jniStatus)
@@ -312,16 +314,16 @@ fun AiDiagnosticScreen(
 
                     if (inferenceDiagnostics.lastInferenceDurationMs > 0L) {
                         DiagnosticRow(
-                            "Inference Latency",
+                            "Generation Latency",
                             "${inferenceDiagnostics.lastInferenceDurationMs} ms"
                         )
-                        DiagnosticRow(
-                            "First Token Latency",
-                            "~${(inferenceDiagnostics.lastInferenceDurationMs * 0.45).toLong()} ms (estimated)"
-                        )
                     } else {
-                        DiagnosticRow("Inference Latency", "No inference run yet")
+                        DiagnosticRow("Generation Latency", "Not measured")
                     }
+
+                    DiagnosticRow("Prompt Tokens", "Not measured")
+                    DiagnosticRow("Last Inference Tokens", "Not measured")
+                    DiagnosticRow("First Token Latency", "Not measured")
 
                     if (inferenceDiagnostics.tokensPerSecond > 0f) {
                         DiagnosticRow(

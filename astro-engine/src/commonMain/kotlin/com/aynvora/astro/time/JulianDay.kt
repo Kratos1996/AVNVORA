@@ -48,6 +48,9 @@ data class JulianDay(
             require(year in 1..9999) { "Year must be in range 1..9999, got: $year" }
             require(month in 1..12) { "Month must be in range 1..12, got: $month" }
             require(day in 1..31) { "Day must be in range 1..31, got: $day" }
+            require(day <= daysInGregorianMonth(year, month)) {
+                "Day $day is invalid for Gregorian month $month in year $year"
+            }
             require(hour in 0..23) { "Hour must be in range 0..23, got: $hour" }
             require(minute in 0..59) { "Minute must be in range 0..59, got: $minute" }
             require(second >= 0.0 && second < 60.0) { "Second must be in range 0.0..<60.0, got: $second" }
@@ -76,5 +79,12 @@ data class JulianDay(
          */
         fun fromEpochMs(epochMs: Long): JulianDay =
             JulianDay((epochMs.toDouble() / MILLIS_PER_DAY) + UNIX_EPOCH_JD)
+
+        private fun daysInGregorianMonth(year: Int, month: Int): Int = when (month) {
+            1, 3, 5, 7, 8, 10, 12 -> 31
+            4, 6, 9, 11 -> 30
+            2 -> if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) 29 else 28
+            else -> 0
+        }
     }
 }

@@ -119,6 +119,7 @@ class GitaReflectionPipeline(
             userContext = userContext,
             question = question,
             locale = locale,
+            maxTokens = 96,
             responseMode = AynvoraResponseMode.REFLECTIVE,
         )
 

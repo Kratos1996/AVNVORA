@@ -1,6 +1,7 @@
 package com.aynvora.core.ai
 
 import com.aynvora.core.result.AynvoraResult
+import com.aynvora.core.models.CalculationMetadata
 import kotlinx.serialization.Serializable
 
 /**
@@ -45,6 +46,7 @@ data class AiToolResult(
     val resultJson: String,
     val provenance: AiProvenance,
     val isSuccess: Boolean = true,
+    val calculationMetadata: CalculationMetadata? = null,
 )
 
 /**

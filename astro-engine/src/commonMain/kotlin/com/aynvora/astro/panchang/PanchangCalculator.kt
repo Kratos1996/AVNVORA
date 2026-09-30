@@ -5,6 +5,7 @@ import com.aynvora.astro.math.AstroMath.normalizeDegrees
 import com.aynvora.astro.planets.MoonCalculator
 import com.aynvora.astro.planets.SunCalculator
 import com.aynvora.astro.time.JulianDay
+import com.aynvora.astro.provenance.CalculationMetadata
 import com.aynvora.astro.zodiac.ZodiacCalculator
 import kotlinx.serialization.Serializable
 
@@ -162,6 +163,12 @@ data class PanchangSnapshot(
     val observerLatitudeDeg: Double? = null,
     val observerLongitudeDeg: Double? = null,
     val timezoneOffsetMinutes: Int? = null,
+    val calculationMetadata: CalculationMetadata = CalculationMetadata(
+        calculationProfileId = profileId,
+        calculationModel = "CLASSICAL_PANCHANG_RULES",
+        ephemerisSourceId = "CLASSICAL_PANCHANG_RULES_V1",
+        conventions = mapOf("vara_convention" to varaConvention.name),
+    ),
 )
 
 /**
@@ -243,6 +250,15 @@ object PanchangCalculator {
             moonSiderealLongitude = moonSidereal,
             varaConvention = varaConvention,
             profileId = if (varaConvention == VaraConvention.LOCAL_SUNRISE) "CLASSICAL_LOCAL_SUNRISE_V1" else "CLASSICAL_CIVIL_UTC_V1",
+            calculationMetadata = CalculationMetadata(
+                calculationProfileId = if (varaConvention == VaraConvention.LOCAL_SUNRISE) "CLASSICAL_LOCAL_SUNRISE_V1" else "CLASSICAL_CIVIL_UTC_V1",
+                calculationModel = "CLASSICAL_PANCHANG_RULES",
+                ephemerisSourceId = "CLASSICAL_PANCHANG_RULES_V1",
+                conventions = mapOf(
+                    "ayanamsa_convention" to ayanamsaConvention.uppercase(),
+                    "vara_convention" to varaConvention.name,
+                ),
+            ),
             sunriseJulianDay = solarEvents?.sunriseJulianDay,
             sunsetJulianDay = solarEvents?.sunsetJulianDay,
             observerLatitudeDeg = latitudeDeg,

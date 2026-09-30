@@ -58,6 +58,7 @@ import com.aynvora.core.models.BirthData
 import com.aynvora.core.models.CelestialBody
 import com.aynvora.core.models.ChartRequest
 import com.aynvora.core.models.ChartResult
+import com.aynvora.core.models.CalculationMetadata
 import com.aynvora.core.models.ChestaBala
 import com.aynvora.core.models.CombustionState
 import com.aynvora.core.models.CompoundRelationshipType
@@ -187,6 +188,11 @@ internal class AstroEngineAdapter(
     fun getMetadata(): EngineMetadata = metadata
 
     suspend fun execute(request: ChartRequest): AynvoraResult<ChartResult> {
+        if (request.config.profile != com.aynvora.core.models.CalculationProfile.STANDARD_VEDIC) {
+            return AynvoraResult.Failure.UnsupportedConfiguration(
+                "Calculation profile '${request.config.profile.name}' is not implemented; supported profile: STANDARD_VEDIC.",
+            )
+        }
         val validationError = validate(request.birthData)
         if (validationError != null) {
             return validationError
@@ -366,8 +372,32 @@ internal class AstroEngineAdapter(
                     ashtakavarga = publicAshtakavarga,
                     shodhitaAshtakavarga = publicShodhitaAshtakavarga,
                     ashtakavargaPinda = publicAshtakavargaPinda,
+                    calculationMetadata = CalculationMetadata(
+                        calculationProfileId = request.config.profile.name,
+                        engineVersion = rawResult.engineVersion,
+                        calculationModel = rawResult.calculationModel,
+                        conventions = mapOf(
+                            "ayanamsa" to request.config.ayanamsa.name,
+                            "house_system" to request.config.houseSystem.name,
+                            "varga_ruleset" to request.config.vargaRulesetId,
+                            "ashtakavarga_ruleset" to request.config.ashtakavargaRulesetId,
+                            "node_profile" to "MEAN_NODE_V1",
+                        ),
+                    ),
                 ),
                 metadata = metadata.copy(engineVersion = rawResult.engineVersion),
+                calculationMetadata = CalculationMetadata(
+                    calculationProfileId = request.config.profile.name,
+                    engineVersion = rawResult.engineVersion,
+                    calculationModel = rawResult.calculationModel,
+                    conventions = mapOf(
+                        "ayanamsa" to request.config.ayanamsa.name,
+                        "house_system" to request.config.houseSystem.name,
+                        "varga_ruleset" to request.config.vargaRulesetId,
+                        "ashtakavarga_ruleset" to request.config.ashtakavargaRulesetId,
+                        "node_profile" to "MEAN_NODE_V1",
+                    ),
+                ),
             )
         } catch (e: UnsupportedOperationException) {
             AynvoraResult.Failure.UnsupportedConfiguration(
@@ -460,7 +490,7 @@ internal class AstroEngineAdapter(
             is AynvoraResult.Success -> {
                 val varga = chartResult.value.divisionalCharts[chart]
                 if (varga != null) {
-                    AynvoraResult.Success(varga, chartResult.metadata)
+                    AynvoraResult.Success(varga, chartResult.metadata, chartResult.value.calculationMetadata)
                 } else {
                     AynvoraResult.Failure.CalculationFailure(
                         code = "VARGA_NOT_CALCULATED",
@@ -482,7 +512,7 @@ internal class AstroEngineAdapter(
             ),
         )
         return when (val chartResult = execute(updatedRequest)) {
-            is AynvoraResult.Success -> AynvoraResult.Success(chartResult.value.divisionalCharts, chartResult.metadata)
+            is AynvoraResult.Success -> AynvoraResult.Success(chartResult.value.divisionalCharts, chartResult.metadata, chartResult.value.calculationMetadata)
             is AynvoraResult.Failure -> chartResult
         }
     }
@@ -493,7 +523,7 @@ internal class AstroEngineAdapter(
     ): AynvoraResult<List<PlanetaryDignity>> {
         return if (chart == DivisionalChart.D1) {
             when (val chartResult = execute(request)) {
-                is AynvoraResult.Success -> AynvoraResult.Success(chartResult.value.planetaryDignities, chartResult.metadata)
+                is AynvoraResult.Success -> AynvoraResult.Success(chartResult.value.planetaryDignities, chartResult.metadata, chartResult.value.calculationMetadata)
                 is AynvoraResult.Failure -> chartResult
             }
         } else {
@@ -513,7 +543,7 @@ internal class AstroEngineAdapter(
                         )
                         mapPlanetaryDignity(internalDignity)
                     }
-                    AynvoraResult.Success(dignities, vargaResult.metadata)
+                    AynvoraResult.Success(dignities, vargaResult.metadata, vargaResult.calculationMetadata)
                 }
                 is AynvoraResult.Failure -> vargaResult
             }
@@ -526,7 +556,7 @@ internal class AstroEngineAdapter(
     ): AynvoraResult<List<PlanetaryRelationship>> {
         return if (chart == DivisionalChart.D1) {
             when (val chartResult = execute(request)) {
-                is AynvoraResult.Success -> AynvoraResult.Success(chartResult.value.planetaryRelationships, chartResult.metadata)
+                is AynvoraResult.Success -> AynvoraResult.Success(chartResult.value.planetaryRelationships, chartResult.metadata, chartResult.value.calculationMetadata)
                 is AynvoraResult.Failure -> chartResult
             }
         } else {
@@ -540,7 +570,7 @@ internal class AstroEngineAdapter(
                         chart = internalChart,
                     )
                     val publicRelationships = internalRelationships.map { mapPlanetaryRelationship(it) }
-                    AynvoraResult.Success(publicRelationships, vargaResult.metadata)
+                    AynvoraResult.Success(publicRelationships, vargaResult.metadata, vargaResult.calculationMetadata)
                 }
                 is AynvoraResult.Failure -> vargaResult
             }
@@ -551,7 +581,7 @@ internal class AstroEngineAdapter(
         request: ChartRequest,
     ): AynvoraResult<List<PlanetaryShadbala>> {
         return when (val chartResult = execute(request)) {
-            is AynvoraResult.Success -> AynvoraResult.Success(chartResult.value.shadbala, chartResult.metadata)
+            is AynvoraResult.Success -> AynvoraResult.Success(chartResult.value.shadbala, chartResult.metadata, chartResult.value.calculationMetadata)
             is AynvoraResult.Failure -> chartResult
         }
     }
@@ -563,7 +593,7 @@ internal class AstroEngineAdapter(
             is AynvoraResult.Success -> {
                 val av = chartResult.value.ashtakavarga
                 if (av != null) {
-                    AynvoraResult.Success(av, chartResult.metadata)
+                    AynvoraResult.Success(av, chartResult.metadata, chartResult.value.calculationMetadata)
                 } else {
                     AynvoraResult.Failure.CalculationFailure(
                         code = "ASHTAKAVARGA_NOT_CALCULATED",
@@ -582,7 +612,7 @@ internal class AstroEngineAdapter(
             is AynvoraResult.Success -> {
                 val sav = chartResult.value.shodhitaAshtakavarga
                 if (sav != null) {
-                    AynvoraResult.Success(sav, chartResult.metadata)
+                    AynvoraResult.Success(sav, chartResult.metadata, chartResult.value.calculationMetadata)
                 } else {
                     AynvoraResult.Failure.CalculationFailure(
                         code = "SHODHITA_ASHTAKAVARGA_NOT_CALCULATED",
@@ -601,7 +631,7 @@ internal class AstroEngineAdapter(
             is AynvoraResult.Success -> {
                 val pinda = chartResult.value.ashtakavargaPinda
                 if (pinda != null) {
-                    AynvoraResult.Success(pinda, chartResult.metadata)
+                    AynvoraResult.Success(pinda, chartResult.metadata, chartResult.value.calculationMetadata)
                 } else {
                     AynvoraResult.Failure.CalculationFailure(
                         code = "ASHTAKAVARGA_PINDA_NOT_CALCULATED",

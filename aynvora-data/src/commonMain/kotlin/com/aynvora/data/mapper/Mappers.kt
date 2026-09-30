@@ -56,6 +56,7 @@ internal fun BirthProfileEntity.toDomain(): BirthProfile =
         notes = notes,
         createdAtEpochMs = createdAtEpochMs,
         updatedAtEpochMs = updatedAtEpochMs,
+        lastOpenedAtEpochMs = lastOpenedAtEpochMs,
     )
 
 internal fun BirthProfile.toEntity(): BirthProfileEntity =
@@ -77,6 +78,7 @@ internal fun BirthProfile.toEntity(): BirthProfileEntity =
         notes = notes,
         createdAtEpochMs = createdAtEpochMs,
         updatedAtEpochMs = updatedAtEpochMs,
+        lastOpenedAtEpochMs = lastOpenedAtEpochMs,
     )
 
 internal fun SavedChartEntity.toDomain(): SavedChart =
@@ -93,6 +95,12 @@ internal fun SavedChartEntity.toDomain(): SavedChart =
         schemaVersion = schemaVersion,
         status = ChartCalculationStatus.valueOf(status),
         cachedResultJson = cachedResultJson,
+        snapshotSchemaVersion = snapshotSchemaVersion,
+        calculationContractVersion = calculationContractVersion,
+        createdAtEpochMs = createdAtEpochMs,
+        updatedAtEpochMs = updatedAtEpochMs,
+        lastOpenedAtEpochMs = lastOpenedAtEpochMs,
+        identityFingerprint = identityFingerprint,
     )
 
 internal fun SavedChart.toEntity(): SavedChartEntity =
@@ -107,6 +115,12 @@ internal fun SavedChart.toEntity(): SavedChartEntity =
         schemaVersion = schemaVersion,
         status = status.name,
         cachedResultJson = cachedResultJson,
+        snapshotSchemaVersion = snapshotSchemaVersion,
+        calculationContractVersion = calculationContractVersion,
+        createdAtEpochMs = createdAtEpochMs,
+        updatedAtEpochMs = updatedAtEpochMs,
+        lastOpenedAtEpochMs = lastOpenedAtEpochMs,
+        identityFingerprint = identityFingerprint,
     )
 
 internal fun UserPreferencesEntity.toDomain(): UserPreferences =

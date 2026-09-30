@@ -57,7 +57,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fno-limit-debug-info  -fPIC"
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O3 -g -fPIC"
 				},
 				{
 					"backtrace" : 2,
@@ -115,15 +115,15 @@
 	[
 		{
 			"backtrace" : 2,
-			"id" : "ggml::@ac82e33bde8b2dde67df"
-		},
-		{
-			"backtrace" : 2,
 			"id" : "llama::@a28f7d715364b5d9b6c0"
 		},
 		{
 			"backtrace" : 2,
 			"id" : "build_info::@9f41f6696c114fc64054"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "ggml::@ac82e33bde8b2dde67df"
 		}
 	],
 	"id" : "common::@9f41f6696c114fc64054",

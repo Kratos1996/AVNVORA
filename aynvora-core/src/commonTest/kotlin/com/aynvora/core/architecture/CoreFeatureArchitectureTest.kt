@@ -125,5 +125,8 @@ class CoreFeatureArchitectureTest {
         assertEquals("PARASHARA_CLASSICAL_V1", toolResult.provenance.calculationRulesetOrEdition)
         assertTrue(toolResult.provenance.isRetrievedFact)
         assertTrue(toolResult.resultJson.contains("ascendant"))
+        assertEquals("V1", toolResult.calculationMetadata?.contractVersion)
+        assertEquals("STANDARD_VEDIC", toolResult.calculationMetadata?.calculationProfileId)
+        assertEquals("ANALYTICAL_MEEUS_SIMON_FORMULAE", toolResult.calculationMetadata?.ephemerisSourceId)
     }
 }

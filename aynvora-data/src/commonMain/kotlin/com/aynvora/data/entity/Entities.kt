@@ -38,6 +38,7 @@ internal data class BirthProfileEntity(
     val notes: String? = null,
     val createdAtEpochMs: Long,
     val updatedAtEpochMs: Long,
+    val lastOpenedAtEpochMs: Long? = null,
 )
 
 /**
@@ -55,6 +56,12 @@ internal data class SavedChartEntity(
     val schemaVersion: Int,
     val status: String,
     val cachedResultJson: String? = null,
+    val snapshotSchemaVersion: String? = null,
+    val calculationContractVersion: String? = null,
+    val createdAtEpochMs: Long = calculationTimestampEpochMs,
+    val updatedAtEpochMs: Long = calculationTimestampEpochMs,
+    val lastOpenedAtEpochMs: Long? = null,
+    val identityFingerprint: String? = null,
 )
 
 /**

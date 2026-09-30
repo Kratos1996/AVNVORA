@@ -49,6 +49,15 @@ sealed class AnalyticsEvent(
     /** Fired once when the app launches on a given session. */
     object AppOpened : AnalyticsEvent("app_opened")
 
+    object AstrologyInputOpened : AnalyticsEvent("astrology_input_opened")
+    object BirthDatePickerOpened : AnalyticsEvent("birth_date_picker_opened")
+    object BirthTimePickerOpened : AnalyticsEvent("birth_time_picker_opened")
+    object BirthLocationPickerOpened : AnalyticsEvent("birth_location_picker_opened")
+    object BirthLocationSelected : AnalyticsEvent("birth_location_selected")
+    object KundaliGenerationStarted : AnalyticsEvent("kundali_generation_started")
+    object KundaliGenerationSuccess : AnalyticsEvent("kundali_generation_success")
+    object KundaliGenerationFailure : AnalyticsEvent("kundali_generation_failure")
+
     // Reports: stable type ids only. Never attach report text, birth data, or chart values.
     class ReportOpened(reportTypeId: String) :
         AnalyticsEvent("report_opened", mapOf("report_type" to safeReportTypeId(reportTypeId)))

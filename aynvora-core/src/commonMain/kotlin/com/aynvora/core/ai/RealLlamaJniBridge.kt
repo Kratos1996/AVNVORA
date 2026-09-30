@@ -73,14 +73,23 @@ class RealLlamaJniBridge : NativeLibraryBridge {
         temperature: Float,
         onTokenGenerated: (String) -> Boolean,
     ): String {
-        if (!isLoaded || handle <= 0L) {
+        if (!isLoaded || handle == 0L || handle == -1L) {
             throw IllegalStateException("Cannot execute native inference: lib$LIBRARY_NAME.so is not linked")
         }
-        return nativeGenerate(handle, prompt, maxTokens, temperature)
+        val result = nativeGenerate(handle, prompt, maxTokens, temperature)
+        if (result == "\u0001AYNVORA_BUSY") {
+            throw IllegalStateException("A native inference request is already active")
+        }
+        return result
+    }
+
+    override fun generatedTokenCount(handle: Long): Int? {
+        if (!isLoaded || handle == 0L || handle == -1L) return null
+        return nativeGeneratedTokenCount(handle)
     }
 
     override fun cancel(handle: Long) {
-        if (isLoaded && handle > 0L) {
+        if (isLoaded && handle != 0L && handle != -1L) {
             try {
                 nativeCancel(handle)
             } catch (_: Throwable) {
@@ -90,7 +99,7 @@ class RealLlamaJniBridge : NativeLibraryBridge {
     }
 
     override fun release(handle: Long) {
-        if (isLoaded && handle > 0L) {
+        if (isLoaded && handle != 0L && handle != -1L) {
             try {
                 nativeRelease(handle)
             } catch (_: Throwable) {
@@ -102,6 +111,7 @@ class RealLlamaJniBridge : NativeLibraryBridge {
     // JNI Native function bindings
     private external fun nativeLoad(modelPath: String, contextLength: Int, threads: Int): Long
     private external fun nativeGenerate(handle: Long, prompt: String, maxTokens: Int, temperature: Float): String
+    private external fun nativeGeneratedTokenCount(handle: Long): Int
     private external fun nativeCancel(handle: Long)
     private external fun nativeRelease(handle: Long)
 }
