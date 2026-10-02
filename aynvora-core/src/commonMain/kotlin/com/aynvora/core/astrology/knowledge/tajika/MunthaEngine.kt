@@ -19,6 +19,27 @@ data class MunthaCalculation(
     val status: String = "CALCULATED_PRIMARY_SOURCE_VERIFIED",
 )
 
+@Serializable
+data class MunthaLordPlanetState(
+    val houseNumber: Int,
+    val sign: Rashi,
+    val longitude: Double,
+    val retrograde: Boolean,
+    val dignity: String?,
+    val state: String?,
+)
+
+@Serializable
+data class MunthaLordResult(
+    val munthaSign: Rashi,
+    val lord: MunthaLord,
+    val annualSign: Rashi?,
+    val annualHouse: Int?,
+    val planetState: MunthaLordPlanetState?,
+    val ruleRefs: List<String>,
+    val provenance: List<String>,
+)
+
 /** Implements the source's one-sign-per-elapsed-year Muntha progression and sign-lord definition. */
 object MunthaEngine {
     fun calculate(
@@ -52,5 +73,35 @@ object MunthaEngine {
         Rashi.LEO -> MunthaLord.SUN
         Rashi.SAGITTARIUS, Rashi.PISCES -> MunthaLord.JUPITER
         Rashi.CAPRICORN, Rashi.AQUARIUS -> MunthaLord.SATURN
+    }
+}
+
+/** Combines the verified Muntha sign-lord rule with observable facts from the annual chart. */
+object MunthaLordEngine {
+    fun calculate(muntha: MunthaCalculation, annualChart: com.aynvora.core.models.AstroChart?): MunthaLordResult {
+        val lordId = muntha.lord.name
+        val placement = annualChart?.houses?.asSequence()?.flatMap { house ->
+            house.planets.asSequence().filter { it.planetId.equals(lordId, ignoreCase = true) }
+                .map { house to it }
+        }?.firstOrNull()
+        val (house, planet) = placement ?: (null to null)
+        val state = if (house != null && planet != null) MunthaLordPlanetState(
+            houseNumber = house.houseNumber,
+            sign = planet.sign,
+            longitude = planet.longitude,
+            retrograde = planet.retrograde,
+            dignity = planet.dignity,
+            state = planet.state,
+        ) else null
+        return MunthaLordResult(
+            munthaSign = muntha.sign,
+            lord = muntha.lord,
+            annualSign = annualChart?.ascendant?.sign,
+            annualHouse = muntha.annualHouse,
+            planetState = state,
+            ruleRefs = listOf(muntha.sourceRef),
+            provenance = listOf("Muntha sign and lord calculated from the primary-source progression and sign-lord rule.") +
+                listOfNotNull(if (annualChart == null) "Annual chart unavailable; lord placement state not calculated." else if (state == null) "Muntha lord placement was not present in the annual chart model." else "Lord placement state taken from the calculated annual AstroChart."),
+        )
     }
 }

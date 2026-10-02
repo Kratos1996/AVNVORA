@@ -52,16 +52,13 @@ class MunthaEngineTest {
 
     @Test
     fun verifiedMunthaToolIsRegisteredAndExecutesWithSourceEvidence() = runBlocking {
-        val descriptor = com.aynvora.core.astrology.knowledge.AstroToolRegistry.all().first { it.toolId == "getMunthaLord" }
+        val descriptor = com.aynvora.core.astrology.knowledge.AstroToolRegistry.all().first { it.toolId == "getMuntha" }
         assertEquals(com.aynvora.core.astrology.knowledge.AstroToolStatus.AVAILABLE, descriptor.status)
-        val args = buildJsonObject {
-            put("natalAscendantLongitude", 15.0)
-            put("elapsedSolarReturnCycles", 1)
-            put("annualAscendantSignIndex", 0)
-        }
         val pack = TajikaKnowledgePack.v1()
         val executor = AynvoraAiToolExecutor(
-            planner = AstroFunctionCallPlanner { _, _, _ -> AstroFunctionCall("getMunthaLord", args) },
+            planner = AstroFunctionCallPlanner { _, _, _ ->
+                AstroFunctionCallParser.parse("""{"tool":"getMuntha","arguments":{"natalAscendantLongitude":15.0,"elapsedSolarReturnCycles":1,"annualAscendantSignIndex":0}}""")
+            },
             tools = TajikaRegisteredTools.verifiedSubset(),
             responseGenerator = AstroGroundedResponseGenerator { _, _, evidence, _, _, _ ->
                 assertTrue(evidence.items.any { it.evidenceId == "TN-MUN-01-02" })
@@ -79,9 +76,11 @@ class MunthaEngineTest {
         val output = assertIs<AynvoraResult.Success<AstroGroundedAiResult>>(
             executor.ask("Calculate Muntha", AstroPageContext("annual-chart", "astro.varshaphal", traditionId = "TAJIKA"), requestTimestampEpochMs = 1_800_000_000_000L),
         ).value.toolResult
-        assertEquals("getMunthaLord", output.toolId)
+        assertEquals("getMuntha", output.toolId)
         assertEquals("SUPPORTED_PRIMARY_SOURCE_VERIFIED", output.status)
         assertEquals("TAJIKA", output.evidence.single().traditionId)
         assertEquals("astro.varshaphal.muntha", output.evidence.single().featureId)
+        assertTrue(output.resultJson.contains("TAURUS"), "Tool result must contain calculated Muntha sign")
+        assertTrue(output.resultJson.contains("45.0"), "Tool result must contain calculated Muntha longitude")
     }
 }

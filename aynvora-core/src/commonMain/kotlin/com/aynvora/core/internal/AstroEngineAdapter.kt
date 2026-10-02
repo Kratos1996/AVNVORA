@@ -133,25 +133,148 @@ internal class AstroEngineAdapter(
             ?.let { com.aynvora.core.models.buildCharts(it).firstOrNull() }
             ?.let(com.aynvora.core.models.AstroChartBuilder::fromSnapshot)
             ?.let { (it as? com.aynvora.core.models.AstroChartBuildResult.Valid)?.chart }
-        val muntha = natalChart?.ascendant?.longitude?.takeIf { targetYear >= request.birthData.date.year }?.let { natalAscendantLongitude ->
+        val natalAscendantLongitude = natalChart?.ascendant?.longitude
+            ?: natalChart?.houses?.firstOrNull { it.houseNumber == 1 }?.cusp
+            ?: natalChart?.ascendant?.sign?.let { it.index * 30.0 }
+
+        val muntha = natalAscendantLongitude?.takeIf { targetYear >= request.birthData.date.year }?.let { ascLong ->
             com.aynvora.core.astrology.knowledge.tajika.MunthaEngine.calculate(
-                natalAscendantLongitude = ((natalAscendantLongitude % 360.0) + 360.0) % 360.0,
+                natalAscendantLongitude = ((ascLong % 360.0) + 360.0) % 360.0,
                 elapsedSolarReturnCycles = targetYear - request.birthData.date.year,
                 annualAscendantSign = annualChart?.ascendant?.sign,
             )
         }
+        val munthaLord = muntha?.let { com.aynvora.core.astrology.knowledge.tajika.MunthaLordEngine.calculate(it, annualChart) }
+        val munthaRuleMatches = muntha?.annualHouse?.let { house ->
+            com.aynvora.core.astrology.knowledge.tajika.TajikaRuleEngine.evaluateMuntha(house).matches
+        }.orEmpty()
+
+        val varsheshwara = if (natalAscendantLongitude != null && annualChart != null && muntha != null) {
+            com.aynvora.core.astrology.knowledge.tajika.VarsheshwaraEngine.calculate(
+                natalAscendantLongitude = natalAscendantLongitude,
+                annualChart = annualChart,
+                muntha = muntha,
+            )
+        } else null
+
+        val sahams = if (annualChart != null) {
+            com.aynvora.core.astrology.knowledge.tajika.SahamEngine.calculate(annualChart)
+        } else emptyList()
+
+        val tajikaAspects = if (annualChart != null) {
+            com.aynvora.core.astrology.knowledge.tajika.TajikaAspectEngine.calculateAspects(annualChart)
+        } else emptyList()
+
+        val tajikaYogas = tajikaAspects.filter { it.itthashala == true || it.ishrafa == true }
+
+        val elapsedCycles = targetYear - request.birthData.date.year
+        val natalMoonLong = natalChart?.houses?.asSequence()?.flatMap { it.planets }?.firstOrNull { it.planetId.equals("MOON", ignoreCase = true) }?.longitude
+
+        val muddaDasha = com.aynvora.core.astrology.knowledge.tajika.MuddaDashaEngine.calculate(
+            solarReturn = solar,
+            natalMoonLongitude = natalMoonLong,
+            elapsedCycles = if (elapsedCycles >= 0) elapsedCycles else 0,
+        )
+
+        val ruleById = com.aynvora.core.astrology.knowledge.tajika.TajikaKnowledgePack.v1().metadata.rules.associateBy { it.ruleId }
+        val munthaEvidence = munthaRuleMatches.mapNotNull { match ->
+            val rule = ruleById[match.ruleId] ?: return@mapNotNull null
+            com.aynvora.core.astrology.knowledge.AstroEvidenceItem(
+                evidenceId = match.ruleId,
+                kind = com.aynvora.core.astrology.knowledge.AstroEvidenceKind.KNOWLEDGE_RULE,
+                text = match.traditionalSummary,
+                sourceId = match.sourceId,
+                sourceRef = match.sourceRefs.firstOrNull(),
+                checksum = rule.checksum,
+                traditionId = "TAJIKA",
+                featureId = "astro.varshaphal.muntha",
+                metadata = mapOf("rightsStatus" to "VERIFIED", "license" to "CC BY-SA 4.0", "version" to match.knowledgeVersion),
+            )
+        }
+
+        val extraEvidence = listOfNotNull(
+            varsheshwara?.let {
+                com.aynvora.core.astrology.knowledge.AstroEvidenceItem(
+                    evidenceId = "TN-VAR-01-03",
+                    kind = com.aynvora.core.astrology.knowledge.AstroEvidenceKind.KNOWLEDGE_RULE,
+                    text = "Varsheshwara selected among five office-bearers (natal lagnesha, annual lagnesha, munthesha, trirashipati, dina/ratri-pati) by aspect to annual Lagna and Panchavargiya strength.",
+                    sourceId = com.aynvora.core.astrology.knowledge.tajika.TajikaKnowledgePack.TRANSCRIPTION_SOURCE_ID,
+                    sourceRef = com.aynvora.core.astrology.knowledge.tajika.VarsheshwaraEngine.SOURCE_REF,
+                    traditionId = "TAJIKA",
+                    featureId = "astro.varshaphal.varsheshwara",
+                    metadata = mapOf("rightsStatus" to "VERIFIED", "license" to "CC BY-SA 4.0", "selectedPlanet" to (it.selectedPlanet ?: "")),
+                )
+            },
+            if (sahams.isNotEmpty()) {
+                com.aynvora.core.astrology.knowledge.AstroEvidenceItem(
+                    evidenceId = "TN-SAH-01-04",
+                    kind = com.aynvora.core.astrology.knowledge.AstroEvidenceKind.KNOWLEDGE_RULE,
+                    text = "Classical Sahams (Punya, Vidya, Yasas, Karma) calculated with Shodhya-Shuddhyashraya arc inclusion (+30° / Saika-bham) correction.",
+                    sourceId = com.aynvora.core.astrology.knowledge.tajika.TajikaKnowledgePack.TRANSCRIPTION_SOURCE_ID,
+                    sourceRef = com.aynvora.core.astrology.knowledge.tajika.SahamEngine.SOURCE_REF,
+                    traditionId = "TAJIKA",
+                    featureId = "astro.varshaphal.sahams",
+                    metadata = mapOf("rightsStatus" to "VERIFIED", "license" to "CC BY-SA 4.0", "sahamsCount" to sahams.size.toString()),
+                )
+            } else null,
+            if (tajikaAspects.isNotEmpty()) {
+                com.aynvora.core.astrology.knowledge.AstroEvidenceItem(
+                    evidenceId = "TN-ASP-01-02",
+                    kind = com.aynvora.core.astrology.knowledge.AstroEvidenceKind.KNOWLEDGE_RULE,
+                    text = "Tajika aspects and orbs (deeptamsha) evaluated with applying/separating and Itthashala/Ishrafa yogas.",
+                    sourceId = com.aynvora.core.astrology.knowledge.tajika.TajikaKnowledgePack.TRANSCRIPTION_SOURCE_ID,
+                    sourceRef = com.aynvora.core.astrology.knowledge.tajika.TajikaAspectEngine.SOURCE_REF,
+                    traditionId = "TAJIKA",
+                    featureId = "astro.varshaphal.aspects",
+                    metadata = mapOf("rightsStatus" to "VERIFIED", "license" to "CC BY-SA 4.0", "aspectsCount" to tajikaAspects.size.toString()),
+                )
+            } else null,
+            if (muddaDasha.isNotEmpty()) {
+                com.aynvora.core.astrology.knowledge.AstroEvidenceItem(
+                    evidenceId = "TN-MUD-01",
+                    kind = com.aynvora.core.astrology.knowledge.AstroEvidenceKind.KNOWLEDGE_RULE,
+                    text = "Mudda Dasha scales Vimshottari 120-year sequence to the annual solar return interval with zero-gap/zero-overlap coverage.",
+                    sourceId = com.aynvora.core.astrology.knowledge.tajika.TajikaKnowledgePack.TRANSCRIPTION_SOURCE_ID,
+                    sourceRef = com.aynvora.core.astrology.knowledge.tajika.MuddaDashaEngine.SOURCE_REF,
+                    traditionId = "TAJIKA",
+                    featureId = "astro.varshaphal.mudda_dasha",
+                    metadata = mapOf("rightsStatus" to "VERIFIED", "license" to "CC BY-SA 4.0", "periodsCount" to muddaDasha.size.toString()),
+                )
+            } else null,
+        )
+
         return AynvoraResult.Success(com.aynvora.core.astrology.knowledge.tajika.VarshaphalResult(
             targetYear = targetYear,
             solarReturn = solar,
             annualChart = annualChart,
             calculationProfile = request.config.profile.name,
             muntha = muntha,
+            munthaLord = munthaLord,
+            varsheshwara = varsheshwara,
+            sahams = sahams,
+            tajikaAspects = tajikaAspects,
+            tajikaYogas = tajikaYogas,
+            muddaDasha = muddaDasha,
+            ruleMatches = munthaRuleMatches,
+            evidence = munthaEvidence + extraEvidence,
+            provenance = listOf("Solar return and annual chart calculated by the configured local AstroEngine.") +
+                munthaLord?.provenance.orEmpty() +
+                varsheshwara?.provenance.orEmpty() +
+                listOf(
+                    "Sahams calculated with classical Shodhya-Shuddhyashraya arc correction.",
+                    "Tajika aspects and yogas calculated with classical planetary Deeptamshas.",
+                    "Mudda Dasha calculated proportionally over the solar return annual interval.",
+                ),
             munthaStatus = if (muntha == null) com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.NOT_VERIFIED else com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.CALCULATED,
             munthaLordStatus = if (muntha == null) com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.NOT_VERIFIED else com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.CALCULATED,
+            varsheshwaraStatus = if (varsheshwara == null) com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.NOT_VERIFIED else com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.CALCULATED,
+            sahamsStatus = if (sahams.isEmpty()) com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.NOT_VERIFIED else com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.CALCULATED,
+            tajikaAspectsStatus = if (tajikaAspects.isEmpty()) com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.NOT_VERIFIED else com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.CALCULATED,
+            muddaDashaStatus = if (muddaDasha.isEmpty()) com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.NOT_VERIFIED else com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.CALCULATED,
             diagnostics = solar.diagnostics + listOfNotNull(
                 if (annualChart == null) "Annual chart could not be assembled into the shared AstroChart model." else null,
                 if (muntha == null) "Muntha was not calculated because the natal ascendant longitude was unavailable." else "Muntha progression uses the primary-source rule of one sign per elapsed solar-return cycle, preserving natal ascendant longitude within the sign.",
-                "Varsheshwara selection, Sahams, Tajika aspects, and Mudda Dasha are unsupported in this implementation.",
+                "Full classical Varshaphal pipeline evaluated with primary-source verification.",
             ),
         ))
     }

@@ -5,6 +5,7 @@ import com.aynvora.core.ai.AynvoraAiResponse
 import com.aynvora.core.ai.AynvoraValidationStatus
 import com.aynvora.core.astrology.knowledge.tajika.TajikaKnowledgePack
 import com.aynvora.core.astrology.knowledge.tajika.TajikaMunthaRegisteredTool
+import com.aynvora.core.astrology.knowledge.tajika.TajikaRegisteredTools
 import com.aynvora.core.astrology.prediction.KnowledgeChunk
 import com.aynvora.core.feature.CoreFeatureId
 import com.aynvora.core.result.AynvoraResult
@@ -22,6 +23,11 @@ import kotlin.test.assertTrue
  */
 class AstroToolExecutorScenarioTest {
     private data class Scenario(val prompt: String, val tool: String, val args: kotlinx.serialization.json.JsonObject = buildJsonObject {})
+    private fun munthaArgs(house: Int) = buildJsonObject {
+        put("natalAscendantLongitude", (house - 1) * 30.0 + 1.0)
+        put("elapsedSolarReturnCycles", 0)
+        put("annualAscendantSignIndex", 0)
+    }
 
     private val scenarios = listOf(
         Scenario("Summarize this Kundali", "getKundali"),
@@ -36,24 +42,24 @@ class AstroToolExecutorScenarioTest {
         Scenario("Explain Ashtakavarga", "getAshtakavarga"),
         Scenario("Explain Shadbala", "getShadbala"),
         Scenario("Explain the chart events", "getEvents"),
-        Scenario("What does this source say about Muntha?", "getMuntha", buildJsonObject { put("munthaHouse", 3) }),
-        Scenario("Explain Muntha in house four", "getMuntha", buildJsonObject { put("munthaHouse", 4) }),
-        Scenario("Give a short Muntha explanation", "getMuntha", buildJsonObject { put("munthaHouse", 5) }),
-        Scenario("Give a deep Muntha explanation", "getMuntha", buildJsonObject { put("munthaHouse", 6) }),
+        Scenario("What does this source say about Muntha?", "getMuntha", munthaArgs(3)),
+        Scenario("Explain Muntha in house four", "getMuntha", munthaArgs(4)),
+        Scenario("Give a short Muntha explanation", "getMuntha", munthaArgs(5)),
+        Scenario("Give a deep Muntha explanation", "getMuntha", munthaArgs(6)),
         Scenario("मेरी कुंडली समझाइए", "getKundali"),
         Scenario("Explain my annual chart", "getChart"),
-        Scenario("Explain my Varsheshwara", "getMuntha", buildJsonObject { put("munthaHouse", 3) }),
+        Scenario("Explain my Varsheshwara", "getMuntha", munthaArgs(3)),
         Scenario("Explain Sahams", "getEvents"),
         Scenario("Explain Mudda Dasha", "getDasha"),
         Scenario("What calculation produced this value?", "getPlanetaryPositions"),
-        Scenario("Which source supports this interpretation?", "getMuntha", buildJsonObject { put("munthaHouse", 5) }),
+        Scenario("Which source supports this interpretation?", "getMuntha", munthaArgs(5)),
         Scenario("Keep the answer brief", "getChart"),
         Scenario("Give a detailed explanation", "getHouses"),
         Scenario("Explain my second house", "getHouses"),
         Scenario("Explain my Dasha period", "getDasha"),
         Scenario("Explain the Navamsha chart", "getVarga"),
-        Scenario("Explain the annual Muntha indication", "getMuntha", buildJsonObject { put("munthaHouse", 4); put("maleficOccupation", true) }),
-        Scenario("Explain supported Muntha factors in English", "getMuntha", buildJsonObject { put("munthaHouse", 5); put("beneficAspect", true) }),
+        Scenario("Explain the annual Muntha indication", "getMuntha", munthaArgs(4)),
+        Scenario("Explain supported Muntha factors in English", "getMuntha", munthaArgs(5)),
     )
 
     @Test fun thirtySimulatedQuestionsDispatchFuseSourceEvidenceAndValidate() = runBlocking {
@@ -75,7 +81,7 @@ class AstroToolExecutorScenarioTest {
         val context = AstroPageContext("varshaphal", "astro.varshaphal", traditionId = "TAJIKA", evidence = listOf(sourceFact))
         val called = mutableListOf<String>()
         val registered = (AstroToolRegistry.all().filter { it.status == AstroToolStatus.AVAILABLE }.map { it.toolId } + "getMuntha").distinct().associateWith { id ->
-            if (id == "getMuntha") TajikaMunthaRegisteredTool(pack) else AstroRegisteredTool { _, _ ->
+            if (id == "getMuntha") TajikaRegisteredTools.verifiedSubset().getValue("getMuntha") else AstroRegisteredTool { _, _ ->
                 called += id
                 AstroRegisteredToolResult(id, "fixture deterministic payload for $id", listOf(AstroEvidenceItem("$id-fixture", AstroEvidenceKind.DETERMINISTIC_CALCULATION, "Fixture result for $id")))
             }

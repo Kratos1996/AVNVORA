@@ -337,7 +337,7 @@ fun AstrologyRoute(onClose: () -> Unit, modifier: Modifier = Modifier) {
                 }, modifier = Modifier.fillMaxWidth()) { Text(if (loading) "Calculating…" else "GET HOROSCOPE") } }
             }
         } else {
-            KundaliWorkspace(model = result!!, translator = translator, modifier = Modifier.weight(1f))
+            KundaliWorkspace(model = result!!, translator = translator, sdk = sdk, modifier = Modifier.weight(1f))
         }
       }
     }
@@ -413,13 +413,50 @@ private fun fullHoroscopeConfig() = CalculationConfig(
 )
 
 @Composable
-private fun KundaliWorkspace(model: VedicAstrologyUiModel, translator: com.aynvora.localization.translation.AynvoraTranslator, modifier: Modifier = Modifier) {
+private fun KundaliWorkspace(
+    model: VedicAstrologyUiModel,
+    translator: com.aynvora.localization.translation.AynvoraTranslator,
+    sdk: AynvoraSdk? = null,
+    modifier: Modifier = Modifier,
+) {
     val snapshot = model.snapshot
     val chart = snapshot.natalChart
     var sectionId by remember(snapshot.profileId) { mutableStateOf("home") }
     val pages = model.sections
     val selectedPage = pages.firstOrNull { it.sectionId == sectionId } ?: pages.first()
     val title: (String) -> String = { key -> translator.get(com.aynvora.core.localization.RawLocalizationKey(key)) }
+
+    val birthYear = remember(snapshot.profileId) {
+        snapshot.birth.localDate.take(4).toIntOrNull() ?: 2026
+    }
+    var targetYear by remember(snapshot.profileId) { mutableStateOf(birthYear + 1) }
+    var varshaphalResult by remember(snapshot.profileId, targetYear) {
+        mutableStateOf<com.aynvora.core.astrology.knowledge.tajika.VarshaphalResult?>(null)
+    }
+    var varshaphalLoading by remember(snapshot.profileId, targetYear) { mutableStateOf(false) }
+    var varshaphalError by remember(snapshot.profileId, targetYear) { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(sectionId, targetYear, snapshot.profileId) {
+        if (sectionId == "varshaphal" && varshaphalResult == null && !varshaphalLoading && sdk != null) {
+            varshaphalLoading = true
+            varshaphalError = null
+            try {
+                val req = ChartRequest(chart.birthData, chart.config)
+                when (val res = sdk.calculateVarshaphal(req, targetYear)) {
+                    is AynvoraResult.Success -> {
+                        varshaphalResult = res.value
+                    }
+                    is AynvoraResult.Failure -> {
+                        varshaphalError = res.message
+                    }
+                }
+            } catch (e: Exception) {
+                varshaphalError = e.message ?: "Failed to calculate Varshaphal."
+            } finally {
+                varshaphalLoading = false
+            }
+        }
+    }
     val selectedChartId = when (sectionId) {
         "navamsha" -> "D9"
         "chandra" -> "MOON"
@@ -625,7 +662,128 @@ private fun KundaliWorkspace(model: VedicAstrologyUiModel, translator: com.aynvo
                 item { DetailRow("पद", "Pada", "Moon nakshatra quarter", chart.planetaryPositions.firstOrNull { it.body == com.aynvora.core.models.CelestialBody.MOON }?.nakshatraPosition?.pada?.toString() ?: "—") }
                 item { DetailRow("चंद्र", "Moon sign", "Janma rāśi", chart.planetaryPositions.firstOrNull { it.body == com.aynvora.core.models.CelestialBody.MOON }?.rashiPosition?.rashi?.name?.let(::displayCanonical) ?: "Unavailable") }
             }
-            "phaladesh", "kp", "lal_kitab", "varshaphal", "karakansha", "swansha", "yogas", "cloud", "pdf_report", "ask_question", "reports" -> {
+            "varshaphal" -> {
+                item {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("VARSHAPHAL (TAJIKA)", color = gold, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            TextButton(onClick = { if (targetYear > 1900) targetYear -= 1 }) { Text("◀", color = gold) }
+                            Text("$targetYear", color = ink, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            TextButton(onClick = { if (targetYear < 2100) targetYear += 1 }) { Text("▶", color = gold) }
+                        }
+                    }
+                }
+                if (varshaphalLoading) {
+                    item { Text("Calculating Varshaphal for $targetYear…", color = muted, fontSize = 13.sp) }
+                } else if (varshaphalError != null) {
+                    item { EmptyReport("Varshaphal calculation error: $varshaphalError") }
+                } else if (varshaphalResult != null) {
+                    val vp = varshaphalResult!!
+                    item {
+                        Surface(color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.92f), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text("SOLAR RETURN (वर्षप्रवेश)", color = gold, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                Text("UTC: ${vp.solarReturn.utcTimestamp ?: "—"}", color = ink, fontSize = 12.sp)
+                                Text("Julian Day: ${vp.solarReturn.julianDayUtc?.let { "%.4f".format(it) } ?: "—"} · Target Year: ${vp.targetYear}", color = muted, fontSize = 11.sp)
+                                val lagnaName = vp.annualChart?.ascendant?.sign?.displayName ?: "—"
+                                val lagnaDeg = vp.annualChart?.ascendant?.longitude?.let { "%.2f°".format(it % 30.0) } ?: "—"
+                                Text("Annual Lagna: $lagnaName $lagnaDeg", color = gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                    item {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            val munthaSign = vp.muntha?.sign?.name?.let(::displayCanonical) ?: "—"
+                            val munthaH = vp.muntha?.annualHouse?.let { "H$it" } ?: "—"
+                            val munthaDeg = vp.muntha?.longitude?.let { "%.2f°".format(it % 30.0) } ?: "—"
+                            SummaryCard("MUNTHA", munthaSign, "$munthaH · $munthaDeg", Modifier.weight(1f))
+                            val yearLord = vp.varsheshwara?.selectedPlanet?.let(::displayCanonical) ?: "—"
+                            val tieBreak = vp.varsheshwara?.tieBreak ?: "Calculated"
+                            SummaryCard("YEAR LORD", yearLord, tieBreak, Modifier.weight(1f))
+                        }
+                    }
+                    vp.munthaLord?.let { ml ->
+                        item {
+                            val stateStr = ml.planetState?.state?.let(::displayCanonical) ?: "Normal"
+                            DetailRow("मु", "Muntha Lord (मुन्थेश)", "${displayCanonical(ml.lord.name)} in ${ml.annualSign?.name?.let(::displayCanonical) ?: "—"}", "House ${ml.annualHouse ?: "—"} · $stateStr")
+                        }
+                    }
+                    vp.varsheshwara?.let { vw ->
+                        item {
+                            val eligibleCount = vw.candidates.count { it.eligible == true }
+                            DetailRow("वर्षे", "Varsheshwara (वर्षेश्वर)", "${displayCanonical(vw.selectedPlanet ?: "—")} (${vw.tieBreak ?: "—"})", "Eligible: $eligibleCount/5 candidates")
+                        }
+                        item { Text("Varsheshwara Candidates & Panchavargiya Bala", color = ink, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
+                        items(vw.candidates, key = { "cand_${it.planet}_${it.strengthBreakdown["office"] ?: ""}" }) { c ->
+                            val office = c.strengthBreakdown["office"] ?: "Candidate"
+                            val aspects = c.strengthBreakdown["aspects_lagna"] ?: if (c.eligible == true) "Yes" else "No"
+                            val h = c.strengthBreakdown["annual_house"] ?: "—"
+                            val virupas = c.strengthBreakdown["panchavargiya_total_virupas"] ?: "—"
+                            DetailRow(
+                                bodyShort(c.planet),
+                                "${displayCanonical(c.planet)} · $office",
+                                "Aspects Lagna: $aspects · H$h",
+                                "$virupas virupas",
+                            )
+                        }
+                    }
+                    item { Text("Verified Sahams (Classical 1907)", color = ink, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
+                    items(vp.sahams, key = { "saham_${it.id}" }) { s ->
+                        val rashiIdx = s.longitude?.let { (it / 30.0).toInt().coerceIn(0, 11) }
+                        val rashiName = rashiIdx?.let { com.aynvora.core.models.Rashi.fromIndex(it).name }?.let(::displayCanonical) ?: "—"
+                        val degInSign = s.longitude?.let { "%.2f°".format(it % 30.0) } ?: "—"
+                        DetailRow(
+                            s.id.take(2).uppercase(),
+                            s.name,
+                            rashiName,
+                            degInSign,
+                        )
+                    }
+                    item { Text("Tajika Yogas & Aspects", color = ink, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
+                    if (vp.tajikaYogas.isEmpty()) {
+                        item { Text("No active Itthashala or Ishrafa yogas formed within orbs.", color = muted, fontSize = 12.sp) }
+                    } else {
+                        items(vp.tajikaYogas, key = { "yoga_${it.planet1}_${it.planet2}_${it.aspectType}" }) { y ->
+                            val p1 = y.planet1?.let(::displayCanonical) ?: "—"
+                            val p2 = y.planet2?.let(::displayCanonical) ?: "—"
+                            val aspect = y.aspectType ?: "Aspect"
+                            val yogaName = if (y.itthashala == true) "Itthashala Yoga" else if (y.ishrafa == true) "Ishrafa Yoga" else aspect
+                            val sep = y.actualSeparation?.let { "%.2f°".format(it) } ?: "—"
+                            val orb = y.orbDegrees?.let { "%.2f°".format(it) } ?: "—"
+                            DetailRow(
+                                if (y.itthashala == true) "इ" else "ई",
+                                "$yogaName: $p1 ↔ $p2",
+                                "$aspect · sep $sep / orb $orb",
+                                if (y.applying == true) "Applying" else "Separating",
+                            )
+                        }
+                    }
+                    item { Text("Mudda Dasha (मुद्दा दशा · Annual Timeline)", color = ink, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
+                    items(vp.muddaDasha, key = { "mudda_${it.planet}_${it.sequenceIndex}" }) { m ->
+                        DetailRow(
+                            bodyShort(m.planet),
+                            "${m.sequenceIndex + 1}. ${displayCanonical(m.planet)} Dasha",
+                            "${m.start.take(10)} to ${m.end.take(10)}",
+                            "${"%.1f".format(m.durationDays)} days",
+                        )
+                    }
+                    item {
+                        Surface(color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.7f), shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text("ASK AI GROUNDING", color = gold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Grounded queries supported by local tools: 'What is my Muntha?', 'Who is my Varsheshwara?', 'Explain my Sahams', 'Show my Mudda Dasha'.", color = muted, fontSize = 11.sp)
+                            }
+                        }
+                    }
+                } else {
+                    item { EmptyReport("Tap to calculate Varshaphal.") }
+                }
+            }
+            "phaladesh", "kp", "lal_kitab", "karakansha", "swansha", "yogas", "cloud", "pdf_report", "ask_question", "reports" -> {
                 val status = selectedPage.availability
                 val message = if (status == com.aynvora.core.models.CalculationAvailability.UNSUPPORTED || status == com.aynvora.core.models.CalculationAvailability.COMING_SOON)
                     "This section is marked ${status.name} by the calculation snapshot. No placeholder astrology values are generated."

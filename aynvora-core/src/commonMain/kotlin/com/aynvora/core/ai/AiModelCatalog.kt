@@ -71,6 +71,26 @@ data class AiModelVariant(
     val displaySizeMb: Int
         get() = (fileSizeBytes / (1024L * 1024L)).toInt()
 
+    val artifact: AiModelArtifact
+        get() = AiModelArtifact(
+            modelId = modelId,
+            filename = "$modelId.gguf",
+            sourceUrl = downloadUrl,
+            revision = when (modelId) {
+                "qwen2.5-0.5b-instruct-q4_k_m" -> "main@0663b826e09042345d6e2069d9655cd3ae84812d8f39a5894bed7b24fc0e86cc"
+                "qwen2.5-1.5b-instruct-q5_k_m" -> "main@26f254b1f649b1424773c38ad26cf8d45cb0ca13"
+                else -> "main"
+            },
+            sizeBytes = fileSizeBytes,
+            sha256 = sha256Checksum,
+            license = license,
+            rightsStatus = "OPEN_WEIGHTS_APACHE_2_0",
+            tokenizerInfo = "Qwen2.5 BPE / ChatML format (<|im_start|>, <|im_end|>)",
+            architecture = "qwen2",
+            quantization = quantization.name,
+            contextLength = defaultContextLength,
+        )
+
     fun toModelInfo(isAvailableLocally: Boolean): AiModelInfo {
         return AiModelInfo(
             modelId = modelId,

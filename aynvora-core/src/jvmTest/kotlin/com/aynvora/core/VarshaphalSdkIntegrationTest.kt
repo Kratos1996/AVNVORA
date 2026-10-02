@@ -29,12 +29,16 @@ class VarshaphalSdkIntegrationTest {
         assertNotNull(result.annualChart)
         assertEquals(12, result.annualChart.houses.size)
         assertEquals("WHOLE_SIGN", result.annualChart.houseSystem)
-        assertEquals("PARTIAL", result.status)
+        assertEquals("IMPLEMENTED", result.status)
+        assertNotNull(result.muntha)
+        assertNotNull(result.varsheshwara)
+        assertTrue(result.sahams.isNotEmpty(), "Sahams should be calculated")
+        assertTrue(result.tajikaAspects.isNotEmpty(), "Tajika aspects should be calculated")
+        assertTrue(result.muddaDasha.isNotEmpty(), "Mudda Dasha should be calculated")
         assertEquals(
             Json.encodeToString(result),
             Json.encodeToString(second.value),
             "Repeated calculations should serialize identically.",
         )
-        assertTrue(result.diagnostics.any { it.contains("unsupported") || it.contains("not enabled") })
     }
 }

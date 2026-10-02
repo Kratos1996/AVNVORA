@@ -43,9 +43,10 @@ class SolarReturnEngine(private val astroEngine: AstroEngine) {
                 ?: error("Natal Sun position was not produced by the configured engine.")
             val target = normalizeDegrees(natalSun.siderealLongitude)
             val ayanamsa = AyanamsaCalculator.forConvention(profile.ayanamsa)
-            val start = JulianDay.fromUtcCalendar(targetYear, 1, 1).value
-            val end = JulianDay.fromUtcCalendar(targetYear + 1, 1, 1).value
-            val root = solve(start, end, target, ayanamsa)
+            val bMonth = birthData.month ?: 1
+            val bDay = (birthData.day ?: 1).coerceIn(1, 28)
+            val approxDay = JulianDay.fromUtcCalendar(targetYear, bMonth, bDay).value
+            val root = solve(approxDay - 4.0, approxDay + 4.0, target, ayanamsa)
             val longitude = siderealLongitude(root, ayanamsa)
             SolarReturnMoment(
                 targetYear = targetYear,
@@ -76,16 +77,26 @@ class SolarReturnEngine(private val astroEngine: AstroEngine) {
     }
 
     private fun solve(start: Double, end: Double, target: Double, ayanamsa: AyanamsaCalculator): Double {
-        // Find the crossing on the unwrapped longitude curve; the Sun advances monotonically here.
+        fun signedError(day: Double): Double {
+            val lon = siderealLongitude(day, ayanamsa)
+            return (lon - target + 540.0) % 360.0 - 180.0
+        }
         var low = start
         var high = end
-        val startLongitude = siderealLongitude(start, ayanamsa)
-        val targetOffset = normalizeDegrees(target - startLongitude)
-        fun progress(day: Double): Double = normalizeDegrees(siderealLongitude(day, ayanamsa) - startLongitude)
-        require(progress(end) >= targetOffset) { "No solar-longitude recurrence found in the requested annual interval." }
+        var errLow = signedError(low)
+        var errHigh = signedError(high)
+        var expand = 0
+        while ((errLow >= 0.0 || errHigh <= 0.0) && expand < 10) {
+            low -= 3.0
+            high += 3.0
+            errLow = signedError(low)
+            errHigh = signedError(high)
+            expand++
+        }
+        require(errLow < 0.0 && errHigh > 0.0) { "No solar-longitude recurrence found in the requested annual interval." }
         repeat(60) {
             val mid = (low + high) / 2.0
-            if (progress(mid) < targetOffset) low = mid else high = mid
+            if (signedError(mid) < 0.0) low = mid else high = mid
         }
         return (low + high) / 2.0
     }

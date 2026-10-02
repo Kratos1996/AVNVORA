@@ -65,3 +65,5 @@
 28414	28818	1790802405137313782	/Users/ishant/Desktop/aynvora-sdk/androidApp/build/intermediates/cxx/Debug/4zcz1z1g/obj/arm64-v8a/libggml.so	11ff125138df2a07
 19	52276	1790802428509320972	llama_build/src/CMakeFiles/llama.dir/llama.cpp.o	80c7e38292edf6b7
 52276	52435	1790802428723340889	/Users/ishant/Desktop/aynvora-sdk/androidApp/build/intermediates/cxx/Debug/4zcz1z1g/obj/arm64-v8a/libllama.so	c1e49684ecc7568a
+5	3087	1790960082405896613	llama_build/src/CMakeFiles/llama.dir/Users/ishant/Desktop/aynvora-sdk/androidApp/src/main/cpp/aynvora_llama_jni.cpp.o	53873e28d6855841
+3087	3887	1790960083059376242	/Users/ishant/Desktop/aynvora-sdk/androidApp/build/intermediates/cxx/Debug/4zcz1z1g/obj/arm64-v8a/libllama.so	c1e49684ecc7568a

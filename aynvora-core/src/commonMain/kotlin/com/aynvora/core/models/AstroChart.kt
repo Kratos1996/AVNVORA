@@ -121,9 +121,10 @@ object AstroChartBuilder {
                 planets = planets, ascendant = h.houseNumber == 1 && source.ascendantSignIndex == h.signIndex,
             )
         }
+        val ascendantLongitude = houses.firstOrNull { it.houseNumber == 1 }?.cusp
         val chart = AstroChart(
             source.chartId, source.chartTypeId, source.titleKey, source.zodiacModeId,
-            source.houseSystemId, source.ascendantSignIndex?.let { idx -> AstroChartAscendant(Rashi.fromIndex(idx)) },
+            source.houseSystemId, source.ascendantSignIndex?.let { idx -> AstroChartAscendant(Rashi.fromIndex(idx), ascendantLongitude) },
             houses, source.sourceMetadata, source.sourceMetadata.ephemerisSourceId, source.status,
         )
         val validation = AstroChartValidator.validate(chart)

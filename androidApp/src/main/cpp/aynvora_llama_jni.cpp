@@ -13,9 +13,18 @@
 #include "llama.h"
 
 #define TAG "AynvoraLlamaJni"
+
+#ifdef __ANDROID__
+#include <android/log.h>
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
+#else
+#include <cstdio>
+#define LOGI(...) do { printf("[INFO] " TAG ": "); printf(__VA_ARGS__); printf("\n"); fflush(stdout); } while(0)
+#define LOGE(...) do { fprintf(stderr, "[ERROR] " TAG ": "); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); fflush(stderr); } while(0)
+#define LOGW(...) do { printf("[WARN] " TAG ": "); printf(__VA_ARGS__); printf("\n"); fflush(stdout); } while(0)
+#endif
 
 struct AynvoraNativeContext {
     llama_model* model = nullptr;

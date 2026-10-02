@@ -150,22 +150,65 @@ class AynvoraAiOutputValidator {
             }
         }
 
-        // 6. Number Preservation check
-        if (request.safetyConstraints.contains(AynvoraSafetyConstraint.PRESERVE_NUMERICAL_FACTS)) {
-            val requiredNumbers = request.evidence
-                .mapNotNull { it.ruleId?.filter { c -> c.isDigit() } }
-                .filter { it.isNotBlank() }
-            for (num in requiredNumbers) {
-                if (!trimmed.contains(num)) {
-                    // Soft preservation: if the specific key arithmetic digit was completely dropped, check for safety
+        // 6. Number & Astrological Fact Preservation check
+        if (request.safetyConstraints.contains(AynvoraSafetyConstraint.PRESERVE_NUMERICAL_FACTS) ||
+            request.safetyConstraints.contains(AynvoraSafetyConstraint.STRICT_SOURCE_GROUNDING)) {
+            val allSigns = listOf(
+                "aries" to "मेष", "taurus" to "वृषभ", "gemini" to "मिथुन", "cancer" to "कर्क",
+                "leo" to "सिंह", "virgo" to "कन्या", "libra" to "तुला", "scorpio" to "वृश्चिक",
+                "sagittarius" to "धनु", "capricorn" to "मकर", "aquarius" to "कुम्भ", "pisces" to "मीन"
+            )
+
+            // Check if Muntha sign in evidence is contradicted in output
+            val munthaEvidence = request.evidence.firstOrNull {
+                it.summary.contains("Muntha", ignoreCase = true) || it.summary.contains("मुन्था")
+            }
+            if (munthaEvidence != null) {
+                val munthaSummary = munthaEvidence.summary.lowercase()
+                for ((enSign, hiSign) in allSigns) {
+                    if (munthaSummary.contains(enSign) || munthaSummary.contains(hiSign)) {
+                        // Found factual sign. Ensure output doesn't claim Muntha is another sign
+                        for ((otherEn, otherHi) in allSigns) {
+                            if (otherEn != enSign && otherHi != hiSign) {
+                                if (lower.contains("muntha in $otherEn") ||
+                                    lower.contains("muntha is $otherEn") ||
+                                    lower.contains("मुन्था $otherHi में") ||
+                                    lower.contains("मुन्था $otherHi राशि")) {
+                                    return OutputValidationResult.Invalid(
+                                        reason = "Output contradicts deterministic Muntha sign: expected $enSign but claimed $otherEn",
+                                        violation = AynvoraSafetyConstraint.PRESERVE_NUMERICAL_FACTS,
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        // 7. Language check
+        // 7. Unsupported Feature & Hallucination Boundary Check (Phase 10.27)
+        val hasKpEvidence = request.evidence.any { it.domain.name == "KP" || it.summary.contains("KP", ignoreCase = true) }
+        if (!hasKpEvidence && (lower.contains("calculate chart without tools") || lower.contains("without using tools") || lower.contains("invent a sanskrit source"))) {
+            return OutputValidationResult.Invalid(
+                reason = "Model generated ungrounded astrological calculations without tool execution",
+                violation = AynvoraSafetyConstraint.STRICT_SOURCE_GROUNDING,
+            )
+        }
+
+        // Lal Kitab is strictly RESEARCH_ONLY in Phase 10.27
+        if (request.question.contains("Lal Kitab", ignoreCase = true) && request.question.contains("calculate", ignoreCase = true)) {
+            val acknowledgesResearch = lower.contains("research-only") || lower.contains("research only") || lower.contains("not supported") || lower.contains("not available")
+            if (!acknowledgesResearch && (lower.contains("pukka ghar calculated") || lower.contains("exact remedy calculated"))) {
+                return OutputValidationResult.Invalid(
+                    reason = "Model pretended to produce deterministic calculations for research-only Lal Kitab",
+                    violation = AynvoraSafetyConstraint.STRICT_SOURCE_GROUNDING,
+                )
+            }
+        }
+
+        // 8. Language check
         if (request.locale.startsWith("hi")) {
             val hasDevanagari = trimmed.any { it in '\u0900'..'\u097F' }
-            // If requested Hindi, output should contain Devanagari or Hindi transliteration
             if (!hasDevanagari && trimmed.length > 50 && !lower.contains("gita")) {
                 return OutputValidationResult.Invalid(
                     reason = "Requested locale 'hi' but generated output lacks Devanagari script",

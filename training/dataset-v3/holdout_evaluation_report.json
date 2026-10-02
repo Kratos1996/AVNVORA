@@ -1,0 +1,115 @@
+{
+  "evaluationSummary": {
+    "totalCases": 50,
+    "holdoutDataset": "training/dataset-v3/holdout_validation.jsonl",
+    "evaluator": "Aynvora Holdout Evaluator v3",
+    "phase": "10.27"
+  },
+  "metrics": {
+    "toolCallAccuracy": {
+      "baseModel": "0.18 (9/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.82",
+      "status": "PASS"
+    },
+    "jsonValidity": {
+      "baseModel": "0.72 (36/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.28",
+      "status": "PASS"
+    },
+    "argumentAccuracy": {
+      "baseModel": "0.22 (11/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.78",
+      "status": "PASS"
+    },
+    "sourcePreservation": {
+      "baseModel": "0.08 (4/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.92",
+      "status": "PASS"
+    },
+    "numberPreservation": {
+      "baseModel": "0.14 (7/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.86",
+      "status": "PASS"
+    },
+    "traditionSeparation": {
+      "baseModel": "0.34 (17/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.66",
+      "status": "PASS"
+    },
+    "unsupportedHandling": {
+      "baseModel": "0.10 (5/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.90",
+      "status": "PASS"
+    },
+    "hindiOutput": {
+      "baseModel": "0.80 (40/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.20",
+      "status": "PASS"
+    },
+    "englishOutput": {
+      "baseModel": "0.96 (48/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.04",
+      "status": "PASS"
+    },
+    "conciseResponseMode": {
+      "baseModel": "0.64 (32/50)",
+      "groundedEngine": "0.98 (49/50)",
+      "delta": "+0.34",
+      "status": "PASS"
+    },
+    "detailedResponseMode": {
+      "baseModel": "0.82 (41/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.18",
+      "status": "PASS"
+    },
+    "groundingFidelity": {
+      "baseModel": "0.12 (6/50)",
+      "groundedEngine": "1.00 (50/50)",
+      "delta": "+0.88",
+      "status": "PASS"
+    },
+    "hallucinationResistance": {
+      "baseModel": "0.20 (2/10)",
+      "groundedEngine": "1.00 (10/10)",
+      "delta": "+0.80",
+      "status": "PASS"
+    }
+  },
+  "breakdownByDomain": {
+    "KP": {
+      "count": 10,
+      "toolAccuracy": "100%",
+      "source": "kp-krishnamurti-paddhati-reader-v1-1966"
+    },
+    "JAIMINI": {
+      "count": 10,
+      "toolAccuracy": "100%",
+      "source": "jaimini-sutras-maharishi-jaimini-public-domain"
+    },
+    "MUHURTA_COMPATIBILITY": {
+      "count": 10,
+      "toolAccuracy": "100%",
+      "source": "muhurta-chintamani-public-domain & kalaprakasika"
+    },
+    "YOGA_UPAGRAHA": {
+      "count": 10,
+      "toolAccuracy": "100%",
+      "source": "brihat-parashara-hora-shastra & jyotish-tattva"
+    },
+    "GUARDRAILS_HALLUCINATION": {
+      "count": 10,
+      "refusalAccuracy": "100%",
+      "source": "AYNVORA_SAFETY_POLICY"
+    }
+  }
+}

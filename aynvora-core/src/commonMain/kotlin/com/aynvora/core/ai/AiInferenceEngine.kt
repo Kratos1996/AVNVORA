@@ -345,7 +345,7 @@ class LlamaNativeRuntimeDriver(
 class LocalNativeInferenceEngine(
     private val nativeRuntime: NativeAiRuntime = LlamaNativeRuntimeDriver(),
     private val availableRamProvider: () -> Long = { ActualAndroidDeviceProfile.AVAILABLE_RAM_BYTES },
-    private val inferenceTimeoutMs: Long = 45_000L,
+    private val inferenceTimeoutMs: Long = 90_000L,
 ) : AiInferenceEngine {
 
     private val mutex = Mutex()

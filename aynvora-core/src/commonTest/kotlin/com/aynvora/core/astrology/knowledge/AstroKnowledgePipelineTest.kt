@@ -70,7 +70,8 @@ class AstroKnowledgePipelineTest {
 
     @Test fun registryLabelsUnsupportedTraditionsAndProviderConditionalWeb() {
         val tools = AstroToolRegistry.all()
-        assertEquals(AstroToolStatus.UNAVAILABLE, tools.single { it.toolId == "getKP" }.status)
+        assertEquals(AstroToolStatus.AVAILABLE, tools.single { it.toolId == "getKP" }.status)
+        assertEquals(AstroToolStatus.RESEARCH_ONLY, tools.single { it.toolId == "getLalKitab" }.status)
         assertEquals(AstroToolStatus.UNAVAILABLE, tools.single { it.toolId == "searchWeb" }.status)
         assertEquals(AstroToolStatus.AVAILABLE, AstroToolRegistry.all(true).single { it.toolId == "searchWeb" }.status)
     }

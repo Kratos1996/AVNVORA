@@ -100,17 +100,8 @@ interface AynvoraSdk {
     /** The signed-off Tajika V1 rules, page citations, source records, and CC BY-SA attribution. */
     fun getTajikaKnowledgePack() = com.aynvora.core.astrology.knowledge.tajika.TajikaKnowledgePack.v1()
 
-    /** Evaluate Tajika Muntha rules only from an explicit caller-calculated Muntha house. */
-    fun getMuntha(
-        munthaHouse: Int,
-        maleficOccupation: Boolean = false,
-        hostileMaleficAspect: Boolean = false,
-        munthaLordStrength: String? = null,
-        beneficAssociation: Boolean = false,
-        beneficAspect: Boolean = false,
-    ) = com.aynvora.core.astrology.knowledge.tajika.TajikaRuleEngine.evaluateMuntha(
-        munthaHouse, maleficOccupation, hostileMaleficAspect, munthaLordStrength, beneficAssociation, beneficAspect,
-    )
+    /** Calculate Muntha from the birth chart and solar-return cycle; never accepts a precomputed Muntha fact. */
+    suspend fun getMuntha(request: ChartRequest, targetYear: Int) = calculateVarshaphal(request, targetYear)
 
     /** Evaluate the sourced Sun-as-Varshesha subset from explicit annual chart facts. */
     fun getVarsheshaSun(strength: String, natalSunStrength: String? = null) =
