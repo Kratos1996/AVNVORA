@@ -34,6 +34,9 @@ class DashaTransitPanchangTest {
         val firstMaha = timeline.mahadashas[0]
         assertEquals(DashaPlanet.KETU, firstMaha.planet)
         assertEquals(9, firstMaha.subPeriods.size)
+        assertTrue(firstMaha.subPeriods.all { it.startJulianDay >= firstMaha.startJulianDay && it.endJulianDay <= firstMaha.endJulianDay })
+        assertEquals(firstMaha.startJulianDay, firstMaha.subPeriods.first().startJulianDay)
+        assertEquals(firstMaha.endJulianDay, firstMaha.subPeriods.last().endJulianDay, 1e-7)
 
         // Second Mahadasha is Venus (20 years)
         val secondMaha = timeline.mahadashas[1]

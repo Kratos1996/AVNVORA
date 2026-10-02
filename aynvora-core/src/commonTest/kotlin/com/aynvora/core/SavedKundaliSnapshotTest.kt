@@ -21,11 +21,33 @@ class SavedKundaliSnapshotTest {
         val saved = sdk.persistKundaliSnapshot(generated.value, "birth-1", "chart-1", 1_700_000_000_000)
         assertIs<AynvoraResult.Success<SavedChart>>(saved)
         assertEquals(1, repository.saveCount)
-        val opened = sdk.openSavedKundaliSnapshot("chart-1")
+        val opened = sdk.getSnapshot("chart-1")
         assertIs<AynvoraResult.Success<SavedKundaliSnapshot>>(opened)
         assertEquals(SavedSnapshotOpenStatus.OPEN, opened.value.status)
         assertEquals(generated.value, opened.value.snapshot)
         assertEquals(1, repository.readCount)
+    }
+
+    @Test
+    fun savedSchemaOneSnapshotIsReturnedAsMigratedSchemaTwo() = runBlocking {
+        val repository = MemorySavedCharts()
+        val sdk = Aynvora.create(savedCharts = repository)
+        val birth = BirthData(BirthDate(2000, 1, 1), BirthTime(17, 30), BirthPlace("Delhi", Coordinates(28.6139, 77.209), "Asia/Kolkata"))
+        val generated = sdk.calculateKundali(ChartRequest(birth), "birth-1", "Delhi")
+        assertIs<AynvoraResult.Success<KundaliSnapshot>>(generated)
+        val oldPayload = KundaliSnapshotJson.encode(generated.value)
+            .replaceFirst("\"schemaVersion\":\"2\"", "\"schemaVersion\":\"1\"")
+        repository.saveChart(SavedChart(
+            id = "legacy-chart", birthProfileId = "birth-1", calculationConfig = CalculationConfig(),
+            engineVersion = generated.value.calculation.engineVersion, calculationTimestampEpochMs = 1_700_000_000_000,
+            cachedResultJson = oldPayload, snapshotSchemaVersion = "1",
+        ))
+
+        val opened = sdk.getSnapshot("legacy-chart")
+        assertIs<AynvoraResult.Success<SavedKundaliSnapshot>>(opened)
+        assertEquals(SavedSnapshotOpenStatus.MIGRATE, opened.value.status)
+        assertEquals(KundaliSnapshot.CURRENT_SCHEMA_VERSION, opened.value.snapshot?.schemaVersion)
+        assertEquals(emptyList(), opened.value.snapshot?.events)
     }
 
     private class MemorySavedCharts : SavedChartRepository {

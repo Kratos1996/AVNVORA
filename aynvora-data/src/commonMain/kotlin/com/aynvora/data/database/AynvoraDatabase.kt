@@ -36,6 +36,7 @@ import com.aynvora.data.database.entity.UserProfileRoomEntity
  * Version history:
  *  v1 — initial schema (profiles, charts, tarot)
  *  v2 — Phase 8.3: Bhagavad Gita scripture tables (gita/gita, Public Domain)
+ *  v3 — Phase 10.16F: complete saved-chart snapshot compatibility metadata
  */
 @Database(
     entities = [
@@ -58,8 +59,8 @@ import com.aynvora.data.database.entity.UserProfileRoomEntity
         GitaAuthorRoomEntity::class,
         GitaSeedStateRoomEntity::class,
     ],
-    version = 2,
-    exportSchema = false,
+    version = 3,
+    exportSchema = true,
 )
 @ConstructedBy(AynvoraDatabaseConstructor::class)
 abstract class AynvoraDatabase : RoomDatabase() {

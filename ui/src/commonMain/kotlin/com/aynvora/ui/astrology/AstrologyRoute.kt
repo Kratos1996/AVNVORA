@@ -481,7 +481,9 @@ private fun KundaliWorkspace(model: VedicAstrologyUiModel, translator: com.aynvo
             }
             "lagna", "navamsha", "chandra", "chalit" -> {
                 val supported = selectedChart != null && selectedChart.status != com.aynvora.core.models.CalculationAvailability.UNSUPPORTED
-                if (!supported) item { EmptyReport("This chart is not included in the saved calculation snapshot.") }
+                if (sectionId == "chalit" && (selectedPage.availability == com.aynvora.core.models.CalculationAvailability.AMBIGUOUS || snapshot.featureResults["chalit"]?.status == com.aynvora.core.models.AstroFeatureStatus.AMBIGUOUS)) {
+                    item { EmptyReport("Chalit is marked AMBIGUOUS because its cusp convention is not verified. The saved snapshot does not substitute an Equal House chart.") }
+                } else if (!supported) item { EmptyReport("This chart is not included in the saved calculation snapshot.") }
                 else {
                     item {
                         Surface(color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.92f), shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
@@ -515,7 +517,9 @@ private fun KundaliWorkspace(model: VedicAstrologyUiModel, translator: com.aynvo
             }
             "chalit_table" -> {
                 val table = snapshot.tables.firstOrNull { it.sectionId == "chalit_table" }
-                table?.let { item { AstrologyDataTable(it) } } ?: item { EmptyReport("House cusp rows are unavailable in this snapshot.") }
+                if (selectedPage.availability == com.aynvora.core.models.CalculationAvailability.AMBIGUOUS || snapshot.featureResults["chalit"]?.status == com.aynvora.core.models.AstroFeatureStatus.AMBIGUOUS) {
+                    item { EmptyReport("Chalit house cusps are AMBIGUOUS for this ruleset. No substitute cusps are shown.") }
+                } else table?.let { item { AstrologyDataTable(it) } } ?: item { EmptyReport("House cusp rows are unavailable in this snapshot.") }
             }
             "dasha" -> {
                 val timeline = snapshot.dasha

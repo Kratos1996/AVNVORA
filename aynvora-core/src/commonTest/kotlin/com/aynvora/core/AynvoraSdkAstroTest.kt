@@ -18,14 +18,21 @@ import com.aynvora.core.models.HouseSystem
 import com.aynvora.core.models.generateKundaliSnapshot
 import com.aynvora.core.models.TransitRequest
 import com.aynvora.core.models.PanchangRequest
+import com.aynvora.core.models.DashaRequest
+import com.aynvora.core.models.OfflineLocationCatalog
+import com.aynvora.core.models.LocationLookupStatus
+import com.aynvora.core.models.AstroReferenceInput
+import com.aynvora.core.models.AstroReferenceInputGate
 import com.aynvora.core.models.PlanetMotionState
 import com.aynvora.core.result.AynvoraResult
+import kotlinx.serialization.encodeToString
 import kotlinx.coroutines.runBlocking
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class AynvoraSdkAstroTest {
@@ -159,14 +166,27 @@ class AynvoraSdkAstroTest {
         val location = sampleBirthData().place
         val requestedDate = BirthDate(2024, 4, 8)
         val requestedTime = BirthTime(18, 30, 0)
-        val result = sdk.astrology.calculateTransit(TransitRequest(requestedDate, requestedTime, location))
+        val result = sdk.astrology.calculateTransit(
+            TransitRequest(requestedDate, requestedTime, location, natalContext = ChartRequest(sampleBirthData())),
+        )
         assertIs<AynvoraResult.Success<com.aynvora.core.models.TransitFeatureResult>>(result)
         assertEquals("2024-04-08", result.value.instant.localDate)
         assertEquals("18:30:00", result.value.instant.localTime)
         assertEquals("2024-04-08T13:00:00Z", result.value.instant.utcTimestamp)
         assertEquals(result.value.instant.julianDay, result.value.snapshot.julianDay, 1e-9)
         assertTrue(result.value.snapshot.julianDay > 2460000.0)
-        assertEquals(com.aynvora.core.models.AstroResolutionStatus.NOT_VERIFIED, result.value.instant.resolutionStatus)
+        assertEquals(com.aynvora.core.models.AstroResolutionStatus.RESOLVED, result.value.instant.resolutionStatus)
+        assertEquals(com.aynvora.astro.time.TimeNormalizer.TIMEZONE_DATA_VERSION, result.value.instant.timezoneDataVersion)
+        assertEquals(com.aynvora.core.models.AstroFeatureStatus.PARTIAL, result.value.status)
+        assertTrue(result.value.natalHouseByBody.isNotEmpty())
+        assertTrue(result.value.interactions.isNotEmpty())
+        assertTrue(result.value.executionTrace!!.executionOrder.contains("vedic.transit"))
+        assertTrue(result.value.executionTrace!!.executionOrder.contains("core.planetary_positions"))
+        assertEquals(1, result.value.executionTrace!!.executionOrder.count { it == "core.planetary_positions" })
+        val encoded = kotlinx.serialization.json.Json.encodeToString(
+            com.aynvora.core.models.TransitFeatureResult.serializer(), result.value,
+        )
+        assertTrue(encoded.contains("2024-04-08T13:00:00Z"))
     }
 
     @Test
@@ -179,6 +199,52 @@ class AynvoraSdkAstroTest {
         assertEquals(28.6139, result.value.snapshot.observerLatitudeDeg)
         assertEquals(77.2090, result.value.snapshot.observerLongitudeDeg)
         assertEquals(330, result.value.snapshot.timezoneOffsetMinutes)
+        assertEquals(listOf("vedic.panchang"), result.value.executionTrace!!.executionOrder)
+        assertEquals(com.aynvora.core.models.AstroFeatureStatus.SUPPORTED, result.value.status)
+        assertNotNull(result.value.snapshot.sunriseJulianDay)
+        assertNotNull(result.value.snapshot.sunsetJulianDay)
+        assertNotNull(result.value.dayDurationMinutes)
+        val encoded = kotlinx.serialization.json.Json.encodeToString(
+            com.aynvora.core.models.PanchangFeatureResult.serializer(), result.value,
+        )
+        assertTrue(encoded.contains("CLASSICAL_LOCAL_SUNRISE_V1"))
+    }
+
+    @Test
+    fun dashaRequestUsesTheCalculatedNatalMoonAndReturnsCurrentNesting() = runBlocking {
+        val result = sdk.astrology.calculateDasha(DashaRequest(ChartRequest(sampleBirthData()), includePratyantardasha = true))
+        assertIs<AynvoraResult.Success<com.aynvora.core.models.DashaFeatureResult>>(result)
+        val dasha = result.value
+        assertEquals("PARASHARA_VIMSHOTTARI_120_V1", dasha.timeline.rulesetId)
+        assertEquals("PARASHARA_VIMSHOTTARI_120_V1", dasha.provenance.calculationProfileId)
+        assertNotNull(dasha.currentMahadasha)
+        assertNotNull(dasha.currentAntardasha)
+        assertNotNull(dasha.currentPratyantardasha)
+        assertEquals(dasha.timeline.birthJulianDay, dasha.currentMahadasha!!.startJulianDay)
+    }
+
+    @Test
+    fun offlineLocationCatalogPreservesDuplicateNamesAndResolvesOnlyByCanonicalId() {
+        val catalog = OfflineLocationCatalog.parse(
+            "101\tSpringfield\tIL\tIllinois\tUS\tUnited States\t39.78\t-89.64\tAmerica/Chicago\n" +
+                "202\tSpringfield\tMA\tMassachusetts\tUS\tUnited States\t42.10\t-72.59\tAmerica/New_York\n",
+            datasetVersion = "fixture-v1",
+            provenance = "test fixture",
+        )
+        assertEquals(LocationLookupStatus.AMBIGUOUS, catalog.findByCityName("Springfield").status)
+        assertEquals(LocationLookupStatus.UNIQUE, catalog.findByCityName("Springfield", stateCode = "IL").status)
+        assertEquals("MA", catalog.resolve("202")?.stateCode)
+        assertEquals(null, catalog.resolve("Springfield"))
+
+        val catalogSdk = Aynvora.create(locationCatalog = catalog)
+        assertEquals(listOf("US"), catalogSdk.searchCountries().map { it.countryCode })
+        assertEquals(listOf("IL", "MA"), catalogSdk.searchStates("US").map { it.stateCode }.sorted())
+        assertEquals(1, catalogSdk.searchCities("MA", "US", "Spring").size)
+        assertEquals(LocationLookupStatus.AMBIGUOUS, catalogSdk.findCity("Springfield").status)
+        val selectedPlace = catalogSdk.resolveLocation("202")!!.toBirthPlace()
+        assertEquals("202", selectedPlace.id)
+        assertEquals("fixture-v1", selectedPlace.locationDatasetVersion)
+        assertEquals(42.10, selectedPlace.coordinates.latitude)
     }
 
     @Test
@@ -194,6 +260,40 @@ class AynvoraSdkAstroTest {
         assertTrue(result.value.trace.executionOrder.contains("core.planetary_positions"))
         assertTrue(result.value.trace.executionOrder.contains("vedic.dasha"))
         assertEquals(com.aynvora.astro.pipeline.FeatureStatus.AMBIGUOUS, result.value.outputs["vedic.chalit"]?.status)
+    }
+
+    @Test
+    fun canonicalLocationMetadataReachesTheCalculationPipeline() = runBlocking {
+        val catalog = OfflineLocationCatalog.parse(
+            "202\tSpringfield\tMA\tMassachusetts\tUS\tUnited States\t42.10\t-72.59\tAmerica/New_York",
+            datasetVersion = "fixture-v1", provenance = "test catalog",
+        )
+        val sdk = Aynvora.create(locationCatalog = catalog)
+        val selectedPlace = sdk.resolveLocation("202")!!.toBirthPlace()
+        val request = ChartRequest(sampleBirthData().copy(place = selectedPlace))
+        val result = sdk.calculateFeature(request, "core.location")
+        assertIs<AynvoraResult.Success<com.aynvora.core.models.AstrologyFeatureCalculation>>(result)
+        val location = result.value.outputs.getValue("core.location").value as com.aynvora.astro.pipeline.ResolvedLocationResult
+        assertEquals("202", location.cityId)
+        assertEquals("America/New_York", location.timezoneId)
+        assertEquals("fixture-v1", location.locationDatasetVersion)
+        assertEquals("test catalog", location.locationProvenance)
+        assertEquals("offline_canonical_catalog", location.source)
+    }
+
+    @Test
+    fun referenceInputGateRejectsDifferentInstantsAndCalculationEpochs() {
+        val aligned = AstroReferenceInput(
+            date = "2024-03-10", localTime = "03:30:00", timezoneId = "America/New_York",
+            latitude = 40.71, longitude = -74.0, ayanamsha = "LAHIRI_CHITRAPAKSHA",
+            houseSystem = "EQUAL_HOUSE", calculationProfile = "STANDARD_VEDIC", requestedFeature = "sun_longitude",
+            requestedTimestamp = "2024-03-10T07:30:00Z", calculationEpoch = "TT", timezoneDataVersion = "tz-v1",
+        )
+        assertEquals(emptyList(), AstroReferenceInputGate.mismatchFields(aligned, aligned.copy()))
+        assertEquals(
+            listOf("requestedTimestamp", "calculationEpoch"),
+            AstroReferenceInputGate.mismatchFields(aligned, aligned.copy(requestedTimestamp = "2024-03-10T06:30:00Z", calculationEpoch = "UTC")),
+        )
     }
 
     @Test
@@ -247,11 +347,12 @@ class AynvoraSdkAstroTest {
         assertIs<AynvoraResult.Success<com.aynvora.core.models.KundaliSnapshot>>(first)
         assertIs<AynvoraResult.Success<com.aynvora.core.models.KundaliSnapshot>>(second)
         val snapshot = first.value
-        assertEquals("1", snapshot.schemaVersion)
+        assertEquals(com.aynvora.core.models.KundaliSnapshot.CURRENT_SCHEMA_VERSION, snapshot.schemaVersion)
         assertEquals("2000-01-01", snapshot.birth.localDate)
         assertEquals("2000-01-01T12:00:00Z", snapshot.birth.utcTimestamp)
         assertEquals(12, snapshot.natalChart.houses.size)
         assertEquals(9, snapshot.natalChart.planetaryPositions.size)
+        assertNull(snapshot.natalChart.executionTrace)
         assertEquals(12, snapshot.charts.first { it.chartId == "D1" }.houses.size)
         assertTrue(snapshot.charts.any { it.chartId == "D9" })
         assertNotNull(snapshot.dasha)
@@ -260,9 +361,48 @@ class AynvoraSdkAstroTest {
         assertTrue(snapshot.tables.any { it.sectionId == "chalit_table" })
         assertEquals(com.aynvora.core.models.CalculationAvailability.UNSUPPORTED, snapshot.availability.first { it.sectionId == "kp" }.availability)
         assertEquals(com.aynvora.core.models.CalculationAvailability.UNSUPPORTED, snapshot.availability.first { it.sectionId == "varshaphal" }.availability)
+        assertEquals(com.aynvora.core.models.AstroFeatureStatus.NOT_VERIFIED, snapshot.featureResults["kp_analysis"]?.status)
+        assertEquals(com.aynvora.core.models.AstroFeatureStatus.NOT_VERIFIED, snapshot.featureResults["lal_kitab_analysis"]?.status)
+        assertEquals(com.aynvora.core.models.AstroFeatureStatus.NOT_VERIFIED, snapshot.featureResults["varshaphal"]?.status)
+        assertEquals(com.aynvora.core.models.AstroFeatureStatus.UNSUPPORTED, snapshot.featureResults["phaladesh"]?.status)
         val encoded = com.aynvora.core.models.KundaliSnapshotJson.encode(snapshot)
         assertEquals(encoded, com.aynvora.core.models.KundaliSnapshotJson.encode(second.value))
         assertEquals(snapshot, com.aynvora.core.models.KundaliSnapshotJson.decode(encoded))
+    }
+
+    @Test
+    fun evaluatedEventsAreIntegratedIntoSnapshotJsonAndEvidenceGraph() = runBlocking {
+        val generated = sdk.generateKundaliSnapshot(
+            ChartRequest(sampleBirthData()), "event-fixture", "Event fixture", "UNSPECIFIED",
+        )
+        assertIs<AynvoraResult.Success<com.aynvora.core.models.KundaliSnapshot>>(generated)
+        val metadata = generated.value.calculation
+        val request = com.aynvora.core.astrology.prediction.AstroEventEvaluationRequest(
+            definition = com.aynvora.core.astrology.prediction.AstroEventDefinition(
+                eventId = "fixture.event", nameKey = "event.fixture", tradition = "FIXTURE_ONLY",
+                conditions = emptyList(), evidenceRequirements = listOf("fixture-fact"),
+                sourceRefs = listOf("test:fixture"), ruleVersion = "test-1", licenseStatus = "CLEARED",
+                status = com.aynvora.core.astrology.prediction.AstroEventDefinitionStatus.SUPPORTED,
+                typedConditions = listOf(com.aynvora.core.astrology.prediction.AstroEventCondition(
+                    "fixture.value", com.aynvora.core.astrology.prediction.AstroEventComparison.EQUALS,
+                    "yes", "fixture-fact",
+                )),
+            ),
+            period = com.aynvora.core.astrology.prediction.AstroEventTimeRange("2027-01-01", "2027-01-31"),
+            facts = listOf(com.aynvora.core.astrology.prediction.AstroEventFact(
+                "fixture-evidence", "fixture.value", "yes", "fixture-fact", listOf("test:calculation"),
+            )),
+            provenance = metadata,
+            featureId = "vedic.fixture",
+        )
+
+        val withEvents = sdk.calculateEventOccurrences(generated.value, listOf(request))
+        val encoded = com.aynvora.core.models.KundaliSnapshotJson.encode(withEvents)
+        assertEquals(com.aynvora.core.astrology.prediction.AstroEventOccurrenceStatus.SUPPORTED, withEvents.events.single().status)
+        assertEquals("vedic.fixture", withEvents.events.single().featureId)
+        assertTrue(withEvents.evidenceGraph!!.edges.any { it.relationship == "SUPPORTS_EVENT" })
+        assertEquals(withEvents, com.aynvora.core.models.KundaliSnapshotJson.decode(encoded))
+        assertEquals(encoded, com.aynvora.core.models.KundaliSnapshotJson.encode(withEvents))
     }
 
     @Test

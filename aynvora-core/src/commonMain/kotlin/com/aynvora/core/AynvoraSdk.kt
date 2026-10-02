@@ -10,7 +10,13 @@ import com.aynvora.core.models.ChartRequest
 import com.aynvora.core.models.ChartResult
 import com.aynvora.core.models.calculateTransitRequest
 import com.aynvora.core.models.calculatePanchangRequest
+import com.aynvora.core.models.calculateDashaRequest
 import com.aynvora.core.models.generateKundaliSnapshot
+import com.aynvora.core.models.getChart
+import com.aynvora.core.models.exportJson
+import com.aynvora.core.models.openSavedKundaliSnapshot
+import com.aynvora.core.astrology.prediction.withEventOccurrences
+import com.aynvora.core.models.SavedKundaliSnapshot
 import com.aynvora.core.models.EngineMetadata
 import com.aynvora.core.repository.BirthProfileRepository
 import com.aynvora.core.repository.SavedChartRepository
@@ -26,6 +32,111 @@ import com.aynvora.core.result.AynvoraResult
  * and persistence infrastructure.
  */
 interface AynvoraSdk {
+    /** Metadata for calculators exposed through the shared feature engine registry. */
+    fun getAstroCalculatorRegistry() = com.aynvora.astro.pipeline.AstroCalculatorRegistry.all()
+
+    /** Returns engine readiness, required pipeline dependencies, and verified implementation blockers. */
+    fun getAdvancedAstrologyCapabilities() =
+        com.aynvora.core.astrology.prediction.AdvancedAstrologyFeatureRegistry.capabilities
+
+    /** Evaluates explicit feature evidence and appends source-linked occurrences to the snapshot. */
+    fun calculateEventOccurrences(
+        snapshot: com.aynvora.core.models.KundaliSnapshot,
+        requests: List<com.aynvora.core.astrology.prediction.AstroEventEvaluationRequest>,
+    ): com.aynvora.core.models.KundaliSnapshot {
+        val occurrences = requests.map { request ->
+            com.aynvora.core.astrology.prediction.AstroEventEngine.evaluate(
+                request.definition, request.period, request.facts, request.provenance, request.featureId,
+            )
+        }
+        return snapshot.withEventOccurrences(occurrences)
+    }
+
+    /** Slices a requested observation range while reusing caller-supplied natal facts. */
+    fun generateEvents(
+        snapshot: com.aynvora.core.models.KundaliSnapshot,
+        catalog: com.aynvora.core.astrology.prediction.AstroEventCatalog,
+        range: com.aynvora.core.astrology.prediction.AstroEventObservationRange,
+        baseFacts: List<com.aynvora.core.astrology.prediction.AstroEventFact>,
+        provenance: com.aynvora.astro.provenance.CalculationMetadata,
+        factsForSlice: (com.aynvora.core.astrology.prediction.AstroEventDefinition, com.aynvora.core.astrology.prediction.AstroEventTimeSlice) -> List<com.aynvora.core.astrology.prediction.AstroEventFact>,
+    ): com.aynvora.core.astrology.prediction.AstroEventSnapshotResult {
+        val generation = com.aynvora.core.astrology.prediction.AstroEventGenerator.generateEvents(
+            catalog, range, baseFacts, provenance, factsForSlice,
+        )
+        return com.aynvora.core.astrology.prediction.AstroEventSnapshotResult(
+            snapshot.withEventOccurrences(generation.occurrences), generation,
+        )
+    }
+
+    /** Exact/token search is local and deterministic; semantic search is optional host infrastructure. */
+    fun searchKnowledge(
+        query: String,
+        chunks: List<com.aynvora.core.astrology.prediction.KnowledgeChunk>,
+        filters: com.aynvora.core.astrology.prediction.KnowledgeSearchFilters = com.aynvora.core.astrology.prediction.KnowledgeSearchFilters(),
+        limit: Int = 20,
+        semanticSearch: com.aynvora.core.astrology.prediction.KnowledgeSemanticSearch? = null,
+    ) = com.aynvora.core.astrology.prediction.KnowledgeSearchEngine.search(query, chunks, filters, limit, semanticSearch)
+
+    /** Search local source-backed chunks with lexical and optional host semantic retrieval. */
+    fun search(query: String, chunks: List<com.aynvora.core.astrology.prediction.KnowledgeChunk>, filters: com.aynvora.core.astrology.prediction.KnowledgeSearchFilters = com.aynvora.core.astrology.prediction.KnowledgeSearchFilters(), limit: Int = 20) =
+        searchKnowledge(query, chunks, filters, limit)
+
+    /** Resolve registered source metadata without fetching source content. */
+    fun getSource(sourceId: String, registry: com.aynvora.core.astrology.knowledge.AstroKnowledgeSourceRegistry) = registry.find(sourceId)
+
+    /** Build provenance-preserving local and optional remote evidence. */
+    fun getEvidence(query: String, chunks: List<com.aynvora.core.astrology.prediction.KnowledgeChunk>, sources: com.aynvora.core.astrology.knowledge.AstroKnowledgeSourceRegistry, rules: List<com.aynvora.core.astrology.prediction.KnowledgeRule> = emptyList(), deterministic: List<com.aynvora.core.astrology.knowledge.AstroEvidenceItem> = emptyList(), web: List<com.aynvora.core.astrology.knowledge.WebEvidence> = emptyList()) =
+        com.aynvora.core.astrology.knowledge.KnowledgeRetriever(sources).retrieve(query, chunks, rules, deterministic = deterministic, web = web)
+
+    /** Prepare a page-aware grounded request. Model inference/tool dispatch is host-owned. */
+    fun ask(question: String, pageContext: com.aynvora.core.astrology.knowledge.AstroPageContext, mode: com.aynvora.core.astrology.knowledge.AstroAnswerMode, evidence: com.aynvora.core.astrology.knowledge.AstroEvidenceBundle) =
+        com.aynvora.core.astrology.knowledge.GroundedAstroAsk(question, pageContext, mode, evidence)
+
+    /** Optional remote provider; returns explicit REMOTE_WEB evidence only when configured. */
+    suspend fun searchWeb(query: String, provider: com.aynvora.core.astrology.knowledge.RemoteWebSearchProvider?, retrievedAtEpochMs: Long, traditionId: String? = null) =
+        provider?.search(query, retrievedAtEpochMs, traditionId).orEmpty()
+
+    /** The signed-off Tajika V1 rules, page citations, source records, and CC BY-SA attribution. */
+    fun getTajikaKnowledgePack() = com.aynvora.core.astrology.knowledge.tajika.TajikaKnowledgePack.v1()
+
+    /** Evaluate Tajika Muntha rules only from an explicit caller-calculated Muntha house. */
+    fun getMuntha(
+        munthaHouse: Int,
+        maleficOccupation: Boolean = false,
+        hostileMaleficAspect: Boolean = false,
+        munthaLordStrength: String? = null,
+        beneficAssociation: Boolean = false,
+        beneficAspect: Boolean = false,
+    ) = com.aynvora.core.astrology.knowledge.tajika.TajikaRuleEngine.evaluateMuntha(
+        munthaHouse, maleficOccupation, hostileMaleficAspect, munthaLordStrength, beneficAssociation, beneficAspect,
+    )
+
+    /** Evaluate the sourced Sun-as-Varshesha subset from explicit annual chart facts. */
+    fun getVarsheshaSun(strength: String, natalSunStrength: String? = null) =
+        com.aynvora.core.astrology.knowledge.tajika.TajikaRuleEngine.evaluateVarsheshaSun(strength, natalSunStrength)
+
+    /** Run the registered-tool, evidence-fusion, and grounded-local-AI pipeline supplied by the host. */
+    suspend fun executeTool(
+        executor: com.aynvora.core.astrology.knowledge.AynvoraAiToolExecutor,
+        question: String,
+        context: com.aynvora.core.astrology.knowledge.AstroPageContext,
+        locale: String = "en",
+        mode: com.aynvora.core.astrology.knowledge.AstroAnswerMode = com.aynvora.core.astrology.knowledge.AstroAnswerMode.NORMAL,
+        includeWeb: Boolean = false,
+        requestTimestampEpochMs: Long,
+    ) = executor.ask(question, context, locale, mode, includeWeb, requestTimestampEpochMs)
+
+    /** Catalog loaded from the host's bundled asset; null means offline search was not configured. */
+    val locationCatalog: com.aynvora.core.models.OfflineLocationCatalog? get() = null
+
+    fun searchCountries(query: String = ""): List<com.aynvora.core.models.CanonicalCountry> = locationCatalog?.searchCountries(query).orEmpty()
+    fun searchStates(countryCode: String, query: String = ""): List<com.aynvora.core.models.CanonicalState> = locationCatalog?.searchStates(countryCode, query).orEmpty()
+    fun searchCities(stateCode: String, countryCode: String? = null, query: String = ""): List<com.aynvora.core.models.CanonicalLocation> = locationCatalog?.searchCities(stateCode, countryCode, query).orEmpty()
+    fun findCity(cityName: String, countryCode: String? = null, stateCode: String? = null): com.aynvora.core.models.LocationNameLookup =
+        locationCatalog?.findByCityName(cityName, countryCode, stateCode) ?: com.aynvora.core.models.LocationNameLookup(emptyList())
+    fun resolveLocation(canonicalId: String): com.aynvora.core.models.CanonicalLocation? = locationCatalog?.resolve(canonicalId)
+
     /** Grouped astrology request API for date-sensitive and selective operations. */
     val astrology: AstrologySdkFacade get() = AstrologySdkFacade(this)
 
@@ -34,11 +145,34 @@ interface AynvoraSdk {
      */
     suspend fun calculateChart(request: ChartRequest): AynvoraResult<ChartResult>
 
+    /** Calculates the solar return and shared annual AstroChart, marking unsupported Tajika parts explicitly. */
+    suspend fun calculateVarshaphal(
+        request: ChartRequest,
+        targetYear: Int,
+    ): AynvoraResult<com.aynvora.core.astrology.knowledge.tajika.VarshaphalResult>
+
     /** Runs only requested registered core features and their shared dependencies. IDs are registry IDs, e.g. `vedic.dignities`. */
     suspend fun calculateFeatures(
         request: ChartRequest,
         featureIds: Set<String>,
     ): AynvoraResult<com.aynvora.core.models.AstrologyFeatureCalculation>
+
+    /** Runs registry features with explicit observation/request inputs through the same pipeline. */
+    suspend fun calculateFeaturesWithInputs(
+        request: ChartRequest,
+        featureIds: Set<String>,
+        inputs: com.aynvora.astro.pipeline.FeatureOutputs,
+    ): AynvoraResult<com.aynvora.core.models.AstrologyFeatureCalculation> = calculateFeatures(request, featureIds)
+
+    /** Calculates one feature and its required upstream dependencies through the same registry/pipeline. */
+    suspend fun calculateFeature(
+        request: ChartRequest,
+        featureId: String,
+    ): AynvoraResult<com.aynvora.core.models.AstrologyFeatureCalculation> =
+        calculateFeatures(request, setOf(featureId))
+
+    /** Reads and decodes an already persisted snapshot without invoking calculation engines. */
+    suspend fun getSnapshot(chartId: String): AynvoraResult<SavedKundaliSnapshot> = openSavedKundaliSnapshot(chartId)
 
     /**
      * Convenience overload calculating chart directly from birth data and optional configuration.
@@ -121,6 +255,9 @@ interface AynvoraSdk {
             birthJd, moonSiderealLongitude, calculateAntardashas, calculatePratyantardashas,
         )
 
+    /** Request-based Dasha calculation sourced from one canonical natal chart calculation. */
+    suspend fun calculateDasha(request: com.aynvora.core.models.DashaRequest) = calculateDashaRequest(request)
+
     /**
      * Calculates planetary transit snapshot for a specific Julian Day.
      */
@@ -130,6 +267,9 @@ interface AynvoraSdk {
     ): com.aynvora.astro.transit.TransitSnapshot =
         com.aynvora.astro.transit.TransitCalculator.calculateSnapshot(jd, ayanamsaConvention)
 
+    /** Calculates transit through the shared pipeline using explicit natal and observation contexts. */
+    suspend fun calculateTransit(request: com.aynvora.core.models.TransitRequest) = calculateTransitRequest(request)
+
     /**
      * Calculates 5-limb classical Panchang snapshot for an exact moment.
      */
@@ -138,6 +278,9 @@ interface AynvoraSdk {
         ayanamsaConvention: String = "LAHIRI_CHITRAPAKSHA",
     ): com.aynvora.astro.panchang.PanchangSnapshot =
         com.aynvora.astro.panchang.PanchangCalculator.calculate(jd, ayanamsaConvention)
+
+    /** Calculates Panchang through the shared pipeline using an explicit observation context. */
+    suspend fun calculatePanchang(request: com.aynvora.core.models.PanchangRequest) = calculatePanchangRequest(request)
 
     /**
      * Discovers calculation engine version and supported capability domains.
@@ -216,15 +359,42 @@ interface AynvoraSdk {
 }
 
 class AstrologySdkFacade internal constructor(private val sdk: AynvoraSdk) {
+    fun calculators() = sdk.getAstroCalculatorRegistry()
+    fun getAdvancedAstrologyCapabilities() = sdk.getAdvancedAstrologyCapabilities()
+    fun calculateEventOccurrences(
+        snapshot: com.aynvora.core.models.KundaliSnapshot,
+        requests: List<com.aynvora.core.astrology.prediction.AstroEventEvaluationRequest>,
+    ) = sdk.calculateEventOccurrences(snapshot, requests)
+    fun events(
+        snapshot: com.aynvora.core.models.KundaliSnapshot,
+        catalog: com.aynvora.core.astrology.prediction.AstroEventCatalog,
+        range: com.aynvora.core.astrology.prediction.AstroEventObservationRange,
+        baseFacts: List<com.aynvora.core.astrology.prediction.AstroEventFact>,
+        provenance: com.aynvora.astro.provenance.CalculationMetadata,
+        factsForSlice: (com.aynvora.core.astrology.prediction.AstroEventDefinition, com.aynvora.core.astrology.prediction.AstroEventTimeSlice) -> List<com.aynvora.core.astrology.prediction.AstroEventFact>,
+    ) = sdk.generateEvents(snapshot, catalog, range, baseFacts, provenance, factsForSlice)
+    fun search(
+        query: String,
+        chunks: List<com.aynvora.core.astrology.prediction.KnowledgeChunk>,
+        filters: com.aynvora.core.astrology.prediction.KnowledgeSearchFilters = com.aynvora.core.astrology.prediction.KnowledgeSearchFilters(),
+        limit: Int = 20,
+        semanticSearch: com.aynvora.core.astrology.prediction.KnowledgeSemanticSearch? = null,
+    ) = sdk.searchKnowledge(query, chunks, filters, limit, semanticSearch)
+    suspend fun calculateFeature(request: ChartRequest, featureId: String) = sdk.calculateFeature(request, featureId)
     suspend fun calculateFeatures(request: ChartRequest, featureIds: Set<String>) = sdk.calculateFeatures(request, featureIds)
-    suspend fun calculateTransit(request: com.aynvora.core.models.TransitRequest) = sdk.calculateTransitRequest(request)
-    suspend fun calculatePanchang(request: com.aynvora.core.models.PanchangRequest) = sdk.calculatePanchangRequest(request)
+    suspend fun calculateTransit(request: com.aynvora.core.models.TransitRequest) = sdk.calculateTransit(request)
+    suspend fun calculatePanchang(request: com.aynvora.core.models.PanchangRequest) = sdk.calculatePanchang(request)
+    suspend fun calculateDasha(request: com.aynvora.core.models.DashaRequest) = sdk.calculateDasha(request)
     suspend fun calculateKundali(
         request: ChartRequest,
         profileId: String,
         profileName: String,
         genderId: String? = null,
     ) = sdk.generateKundaliSnapshot(request, profileId, profileName, genderId)
+
+    suspend fun getSnapshot(chartId: String) = sdk.getSnapshot(chartId)
+    fun getChart(snapshot: com.aynvora.core.models.KundaliSnapshot, chartId: String) = snapshot.getChart(chartId)
+    fun exportJson(snapshot: com.aynvora.core.models.KundaliSnapshot) = snapshot.exportJson()
 }
 
 /**
@@ -244,6 +414,7 @@ object Aynvora {
         tarot: com.aynvora.core.tarot.TarotRepository? = null,
         numerology: com.aynvora.core.numerology.NumerologyRepository? = null,
         analyticsTracker: AnalyticsTracker = NoOpAnalyticsTracker(),
+        locationCatalog: com.aynvora.core.models.OfflineLocationCatalog? = null,
     ): AynvoraSdk = DefaultAynvoraSdk(
         adapter = AstroEngineAdapter(),
         userProfiles = userProfiles,
@@ -255,6 +426,7 @@ object Aynvora {
         tarot = tarot,
         numerology = numerology,
         analyticsTrackerImpl = analyticsTracker,
+        locationCatalog = locationCatalog,
     )
 }
 
@@ -272,6 +444,7 @@ internal class DefaultAynvoraSdk(
     override val tarot: com.aynvora.core.tarot.TarotRepository? = null,
     override val numerology: com.aynvora.core.numerology.NumerologyRepository? = null,
     private val analyticsTrackerImpl: AnalyticsTracker = NoOpAnalyticsTracker(),
+    override val locationCatalog: com.aynvora.core.models.OfflineLocationCatalog? = null,
 ) : AynvoraSdk {
 
     override val analytics: AnalyticsTracker get() = analyticsTrackerImpl
@@ -289,10 +462,21 @@ internal class DefaultAynvoraSdk(
         return result
     }
 
+    override suspend fun calculateVarshaphal(
+        request: ChartRequest,
+        targetYear: Int,
+    ) = adapter.calculateVarshaphal(request, targetYear)
+
     override suspend fun calculateFeatures(
         request: ChartRequest,
         featureIds: Set<String>,
     ): AynvoraResult<com.aynvora.core.models.AstrologyFeatureCalculation> = adapter.executeFeatures(request, featureIds)
+
+    override suspend fun calculateFeaturesWithInputs(
+        request: ChartRequest,
+        featureIds: Set<String>,
+        inputs: com.aynvora.astro.pipeline.FeatureOutputs,
+    ): AynvoraResult<com.aynvora.core.models.AstrologyFeatureCalculation> = adapter.executeFeatures(request, featureIds, inputs)
 
     override suspend fun calculateDivisionalChart(
         request: ChartRequest,

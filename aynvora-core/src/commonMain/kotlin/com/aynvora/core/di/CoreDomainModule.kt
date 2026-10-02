@@ -38,7 +38,7 @@ val coreDomainModule: Module = module {
     single<AnalyticsTracker> { NoOpAnalyticsTracker() }
 
     // Core SDK
-    single<AynvoraSdk> { Aynvora.create(numerology = getOrNull()) }
+    single<AynvoraSdk> { Aynvora.create(numerology = getOrNull(), locationCatalog = getOrNull()) }
 
     // Domain Use Cases
     factory { SaveBirthProfileUseCase(get()) }

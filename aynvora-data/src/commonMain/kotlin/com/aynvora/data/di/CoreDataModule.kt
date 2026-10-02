@@ -14,7 +14,7 @@ import com.aynvora.data.database.AynvoraDatabase
 import com.aynvora.data.repository.BirthProfileRepositoryImpl
 import com.aynvora.data.repository.ContentRepositoryImpl
 import com.aynvora.data.repository.ContentSyncRepositoryImpl
-import com.aynvora.data.repository.SavedChartRepositoryImpl
+import com.aynvora.data.repository.RoomSavedChartRepository
 import com.aynvora.data.repository.UserPreferencesRepositoryImpl
 import com.aynvora.data.repository.UserProfileRepositoryImpl
 import com.aynvora.data.security.NoOpStorageCipher
@@ -48,7 +48,7 @@ val coreDataModule: Module = module {
 
     single<UserProfileRepository> { UserProfileRepositoryImpl(get()) }
     single<BirthProfileRepository> { BirthProfileRepositoryImpl(get()) }
-    single<SavedChartRepository> { SavedChartRepositoryImpl(get()) }
+    single<SavedChartRepository> { RoomSavedChartRepository(get<AynvoraDatabase>().savedChartDao()) }
     single<UserPreferencesRepository> { UserPreferencesRepositoryImpl(get()) }
 
     single<ContentRepository> {

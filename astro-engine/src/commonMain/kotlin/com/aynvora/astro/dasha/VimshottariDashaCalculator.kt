@@ -178,7 +178,7 @@ object VimshottariDashaCalculator {
             val antarPlanet = DashaPlanet.fromIndex(startingIndex + j)
             // Antardasha duration proportion = (MahaYears * AntarYears) / 120
             val antarYears =
-                (mahaPlanet.standardYears * antarPlanet.standardYears) / DashaPlanet.TOTAL_VIMSHOTTARI_YEARS
+                (totalMahaYears * antarPlanet.standardYears) / DashaPlanet.TOTAL_VIMSHOTTARI_YEARS
             val antarDays = antarYears * DashaPlanet.DAYS_PER_YEAR
             val endJd = currentStartJd + antarDays
 

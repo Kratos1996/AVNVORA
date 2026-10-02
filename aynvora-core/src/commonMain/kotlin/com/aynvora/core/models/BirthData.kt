@@ -68,6 +68,8 @@ data class BirthPlace(
     val stateName: String? = null,
     val stateCode: String? = null,
     val cityName: String? = null,
+    val locationDatasetVersion: String? = null,
+    val locationProvenance: String? = null,
 ) {
     init {
         require(timezoneId.isNotBlank()) { "Timezone ID cannot be blank" }

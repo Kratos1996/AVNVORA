@@ -5,6 +5,7 @@ import androidx.compose.ui.window.application
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.aynvora.data.database.AynvoraDatabase
+import com.aynvora.data.database.AynvoraDatabaseMigrations
 import com.aynvora.data.gita.GitaDataSeeder
 import com.aynvora.ui.AynvoraApp
 import com.aynvora.ui.di.aynvoraAppModules
@@ -44,7 +45,7 @@ val jvmDataModule = module {
         Room.databaseBuilder<AynvoraDatabase>(
             name = dbFile.absolutePath,
         )
-            .fallbackToDestructiveMigration(true)
+            .addMigrations(*AynvoraDatabaseMigrations.ALL)
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO)
             .build()

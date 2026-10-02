@@ -35,6 +35,8 @@ internal data class BirthProfileEntity(
     val timezoneId: String,
     val country: String? = null,
     val placeId: String? = null,
+    val locationDatasetVersion: String? = null,
+    val locationProvenance: String? = null,
     val notes: String? = null,
     val createdAtEpochMs: Long,
     val updatedAtEpochMs: Long,

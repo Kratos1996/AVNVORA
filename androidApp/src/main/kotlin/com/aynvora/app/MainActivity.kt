@@ -27,6 +27,8 @@ import com.aynvora.core.ai.OsPlatform
 import com.aynvora.core.analytics.AnalyticsEvent
 import com.aynvora.core.analytics.AnalyticsTracker
 import com.aynvora.data.database.AynvoraDatabase
+import com.aynvora.data.database.AynvoraDatabaseMigrations
+import com.aynvora.core.models.OfflineLocationCatalog
 import com.aynvora.data.gita.GitaDataSeeder
 import com.aynvora.data.storage.StorageDriver
 import com.aynvora.qa.android.AndroidInteractionSentinelRuntime
@@ -57,6 +59,13 @@ class MainActivity : ComponentActivity() {
         if (GlobalContext.getOrNull() == null) {
             val androidModule = module {
                 single<AnalyticsTracker> { FirebaseAnalyticsTracker(this@MainActivity) }
+                single {
+                    val context = this@MainActivity.applicationContext
+                    val path = "composeResources/com.aynvora.designsystem.generated.resources/files/locations.tsv"
+                    context.assets.open(path).bufferedReader().use { reader ->
+                        OfflineLocationCatalog.parse(reader.readText())
+                    }
+                }
                 single<StorageDriver> {
                     AndroidPreferencesStorageDriver(this@MainActivity.applicationContext)
                 }
@@ -67,7 +76,7 @@ class MainActivity : ComponentActivity() {
                         context = applicationContext,
                         name = dbFile.absolutePath,
                     )
-                        .fallbackToDestructiveMigration(true)
+                        .addMigrations(*AynvoraDatabaseMigrations.ALL)
                         .setDriver(BundledSQLiteDriver())
                         .setQueryCoroutineContext(Dispatchers.IO)
                         .build()

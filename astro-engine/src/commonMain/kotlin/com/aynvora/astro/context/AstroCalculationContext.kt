@@ -13,6 +13,7 @@ data class AstroCalculationContext(
     val normalizedUtc: TimeNormalizer.NormalizedUtcTime,
     val julianDay: JulianDay,
     val providerId: String,
+    val providerVersion: String,
     val engineVersion: String,
     val calculationContractVersion: String,
     val dataVersion: String?,
@@ -25,6 +26,7 @@ data class AstroCalculationContext(
             config: EngineCalculationConfig,
             providerId: String = CalculationMetadata.CURRENT_EPHEMERIS_SOURCE_ID,
             dataVersion: String? = null,
+            providerVersion: String = CalculationMetadata.ENGINE_VERSION,
             timeResolver: (Int, Int, Int, Int, Int, Int, String) -> TimeNormalizer.NormalizedUtcTime = { year, month, day, hour, minute, second, zone ->
                 TimeNormalizer.normalizeUnambiguous(year, month, day, hour, minute, second, zone)
             },
@@ -39,6 +41,7 @@ data class AstroCalculationContext(
                 normalizedUtc = normalized,
                 julianDay = normalized.julianDay,
                 providerId = providerId,
+                providerVersion = providerVersion,
                 engineVersion = CalculationMetadata.ENGINE_VERSION,
                 calculationContractVersion = CalculationMetadata.CURRENT_CONTRACT_VERSION,
                 dataVersion = dataVersion,

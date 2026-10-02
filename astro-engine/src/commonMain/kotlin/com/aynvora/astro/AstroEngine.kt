@@ -39,6 +39,7 @@ import com.aynvora.astro.pipeline.AstroFeaturePipeline
 import com.aynvora.astro.pipeline.CoreAstroFeatureRegistry
 import com.aynvora.astro.pipeline.AyanamsaFeatureEngine
 import com.aynvora.astro.pipeline.CoreFeatureKeys
+import com.aynvora.astro.pipeline.FeatureKey
 import com.aynvora.astro.pipeline.PlanetaryPositionFeatureEngine
 import com.aynvora.astro.pipeline.TimeFeatureEngine
 import com.aynvora.astro.pipeline.LagnaFeatureEngine
@@ -105,7 +106,21 @@ data class BirthData(
     val hour: Int? = null,
     val minute: Int? = null,
     val second: Int? = null,
-)
+    val countryCode: String? = null,
+    val countryName: String? = null,
+    val stateCode: String? = null,
+    val stateName: String? = null,
+    val cityId: String? = null,
+    val cityName: String? = null,
+    val locationDatasetVersion: String? = null,
+    val locationProvenance: String? = null,
+) {
+    init {
+        require(latitude in -90.0..90.0) { "Latitude must be between -90.0 and 90.0" }
+        require(longitude in -180.0..180.0) { "Longitude must be between -180.0 and 180.0" }
+        require(timeZoneId.isNotBlank()) { "Timezone ID cannot be blank" }
+    }
+}
 
 @Serializable
 data class CalculationResult(
@@ -133,6 +148,12 @@ data class CalculationResult(
     val shodhitaAshtakavarga: ShodhitaAshtakavargaResult? = null,
     val ashtakavargaPinda: AshtakavargaPindaResult? = null,
     val dasha: com.aynvora.astro.dasha.VimshottariDashaTimeline? = null,
+    val commonChart: com.aynvora.astro.pipeline.AstroChartFeatureResult? = null,
+    val grahSthiti: com.aynvora.astro.pipeline.GrahSthitiResult? = null,
+    val chalit: com.aynvora.astro.pipeline.ChalitFeatureResult? = null,
+    val transit: com.aynvora.astro.pipeline.TransitPipelineResult? = null,
+    val panchang: com.aynvora.astro.pipeline.PanchangPipelineResult? = null,
+    val executionTrace: com.aynvora.astro.pipeline.FeatureExecutionTrace? = null,
 )
 
 interface AstroEngine {
@@ -147,12 +168,15 @@ class AynvoraAstroEngine(
     private val timeResolver: (Int, Int, Int, Int, Int, Int, String) -> TimeNormalizer.NormalizedUtcTime = { year, month, day, hour, minute, second, zone ->
         TimeNormalizer.normalize(year, month, day, hour, minute, second, zone)
     },
+    private val calculationCache: com.aynvora.astro.pipeline.AstroCalculationCache =
+        com.aynvora.astro.pipeline.InMemoryAstroCalculationCache(),
 ) : AstroEngine {
 
     suspend fun calculateFeatures(
         birthData: BirthData,
         config: EngineCalculationConfig,
         featureIds: Set<String>,
+        seed: com.aynvora.astro.pipeline.FeatureOutputs = com.aynvora.astro.pipeline.FeatureOutputs.Empty,
     ): com.aynvora.astro.pipeline.FeatureSetCalculation {
         val context = AstroCalculationContext.create(birthData, config, timeResolver = timeResolver)
         val engines = CoreAstroFeatureRegistry.engines(vargaEngine)
@@ -160,16 +184,31 @@ class AynvoraAstroEngine(
             require(engines.any { it.output.id == id }) { "No engine registered for requested feature '$id'" }
             com.aynvora.astro.pipeline.FeatureKey<Any?>(id)
         }.toSet()
-        return AstroFeaturePipeline(engines).calculateFeatures(context, requested)
+        return AstroFeaturePipeline(engines, calculationCache).calculateFeatures(context, requested, seed)
     }
 
     override suspend fun calculate(
         birthData: BirthData,
         config: EngineCalculationConfig,
+    ): CalculationResult = calculateSnapshot(
+        birthData,
+        config,
+        CoreAstroFeatureRegistry.natalFeatureIds,
+        com.aynvora.astro.pipeline.FeatureOutputs.Empty,
+    )
+
+    /** Builds a single typed result from any registered feature set and explicit request inputs. */
+    suspend fun calculateSnapshot(
+        birthData: BirthData,
+        config: EngineCalculationConfig = EngineCalculationConfig(),
+        featureIds: Set<String> = CoreAstroFeatureRegistry.featureIds,
+        seed: com.aynvora.astro.pipeline.FeatureOutputs = com.aynvora.astro.pipeline.FeatureOutputs.Empty,
     ): CalculationResult {
         // Shared context normalizes the birth time once; feature outputs are reused downstream.
         val context = AstroCalculationContext.create(birthData, config, timeResolver = timeResolver)
-        val features = AstroFeaturePipeline(CoreAstroFeatureRegistry.engines(vargaEngine)).calculate(context)
+        val featureCalculation = AstroFeaturePipeline(CoreAstroFeatureRegistry.engines(vargaEngine), calculationCache)
+            .calculateFeatures(context, featureIds.map { FeatureKey<Any?>(it) }.toSet(), seed)
+        val features = featureCalculation.outputs
         val normalizedTime = context.normalizedUtc
         val jd = context.julianDay
         val ayanamsaDegrees = features.get(CoreFeatureKeys.Ayanamsa).value
@@ -189,6 +228,11 @@ class AynvoraAstroEngine(
         val shodhitaAshtakavarga = features.get(CoreFeatureKeys.Shodhana).value ?: error("Shodhana feature returned no value")
         val ashtakavargaPinda = features.get(CoreFeatureKeys.Pinda).value ?: error("Pinda feature returned no value")
         val dasha = features.get(CoreFeatureKeys.Dasha).value ?: error("Dasha feature returned no value")
+        val commonChart = features.get(CoreFeatureKeys.Chart).value ?: error("Chart feature returned no value")
+        val grahSthiti = features.get(CoreFeatureKeys.GrahSthiti).value ?: error("Grah Sthiti feature returned no value")
+        val chalit = features.get(CoreFeatureKeys.Chalit).value ?: error("Chalit feature returned no value")
+        val transit = features.asMap()[CoreFeatureKeys.Transit.id]?.value as? com.aynvora.astro.pipeline.TransitPipelineResult
+        val panchang = features.asMap()[CoreFeatureKeys.Panchang.id]?.value as? com.aynvora.astro.pipeline.PanchangPipelineResult
 
         val ashtakavarga = rawAshtakavarga.copy(
             shodhana = shodhitaAshtakavarga,
@@ -222,6 +266,12 @@ class AynvoraAstroEngine(
             shodhitaAshtakavarga = shodhitaAshtakavarga,
             ashtakavargaPinda = ashtakavargaPinda,
             dasha = dasha,
+            commonChart = commonChart,
+            grahSthiti = grahSthiti,
+            chalit = chalit,
+            transit = transit,
+            panchang = panchang,
+            executionTrace = featureCalculation.trace,
         )
     }
 

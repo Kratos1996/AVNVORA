@@ -7,7 +7,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 @kotlinx.serialization.Serializable
-enum class SavedSnapshotOpenStatus { OPEN, MIGRATION_REQUIRED, NO_SNAPSHOT, CORRUPT }
+enum class SavedSnapshotOpenStatus { OPEN, MIGRATE, MIGRATION_REQUIRED, UNSUPPORTED_VERSION, NO_SNAPSHOT, CORRUPT }
 
 @kotlinx.serialization.Serializable
 data class SavedKundaliSnapshot(
@@ -51,8 +51,18 @@ suspend fun AynvoraSdk.openSavedKundaliSnapshot(chartId: String): AynvoraResult<
             try {
                 val root = Json.parseToJsonElement(json).jsonObject
                 val version = root["schemaVersion"]?.jsonPrimitive?.content
-                if (version != KundaliSnapshot.CURRENT_SCHEMA_VERSION) {
-                    AynvoraResult.Success(SavedKundaliSnapshot(SavedSnapshotOpenStatus.MIGRATION_REQUIRED, message = "Snapshot schema '$version' requires migration."))
+                if (version == "1") {
+                    val migrated = KundaliSnapshotJson.decode(json)
+                    AynvoraResult.Success(SavedKundaliSnapshot(SavedSnapshotOpenStatus.MIGRATE, migrated, "Snapshot schema 1 was upgraded to schema 2."))
+                } else if (version != KundaliSnapshot.CURRENT_SCHEMA_VERSION) {
+                    val versionNumber = version?.toIntOrNull()
+                    val currentVersion = KundaliSnapshot.CURRENT_SCHEMA_VERSION.toIntOrNull() ?: 1
+                    val status = when {
+                        versionNumber == null || versionNumber < currentVersion -> SavedSnapshotOpenStatus.MIGRATION_REQUIRED
+                        versionNumber > currentVersion -> SavedSnapshotOpenStatus.UNSUPPORTED_VERSION
+                        else -> SavedSnapshotOpenStatus.MIGRATE
+                    }
+                    AynvoraResult.Success(SavedKundaliSnapshot(status, message = "Snapshot schema '$version' is not readable as '${KundaliSnapshot.CURRENT_SCHEMA_VERSION}'."))
                 } else {
                     AynvoraResult.Success(SavedKundaliSnapshot(SavedSnapshotOpenStatus.OPEN, KundaliSnapshotJson.decode(json)))
                 }

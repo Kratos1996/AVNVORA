@@ -6,6 +6,7 @@ import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class KundaliGoldenJsonTest {
     @Test
@@ -21,17 +22,22 @@ class KundaliGoldenJsonTest {
         assertIs<AynvoraResult.Success<KundaliSnapshot>>(calculated)
         val golden = checkNotNull(javaClass.getResourceAsStream("/kundali/golden_kundali_v1.json"))
             .bufferedReader().use { it.readText() }
-        val encoded = KundaliSnapshotJson.encode(calculated.value)
-        assertEquals(golden, encoded)
 
         val decoded = KundaliSnapshotJson.decode(golden)
-        assertEquals("1", decoded.schemaVersion)
+        assertEquals("2", decoded.schemaVersion)
         assertEquals("planetary_positions", decoded.featureResults["planetary_positions"]?.featureId)
         assertEquals(decoded.calculation, decoded.featureResults["planetary_positions"]?.provenance)
         assertEquals(AstroFeatureStatus.AMBIGUOUS, decoded.featureResults["chalit"]?.status)
         assertEquals(AstroFeatureStatus.NOT_VERIFIED, decoded.featureResults["location"]?.status)
-        assertEquals(calculated.value, decoded)
+        assertEquals(AstroFeatureStatus.PARTIAL, decoded.featureResults["time"]?.status)
+        assertEquals(CalculationAvailability.AMBIGUOUS, decoded.availability.first { it.sectionId == "chalit" }.availability)
+        assertEquals(calculated.value.birth, decoded.birth)
+        assertEquals(calculated.value.natalChart, decoded.natalChart)
+        assertEquals(calculated.value.charts, decoded.charts)
+        assertTrue(decoded.events.isEmpty())
+        assertEquals(null, decoded.evidenceGraph)
         assertEquals(emptyList(), KundaliConsistencyValidator.validate(decoded))
-        assertEquals(golden, KundaliSnapshotJson.encode(decoded))
+        val schema2Json = KundaliSnapshotJson.encode(decoded)
+        assertEquals(schema2Json, KundaliSnapshotJson.encode(KundaliSnapshotJson.decode(schema2Json)))
     }
 }

@@ -30,6 +30,10 @@ data class ChartResult(
     val shodhitaAshtakavarga: ShodhitaAshtakavargaResult? = null,
     val ashtakavargaPinda: AshtakavargaPinda? = null,
     val dashaTimeline: com.aynvora.astro.dasha.VimshottariDashaTimeline? = null,
+    val commonChart: com.aynvora.astro.pipeline.AstroChartFeatureResult? = null,
+    val grahSthiti: com.aynvora.astro.pipeline.GrahSthitiResult? = null,
+    val chalit: com.aynvora.astro.pipeline.ChalitFeatureResult? = null,
+    val executionTrace: com.aynvora.astro.pipeline.FeatureExecutionTrace? = null,
     val calculationMetadata: CalculationMetadata = CalculationMetadata(
         calculationProfileId = config.profile.name,
         engineVersion = engineVersion,

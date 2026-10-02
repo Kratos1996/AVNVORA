@@ -10,6 +10,9 @@ import kotlin.math.abs
  */
 object TimeNormalizer {
 
+    /** This is a small, source-reviewed rule set, not a complete IANA tzdb release. */
+    const val TIMEZONE_DATA_VERSION = "AYNVORA_CURATED_RULES_V1"
+
     enum class LocalTimeStatus { NORMAL, AMBIGUOUS_FOLD, INVALID_DST_GAP }
 
     data class NormalizedUtcTime(
@@ -222,6 +225,24 @@ object TimeNormalizer {
                     ?: throw IllegalArgumentException("Unsupported or unrecognized timezone identifier: '$timezoneId'")
             }
         }
+    }
+
+    /** True only for fixed offsets and the explicitly implemented regional rule set. */
+    fun supportsTimezoneId(timezoneId: String): Boolean {
+        val trimmed = timezoneId.trim()
+        if (trimmed.isBlank()) return false
+        if (trimmed.equals("UTC", true) || trimmed.equals("GMT", true) || trimmed == "Z") return true
+        if (parseExplicitOffset(trimmed) != null) return true
+        return trimmed.lowercase() in setOf(
+            "asia/kolkata", "asia/calcutta", "ist", "asia/colombo", "asia/kathmandu", "asia/katmandu",
+            "asia/dhaka", "asia/dacca", "asia/karachi", "asia/dubai", "asia/tokyo", "jst",
+            "asia/singapore", "sst", "asia/hong_kong", "asia/shanghai", "asia/bangkok",
+            "america/new_york", "us/eastern", "est", "edt", "america/chicago", "us/central", "cst", "cdt",
+            "america/denver", "us/mountain", "mst", "mdt", "america/phoenix", "america/los_angeles",
+            "us/pacific", "pst", "pdt", "america/anchorage", "pacific/honolulu", "hst",
+            "europe/london", "wep", "europe/paris", "europe/berlin", "europe/rome", "europe/madrid",
+            "europe/amsterdam", "cet", "cest", "australia/sydney", "aest", "aedt",
+        )
     }
 
     private fun parseExplicitOffset(text: String): Int? {

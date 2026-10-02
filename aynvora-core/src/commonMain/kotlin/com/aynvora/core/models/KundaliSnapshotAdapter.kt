@@ -3,6 +3,10 @@ package com.aynvora.core.models
 import com.aynvora.core.AynvoraSdk
 import com.aynvora.core.result.AynvoraResult
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /** Stable JSON boundary. Data-class and list declaration order is part of schema v1. */
 object KundaliSnapshotJson {
@@ -14,7 +18,19 @@ object KundaliSnapshotJson {
     }
 
     fun encode(snapshot: KundaliSnapshot): String = json.encodeToString(KundaliSnapshot.serializer(), snapshot)
-    fun decode(payload: String): KundaliSnapshot = json.decodeFromString(KundaliSnapshot.serializer(), payload)
+    fun decode(payload: String): KundaliSnapshot {
+        val root = Json.parseToJsonElement(payload).jsonObject
+        val version = root["schemaVersion"]?.jsonPrimitive?.content
+        return when (version) {
+            KundaliSnapshot.CURRENT_SCHEMA_VERSION -> json.decodeFromJsonElement(KundaliSnapshot.serializer(), root)
+            "1" -> {
+                // Schema 2 only adds optional event/evidence fields, so v1 snapshots migrate losslessly.
+                val migrated = JsonObject(root + ("schemaVersion" to JsonPrimitive(KundaliSnapshot.CURRENT_SCHEMA_VERSION)))
+                json.decodeFromJsonElement(KundaliSnapshot.serializer(), migrated)
+            }
+            else -> error("Unsupported Kundali snapshot schema '$version'.")
+        }
+    }
 }
 
 /** Catalog entries are metadata only; a section is available only when snapshot data backs it. */
@@ -50,10 +66,21 @@ object AstrologySectionCatalog {
             "navamsha" to (if (hasD9) CalculationAvailability.AVAILABLE else CalculationAvailability.UNSUPPORTED),
             "cloud" to CalculationAvailability.UNSUPPORTED,
             "chandra" to (if (hasMoon) CalculationAvailability.AVAILABLE else CalculationAvailability.UNSUPPORTED),
-            "chalit" to (if (natal.houses.size == 12) CalculationAvailability.AVAILABLE else CalculationAvailability.PARTIAL),
+            "chalit" to (when (snapshot.featureResults["chalit"]?.status) {
+                AstroFeatureStatus.AMBIGUOUS -> CalculationAvailability.AMBIGUOUS
+                AstroFeatureStatus.UNSUPPORTED, AstroFeatureStatus.FAILED -> CalculationAvailability.UNSUPPORTED
+                AstroFeatureStatus.SUPPORTED -> if (natal.houses.size == 12) CalculationAvailability.AVAILABLE else CalculationAvailability.PARTIAL
+                AstroFeatureStatus.PARTIAL -> CalculationAvailability.PARTIAL
+                // Old snapshots without a Chalit feature record must not inherit the natal chart as a substitute.
+                null, AstroFeatureStatus.NOT_VERIFIED -> CalculationAvailability.AMBIGUOUS
+            }),
             "graha_sthiti" to (if (natal.planetaryPositions.isNotEmpty()) CalculationAvailability.AVAILABLE else CalculationAvailability.UNSUPPORTED),
             "graha_sthiti_all" to (if (states) CalculationAvailability.AVAILABLE else CalculationAvailability.PARTIAL),
-            "chalit_table" to (if (natal.houses.isNotEmpty()) CalculationAvailability.AVAILABLE else CalculationAvailability.UNSUPPORTED),
+            "chalit_table" to (when (snapshot.featureResults["chalit"]?.status) {
+                AstroFeatureStatus.SUPPORTED -> if (natal.houses.size == 12) CalculationAvailability.AVAILABLE else CalculationAvailability.PARTIAL
+                AstroFeatureStatus.UNSUPPORTED, AstroFeatureStatus.FAILED -> CalculationAvailability.UNSUPPORTED
+                else -> CalculationAvailability.AMBIGUOUS
+            }),
             "janam_vivaran" to CalculationAvailability.AVAILABLE,
             "panchang" to (if (snapshot.panchang != null) CalculationAvailability.PARTIAL else CalculationAvailability.UNSUPPORTED),
             "ashtakavarga" to (if (hasAv) CalculationAvailability.AVAILABLE else CalculationAvailability.UNSUPPORTED),
@@ -112,6 +139,9 @@ suspend fun AynvoraSdk.generateKundaliSnapshot(
         is AynvoraResult.Failure -> calculated
         is AynvoraResult.Success -> {
             val chart = calculated.value
+            // Execution timings are diagnostic data, not stable chart content. Persisting them
+            // makes otherwise identical snapshots and their JSON change from run to run.
+            val snapshotChart = chart.copy(executionTrace = null)
             val dasha = chart.dashaTimeline
             val transit = runCatching { calculateTransit(chart.julianDay, request.config.ayanamsa.name) }.getOrNull()
             val panchang = runCatching { calculatePanchang(chart.julianDay, request.config.ayanamsa.name) }.getOrNull()
@@ -142,23 +172,25 @@ suspend fun AynvoraSdk.generateKundaliSnapshot(
                     stateCode = birth.place.stateCode,
                     city = birth.place.cityName ?: birth.place.name,
                     cityId = birth.place.id,
-                    locationSource = "CALLER_SUPPLIED",
-                    locationResolutionStatus = AstroFeatureStatus.NOT_VERIFIED,
-                    timezoneDataVersion = null,
+                    locationSource = if (birth.place.locationDatasetVersion != null) "OFFLINE_CANONICAL_CATALOG" else "CALLER_SUPPLIED",
+                    locationResolutionStatus = if (birth.place.locationDatasetVersion != null) AstroFeatureStatus.PARTIAL else AstroFeatureStatus.NOT_VERIFIED,
+                    locationDatasetVersion = birth.place.locationDatasetVersion,
+                    locationProvenance = birth.place.locationProvenance,
+                    timezoneDataVersion = if (com.aynvora.astro.time.TimeNormalizer.supportsTimezoneId(birth.place.timezoneId)) com.aynvora.astro.time.TimeNormalizer.TIMEZONE_DATA_VERSION else null,
                     ayanamsaId = request.config.ayanamsa.name,
                     houseSystemId = request.config.houseSystem.name,
                     calculationProfileId = request.config.profile.name,
                     nodeConventionId = chart.calculationMetadata.conventions["node_profile"] ?: "UNSPECIFIED",
                 ),
                 calculation = chart.calculationMetadata,
-                natalChart = chart,
-                charts = buildCharts(chart),
+                natalChart = snapshotChart,
+                charts = buildCharts(snapshotChart),
                 dasha = dasha,
                 transitAtBirth = transit,
                 panchang = panchang,
-                tables = buildTables(chart),
+                tables = buildTables(snapshotChart),
                 availability = emptyList(),
-                featureResults = buildFeatureRecords(chart, dasha != null, transit != null, panchang != null),
+                featureResults = buildFeatureRecords(snapshotChart, birth.place, dasha != null, transit != null, panchang != null),
             ).let { it.copy(availability = AstrologySectionCatalog.forSnapshot(it)) }
             AynvoraResult.Success(snapshot, calculated.metadata, chart.calculationMetadata)
         }
@@ -181,21 +213,32 @@ fun KundaliSnapshot.exportJson(): String = KundaliSnapshotJson.encode(this)
 
 private fun buildFeatureRecords(
     chart: ChartResult,
+    place: BirthPlace,
     hasDasha: Boolean,
     hasTransit: Boolean,
     hasPanchang: Boolean,
 ): Map<String, AstroFeatureRecord> {
     val metadata = chart.calculationMetadata
-    fun record(id: String, ref: String?, dependencies: List<String> = emptyList(), status: AstroFeatureStatus = AstroFeatureStatus.SUPPORTED) =
+    fun record(
+        id: String,
+        ref: String?,
+        dependencies: List<String> = emptyList(),
+        status: AstroFeatureStatus = AstroFeatureStatus.SUPPORTED,
+        warnings: List<String>? = null,
+    ) =
         AstroFeatureRecord(
             id, "1", status, ref, dependencies, metadata,
-            warnings = if (status == AstroFeatureStatus.NOT_VERIFIED) listOf("Canonical location or timezone database resolution is not configured; source values are caller supplied.") else emptyList(),
+            warnings = warnings ?: if (status == AstroFeatureStatus.NOT_VERIFIED) listOf("Canonical location or timezone database resolution is not configured; source values are caller supplied.") else emptyList(),
         )
     return listOf(
-        record("location", "birth", status = AstroFeatureStatus.NOT_VERIFIED),
-        record("time", "birth", status = AstroFeatureStatus.SUPPORTED),
+        record("location", "birth", status = if (place.locationDatasetVersion != null) AstroFeatureStatus.PARTIAL else AstroFeatureStatus.NOT_VERIFIED),
+        record(
+            "time", "birth", listOf("location"),
+            status = if (com.aynvora.astro.time.TimeNormalizer.supportsTimezoneId(place.timezoneId)) AstroFeatureStatus.PARTIAL else AstroFeatureStatus.NOT_VERIFIED,
+        ),
         record("ayanamsa", "calculation", listOf("time")),
-        record("planetary_positions", "natalChart.planetaryPositions", listOf("time", "ayanamsa")),
+        record("ephemeris", "natalChart.planetaryPositions", listOf("time")),
+        record("planetary_positions", "natalChart.planetaryPositions", listOf("ephemeris", "ayanamsa")),
         record("lagna", "natalChart.lagna", listOf("time", "ayanamsa"), if (chart.lagna != null) AstroFeatureStatus.SUPPORTED else AstroFeatureStatus.PARTIAL),
         record("houses", "natalChart.houses", listOf("lagna", "planetary_positions"), if (chart.houses.size == 12) AstroFeatureStatus.SUPPORTED else AstroFeatureStatus.PARTIAL),
         record("varga", "charts", listOf("planetary_positions", "lagna"), if (chart.divisionalCharts.isNotEmpty()) AstroFeatureStatus.SUPPORTED else AstroFeatureStatus.PARTIAL),
@@ -210,12 +253,28 @@ private fun buildFeatureRecords(
         record("ashtakavarga", "natalChart.ashtakavarga", listOf("planetary_positions")),
         record("shodhana", "natalChart.shodhitaAshtakavarga", listOf("ashtakavarga")),
         record("pinda", "natalChart.ashtakavargaPinda", listOf("shodhana")),
-        record("grah_sthiti", "tables.grah_sthiti", listOf("planetary_positions", "houses", "dignity", "planet_states")),
-        record("chalit", "tables.chalit_table", listOf("houses"), AstroFeatureStatus.AMBIGUOUS),
+        record("chart", "commonChart", listOf("planetary_positions", "lagna", "houses"), if (chart.commonChart != null) AstroFeatureStatus.SUPPORTED else AstroFeatureStatus.UNSUPPORTED),
+        record("grah_sthiti", "tables.grah_sthiti", listOf("chart", "planet_states", "dignity"), if (chart.grahSthiti?.rows?.size == chart.planetaryPositions.size) AstroFeatureStatus.SUPPORTED else AstroFeatureStatus.UNSUPPORTED),
+        record("kp_analysis", null, listOf("core.time", "core.location", "core.ephemeris", "core.planetary_positions", "vedic.houses"), AstroFeatureStatus.NOT_VERIFIED,
+            listOf("Verified KP ayanamsha, Placidus convention, 249 subdivision data, and source-backed rules are unavailable.")),
+        record("lal_kitab_analysis", null, listOf("chart", "knowledge.rules"), AstroFeatureStatus.NOT_VERIFIED,
+            listOf("An approved source edition and rights-cleared normalized rule pack are unavailable.")),
+        record("varshaphal", null, listOf("core.time", "core.location", "core.ephemeris", "vedic.houses"), AstroFeatureStatus.NOT_VERIFIED,
+            listOf("Verified solar return, annual chart, Tajika, and Mudda Dasha conventions are unavailable.")),
+        record("phaladesh", null, listOf("vedic.dasha", "vedic.transit", "vedic.vargas", "astro.events", "knowledge.rules"), AstroFeatureStatus.UNSUPPORTED,
+            listOf("Monthly processing requires supported event and tradition rule packs.")),
+        record("astro_events", null, listOf("feature_evidence"), AstroFeatureStatus.NOT_VERIFIED,
+            listOf("No event rules are bundled by default; occurrences require explicit source-backed definitions and calculated evidence.")),
+        record("knowledge_rules", null, listOf("knowledge.pack"), AstroFeatureStatus.NOT_VERIFIED,
+            listOf("No advanced tradition knowledge pack is installed.")),
+        record("chalit", "tables.chalit_table", listOf("houses"), when (chart.chalit?.ruleStatus) {
+            "SRIPATI_CHALIT_V1" -> AstroFeatureStatus.PARTIAL
+            else -> AstroFeatureStatus.AMBIGUOUS
+        }),
     ).associateBy { it.featureId }
 }
 
-private fun buildCharts(chart: ChartResult): List<AstroChartSnapshot> {
+internal fun buildCharts(chart: ChartResult): List<AstroChartSnapshot> {
     val dignity = chart.planetaryDignities.filter { it.chart == DivisionalChart.D1 }.associateBy { it.body }
     val natalPlacements = chart.planetaryPositions.sortedBy { it.body.ordinal }.map { p ->
         val d = dignity[p.body]
@@ -286,31 +345,42 @@ private fun buildTables(chart: ChartResult): List<AstroTableSnapshot> {
         AstroTableColumn("retrograde", "astrology.column.retrograde", AstroValueType.BOOLEAN),
         AstroTableColumn("combust", "astrology.column.combust", AstroValueType.BOOLEAN),
     )
+    val grahRows = chart.grahSthiti?.rows.orEmpty()
     val planets = AstroTableSnapshot("graha_sthiti", "astrology.section.graha_sthiti", planetColumns,
-        chart.planetaryPositions.sortedBy { it.body.ordinal }.map { p -> AstroTableRow(p.body.name, listOf(
-            AstroTableCell(AstroValueType.BODY, canonicalId = p.body.name),
-            AstroTableCell(AstroValueType.SIGN, canonicalId = p.rashiPosition.rashi.name),
-            AstroTableCell(AstroValueType.ANGLE, numericValue = p.siderealLongitude),
-            AstroTableCell(AstroValueType.INTEGER, integerValue = p.houseNumber),
-            AstroTableCell(AstroValueType.NAKSHATRA, canonicalId = p.nakshatraPosition.nakshatra.name),
-            AstroTableCell(AstroValueType.INTEGER, integerValue = p.nakshatraPosition.pada),
-            AstroTableCell(AstroValueType.BOOLEAN, canonicalId = p.isRetrograde.toString()),
-            AstroTableCell(AstroValueType.BOOLEAN, canonicalId = (p.combustionState == CombustionState.COMBUST).toString()),
-        )) }, if (chart.planetaryPositions.isNotEmpty()) CalculationAvailability.AVAILABLE else CalculationAvailability.UNSUPPORTED)
-    val houseColumns = listOf(
-        AstroTableColumn("house", "astrology.column.house", AstroValueType.INTEGER),
-        AstroTableColumn("sign", "astrology.column.sign", AstroValueType.SIGN),
-        AstroTableColumn("start", "astrology.column.start", AstroValueType.ANGLE),
-        AstroTableColumn("cusp", "astrology.column.cusp", AstroValueType.ANGLE),
-        AstroTableColumn("end", "astrology.column.end", AstroValueType.ANGLE),
-    )
-    val houses = AstroTableSnapshot("chalit_table", "astrology.section.chalit_table", houseColumns,
-        chart.houses.sortedBy { it.houseNumber }.map { h -> AstroTableRow("house_${h.houseNumber}", listOf(
-            AstroTableCell(AstroValueType.INTEGER, integerValue = h.houseNumber),
-            AstroTableCell(AstroValueType.SIGN, canonicalId = h.rashiPosition.rashi.name),
-            AstroTableCell(AstroValueType.ANGLE, numericValue = h.startLongitude),
-            AstroTableCell(AstroValueType.ANGLE, numericValue = h.cuspLongitude),
-            AstroTableCell(AstroValueType.ANGLE, numericValue = h.endLongitude),
-        )) }, if (chart.houses.isNotEmpty()) CalculationAvailability.AVAILABLE else CalculationAvailability.UNSUPPORTED)
+        grahRows.map { row -> AstroTableRow(row.bodyId.name, listOf(
+            AstroTableCell(AstroValueType.BODY, canonicalId = row.bodyId.name),
+            AstroTableCell(AstroValueType.SIGN, canonicalId = Rashi.fromIndex(row.signIndex).name),
+            AstroTableCell(AstroValueType.ANGLE, numericValue = row.signIndex * 30.0 + row.degreeInSign),
+            AstroTableCell(AstroValueType.INTEGER, integerValue = row.houseNumber),
+            AstroTableCell(AstroValueType.NAKSHATRA, canonicalId = Nakshatra.fromIndex(row.nakshatraIndex).name),
+            AstroTableCell(AstroValueType.INTEGER, integerValue = row.pada),
+            AstroTableCell(AstroValueType.BOOLEAN, canonicalId = row.retrograde.toString()),
+            AstroTableCell(AstroValueType.BOOLEAN, canonicalId = (row.combustionState == com.aynvora.astro.states.CombustionState.COMBUST).toString()),
+        )) }, if (grahRows.size == chart.planetaryPositions.size && grahRows.isNotEmpty()) CalculationAvailability.AVAILABLE else CalculationAvailability.UNSUPPORTED)
+    val chalitFeature = chart.chalit
+    val chalitAvailable = chalitFeature?.ruleStatus == "SRIPATI_CHALIT_V1" && chalitFeature.boundaries.size == 12
+    val houses = if (!chalitAvailable) {
+        // Do not substitute the selected natal house system for Chalit.
+        AstroTableSnapshot("chalit_table", "astrology.section.chalit_table", emptyList(), emptyList(), CalculationAvailability.AMBIGUOUS)
+    } else {
+        val columns = listOf(
+            AstroTableColumn("house", "astrology.column.house", AstroValueType.INTEGER),
+            AstroTableColumn("sign", "astrology.column.sign", AstroValueType.SIGN),
+            AstroTableColumn("cusp", "astrology.column.cusp", AstroValueType.ANGLE),
+            AstroTableColumn("planets", "astrology.column.planets", AstroValueType.TEXT),
+        )
+        val rows = (1..12).map { house ->
+            val cusp = chalitFeature.boundaries[house - 1]
+            val signIndex = (cusp / 30.0).toInt().coerceIn(0, 11)
+            val planetIds = chalitFeature.planetHouseOccupancy.filterValues { it == house }.keys.sortedBy { it.ordinal }.joinToString(",") { it.name }
+            AstroTableRow(house.toString(), listOf(
+                AstroTableCell(AstroValueType.INTEGER, integerValue = house),
+                AstroTableCell(AstroValueType.SIGN, canonicalId = Rashi.fromIndex(signIndex).name),
+                AstroTableCell(AstroValueType.ANGLE, numericValue = cusp),
+                AstroTableCell(AstroValueType.TEXT, textValue = planetIds),
+            ))
+        }
+        AstroTableSnapshot("chalit_table", "astrology.section.chalit_table", columns, rows, CalculationAvailability.PARTIAL)
+    }
     return listOf(planets, houses)
 }

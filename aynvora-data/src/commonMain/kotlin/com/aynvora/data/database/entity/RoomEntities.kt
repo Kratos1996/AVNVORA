@@ -3,6 +3,7 @@ package com.aynvora.data.database.entity
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.ColumnInfo
 
 /**
  * Room entity representing a user profile.
@@ -35,6 +36,8 @@ data class BirthProfileRoomEntity(
     val timezoneId: String,
     val country: String? = null,
     val placeId: String? = null,
+    val locationDatasetVersion: String? = null,
+    val locationProvenance: String? = null,
     val notes: String? = null,
     val createdAtEpochMs: Long,
     val updatedAtEpochMs: Long,
@@ -60,6 +63,12 @@ data class SavedChartRoomEntity(
     val schemaVersion: Int,
     val status: String,
     val cachedResultJson: String? = null,
+    val snapshotSchemaVersion: String? = null,
+    val calculationContractVersion: String? = null,
+    @ColumnInfo(defaultValue = "0") val createdAtEpochMs: Long = 0,
+    @ColumnInfo(defaultValue = "0") val updatedAtEpochMs: Long = 0,
+    val lastOpenedAtEpochMs: Long? = null,
+    val identityFingerprint: String? = null,
 )
 
 /**

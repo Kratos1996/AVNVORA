@@ -3,6 +3,8 @@ package com.aynvora.core.models
 import com.aynvora.astro.dasha.VimshottariDashaTimeline
 import com.aynvora.astro.panchang.PanchangSnapshot
 import com.aynvora.astro.transit.TransitSnapshot
+import com.aynvora.core.astrology.prediction.AstroEventOccurrence
+import com.aynvora.core.intelligence.EvidenceGraph
 import kotlinx.serialization.Serializable
 
 /** Versioned, offline-ready aggregate emitted after one Kundali generation. */
@@ -24,6 +26,10 @@ data class KundaliSnapshot(
     val availability: List<AstrologySectionAvailability>,
     /** Per-feature calculation records persisted alongside the aggregate snapshot. */
     val featureResults: Map<String, AstroFeatureRecord> = emptyMap(),
+    /** Source-linked event evidence actually evaluated for this snapshot. */
+    val events: List<AstroEventOccurrence> = emptyList(),
+    /** Deterministic evidence graph derived from calculated facts and evaluated rules. */
+    val evidenceGraph: EvidenceGraph? = null,
 ) {
     init {
         require(schemaVersion == CURRENT_SCHEMA_VERSION)
@@ -34,7 +40,7 @@ data class KundaliSnapshot(
         require(availability.map { it.sectionId }.distinct().size == availability.size) { "Duplicate section IDs" }
     }
 
-    companion object { const val CURRENT_SCHEMA_VERSION = "1" }
+    companion object { const val CURRENT_SCHEMA_VERSION = "2" }
 }
 
 @Serializable
@@ -69,6 +75,8 @@ data class KundaliBirthDetails(
     val cityId: String? = null,
     val locationSource: String = "CALLER_SUPPLIED",
     val locationResolutionStatus: AstroFeatureStatus = AstroFeatureStatus.NOT_VERIFIED,
+    val locationDatasetVersion: String? = null,
+    val locationProvenance: String? = null,
     val timezoneDataVersion: String? = null,
     val ayanamsaId: String,
     val houseSystemId: String,
@@ -146,7 +154,7 @@ data class AstroTableCell(
 enum class AstroValueType { BODY, SIGN, NAKSHATRA, ANGLE, INTEGER, BOOLEAN, TEXT, ENUM }
 
 @Serializable
-enum class CalculationAvailability { AVAILABLE, PARTIAL, UNSUPPORTED, COMING_SOON }
+enum class CalculationAvailability { AVAILABLE, PARTIAL, AMBIGUOUS, UNSUPPORTED, COMING_SOON }
 
 @Serializable
 data class AstrologySectionAvailability(

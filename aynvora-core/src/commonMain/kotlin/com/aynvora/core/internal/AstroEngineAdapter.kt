@@ -96,6 +96,80 @@ import com.aynvora.core.result.AynvoraResult
 internal class AstroEngineAdapter(
     private val engine: AstroEngine = AynvoraAstroEngine(),
 ) {
+    suspend fun calculateVarshaphal(request: ChartRequest, targetYear: Int): AynvoraResult<com.aynvora.core.astrology.knowledge.tajika.VarshaphalResult> {
+        if (request.config.profile != com.aynvora.core.models.CalculationProfile.STANDARD_VEDIC) {
+            return AynvoraResult.Failure.UnsupportedConfiguration("Varshaphal currently supports STANDARD_VEDIC only.")
+        }
+        val internalBirth = request.birthData.toInternalBirthData()
+        val solar = com.aynvora.astro.varshaphal.SolarReturnEngine(engine).calculate(
+            internalBirth, targetYear, EngineCalculationConfig(
+                ayanamsa = request.config.ayanamsa.name,
+                houseSystem = request.config.houseSystem.name,
+                profile = request.config.profile.name,
+                vargaRulesetId = request.config.vargaRulesetId,
+                ashtakavargaRulesetId = request.config.ashtakavargaRulesetId,
+            ),
+        )
+        val returnTimestamp = solar.utcTimestamp
+        if (solar.status != com.aynvora.astro.varshaphal.SolarReturnStatus.CALCULATED || returnTimestamp == null) {
+            return AynvoraResult.Failure.CalculationFailure("SOLAR_RETURN_FAILED", solar.diagnostics.joinToString(" "))
+        }
+        val dateTime = returnTimestamp.removeSuffix(" UTC").split(" ")
+        val date = dateTime[0].split("-").map(String::toInt)
+        val time = dateTime[1].split(":").map(String::toInt)
+        val annualBirth = request.birthData.copy(
+            date = com.aynvora.core.models.BirthDate(date[0], date[1], date[2]),
+            time = com.aynvora.core.models.BirthTime(time[0], time[1], time[2]),
+            place = request.birthData.place.copy(timezoneId = "UTC"),
+        )
+        val chartResult = execute(ChartRequest(annualBirth, request.config))
+        if (chartResult !is AynvoraResult.Success) return chartResult as AynvoraResult.Failure
+        val chartSnapshot = com.aynvora.core.models.buildCharts(chartResult.value).firstOrNull()
+        val annualChart = when (val built = chartSnapshot?.let(com.aynvora.core.models.AstroChartBuilder::fromSnapshot)) {
+            is com.aynvora.core.models.AstroChartBuildResult.Valid -> built.chart
+            else -> null
+        }
+        val natalChart = (execute(request) as? AynvoraResult.Success)?.value
+            ?.let { com.aynvora.core.models.buildCharts(it).firstOrNull() }
+            ?.let(com.aynvora.core.models.AstroChartBuilder::fromSnapshot)
+            ?.let { (it as? com.aynvora.core.models.AstroChartBuildResult.Valid)?.chart }
+        val muntha = natalChart?.ascendant?.longitude?.takeIf { targetYear >= request.birthData.date.year }?.let { natalAscendantLongitude ->
+            com.aynvora.core.astrology.knowledge.tajika.MunthaEngine.calculate(
+                natalAscendantLongitude = ((natalAscendantLongitude % 360.0) + 360.0) % 360.0,
+                elapsedSolarReturnCycles = targetYear - request.birthData.date.year,
+                annualAscendantSign = annualChart?.ascendant?.sign,
+            )
+        }
+        return AynvoraResult.Success(com.aynvora.core.astrology.knowledge.tajika.VarshaphalResult(
+            targetYear = targetYear,
+            solarReturn = solar,
+            annualChart = annualChart,
+            calculationProfile = request.config.profile.name,
+            muntha = muntha,
+            munthaStatus = if (muntha == null) com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.NOT_VERIFIED else com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.CALCULATED,
+            munthaLordStatus = if (muntha == null) com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.NOT_VERIFIED else com.aynvora.core.astrology.knowledge.tajika.VarshaphalComponentStatus.CALCULATED,
+            diagnostics = solar.diagnostics + listOfNotNull(
+                if (annualChart == null) "Annual chart could not be assembled into the shared AstroChart model." else null,
+                if (muntha == null) "Muntha was not calculated because the natal ascendant longitude was unavailable." else "Muntha progression uses the primary-source rule of one sign per elapsed solar-return cycle, preserving natal ascendant longitude within the sign.",
+                "Varsheshwara selection, Sahams, Tajika aspects, and Mudda Dasha are unsupported in this implementation.",
+            ),
+        ))
+    }
+
+    private fun com.aynvora.core.models.BirthData.toInternalBirthData() = InternalBirthData(
+        dateTimeIso = toIsoDateTimeString(),
+        latitude = place.coordinates.latitude,
+        longitude = place.coordinates.longitude,
+        timeZoneId = place.timezoneId,
+        year = date.year, month = date.month, day = date.day,
+        hour = time.hour, minute = time.minute, second = time.second,
+        countryCode = place.countryCode, countryName = place.country,
+        stateCode = place.stateCode, stateName = place.stateName,
+        cityId = place.id, cityName = place.cityName ?: place.name,
+        locationDatasetVersion = place.locationDatasetVersion,
+        locationProvenance = place.locationProvenance,
+    )
+
     private val metadata = EngineMetadata(
         engineVersion = "0.3.0",
         buildNumber = "astro-b3",
@@ -214,6 +288,15 @@ internal class AstroEngineAdapter(
                 hour = time.hour,
                 minute = time.minute,
                 second = time.second,
+                countryCode = request.birthData.place.countryCode,
+                countryName = request.birthData.place.country,
+                stateCode = request.birthData.place.stateCode,
+                stateName = request.birthData.place.stateName,
+                cityId = request.birthData.place.id,
+                cityName = request.birthData.place.cityName?.takeIf { it.isNotBlank() }
+                    ?: request.birthData.place.name.takeIf { it.isNotBlank() },
+                locationDatasetVersion = request.birthData.place.locationDatasetVersion,
+                locationProvenance = request.birthData.place.locationProvenance,
             )
 
             val engineConfig = EngineCalculationConfig(
@@ -375,6 +458,10 @@ internal class AstroEngineAdapter(
                     shodhitaAshtakavarga = publicShodhitaAshtakavarga,
                     ashtakavargaPinda = publicAshtakavargaPinda,
                     dashaTimeline = rawResult.dasha,
+                    commonChart = rawResult.commonChart,
+                    grahSthiti = rawResult.grahSthiti,
+                    chalit = rawResult.chalit,
+                    executionTrace = rawResult.executionTrace,
                     calculationMetadata = CalculationMetadata(
                         calculationProfileId = request.config.profile.name,
                         engineVersion = rawResult.engineVersion,
@@ -416,6 +503,7 @@ internal class AstroEngineAdapter(
     suspend fun executeFeatures(
         request: ChartRequest,
         featureIds: Set<String>,
+        inputs: com.aynvora.astro.pipeline.FeatureOutputs = com.aynvora.astro.pipeline.FeatureOutputs.Empty,
     ): AynvoraResult<com.aynvora.core.models.AstrologyFeatureCalculation> {
         if (featureIds.isEmpty()) return AynvoraResult.Failure.InvalidInput("featureIds", "At least one feature ID is required.")
         if (request.config.profile != com.aynvora.core.models.CalculationProfile.STANDARD_VEDIC) {
@@ -439,6 +527,15 @@ internal class AstroEngineAdapter(
                     hour = birth.time.hour,
                     minute = birth.time.minute,
                     second = birth.time.second,
+                    countryCode = birth.place.countryCode,
+                    countryName = birth.place.country,
+                    stateCode = birth.place.stateCode,
+                    stateName = birth.place.stateName,
+                    cityId = birth.place.id,
+                    cityName = birth.place.cityName?.takeIf { it.isNotBlank() }
+                        ?: birth.place.name.takeIf { it.isNotBlank() },
+                    locationDatasetVersion = birth.place.locationDatasetVersion,
+                    locationProvenance = birth.place.locationProvenance,
                 ),
                 EngineCalculationConfig(
                     ayanamsa = request.config.ayanamsa.name,
@@ -449,6 +546,7 @@ internal class AstroEngineAdapter(
                     ashtakavargaRulesetId = request.config.ashtakavargaRulesetId,
                 ),
                 featureIds,
+                inputs,
             )
             AynvoraResult.Success(
                 com.aynvora.core.models.AstrologyFeatureCalculation(result.outputs.asMap(), result.trace),

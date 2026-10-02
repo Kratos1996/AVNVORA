@@ -16,6 +16,7 @@ import com.aynvora.data.gita.RoomGitaRepository
 import com.aynvora.data.repository.BirthProfileRepositoryImpl
 import com.aynvora.data.repository.ContentRepositoryImpl
 import com.aynvora.data.repository.ContentSyncRepositoryImpl
+import com.aynvora.data.repository.RoomSavedChartRepository
 import com.aynvora.data.repository.SavedChartRepositoryImpl
 import com.aynvora.data.repository.UserPreferencesRepositoryImpl
 import com.aynvora.data.repository.UserProfileRepositoryImpl
@@ -132,7 +133,7 @@ object AynvoraDataFactory {
         return AynvoraDataComponents(
             userProfiles = UserProfileRepositoryImpl(engine),
             birthProfiles = BirthProfileRepositoryImpl(engine),
-            savedCharts = SavedChartRepositoryImpl(engine),
+            savedCharts = RoomSavedChartRepository(database.savedChartDao()),
             userPreferences = UserPreferencesRepositoryImpl(engine),
             contentRepository = contentRepository,
             contentSyncRepository = ContentSyncRepositoryImpl(

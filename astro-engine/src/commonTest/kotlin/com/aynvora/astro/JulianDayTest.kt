@@ -126,6 +126,11 @@ class JulianDayTest {
         val normUtc = TimeNormalizer.normalize(2023, 6, 15, 12, 0, 0, "UTC")
         assertEquals(0, normUtc.timezoneOffsetMinutes)
         assertEquals(12, normUtc.hour)
+        assertEquals("AYNVORA_CURATED_RULES_V1", TimeNormalizer.TIMEZONE_DATA_VERSION)
+        assertTrue(TimeNormalizer.supportsTimezoneId("UTC"))
+        assertTrue(TimeNormalizer.supportsTimezoneId("+05:30"))
+        assertTrue(TimeNormalizer.supportsTimezoneId("America/New_York"))
+        assertTrue(!TimeNormalizer.supportsTimezoneId("Europe/Reykjavik"))
     }
 
     @Test
