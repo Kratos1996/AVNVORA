@@ -1,0 +1,16 @@
+{
+  "status": "NOT_RUN",
+  "baseModel": null,
+  "baseModelRevision": null,
+  "datasetPath": "training/verified_sft.jsonl",
+  "datasetVersion": null,
+  "datasetSha256": null,
+  "exampleCount": null,
+  "method": null,
+  "hardware": null,
+  "durationSeconds": null,
+  "outputArtifact": null,
+  "outputSha256": null,
+  "evaluationResults": null,
+  "notes": "Fill only after selecting a compatible trainer and completing a reproducible run."
+}

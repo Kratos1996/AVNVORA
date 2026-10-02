@@ -1,0 +1,533 @@
+{
+  "packId": "TAJIKA_V1",
+  "version": "1.0.0",
+  "locale": "en",
+  "language": "en",
+  "tradition": "TAJIKA",
+  "status": "VERIFIED_SCOPED_CONTENT",
+  "rightsStatus": "VERIFIED",
+  "license": "CC BY-SA 4.0 for adaptations of the cited Wikisource transcription; source scan marked public domain in India and the United States",
+  "attribution": "Wikisource contributors, Tājika Nīlakaṇṭhī (Mahidhar Hindi commentary), Sanskrit Wikisource, revisions 378434, 378444, 378446, CC BY-SA 4.0. AYNVORA adaptations are distributed under CC BY-SA 4.0.",
+  "sources": [
+    {
+      "sourceId": "tajika-neelakanthi-1907-scan",
+      "title": "Tājika Nīlakaṇṭhī (Mahidhar Hindi commentary edition)",
+      "author": "Nīlakaṇṭha Daivajña; Hindi commentary attributed in the edition to Mahidhar",
+      "edition": "Khemraj Shri Venkateshwar Steam Press edition; Samvat 1964 / Śaka 1829 (1907 CE)",
+      "publicationYear": 1907,
+      "language": "Sanskrit with Hindi commentary",
+      "sourceType": "PUBLIC_DOMAIN_SCAN",
+      "sourceClass": "PUBLIC_DOMAIN",
+      "license": "Public domain in India and the United States per Wikimedia Commons source record; territorial status may vary elsewhere",
+      "rightsStatus": "VERIFIED",
+      "rightsTerritories": [
+        "India",
+        "United States"
+      ],
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:ताजिकनीलकण्ठी_(महीधरकृतभाषाटीकासहिता).pdf",
+      "publisher": "Khemraj Shri Venkateshwar Steam Press, Mumbai",
+      "repository": "Wikimedia Commons; scanned under Digitalized Sanskrit Corps",
+      "retrievedAt": "2026-10-01T13:16:48.087874Z",
+      "contentHash": "a6968d0f22a277eca7d64649490baad1c1cd08b71dde4adacccd267420e5f989",
+      "version": "1907-scan-sha256:a6968d0f",
+      "inspectedFiles": [
+        "280-page PDF; folios 112, 122, 124 visually reviewed"
+      ]
+    },
+    {
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "title": "Wikisource transcription of selected Tājika Nīlakaṇṭhī pages",
+      "author": "Wikisource contributors",
+      "edition": "Transcription revisions 378434, 378444, 378446 of the 1907 edition",
+      "publicationYear": 2023,
+      "language": "Sanskrit with Hindi commentary",
+      "sourceType": "WEB_PAGE",
+      "sourceClass": "LICENSED",
+      "license": "CC BY-SA 4.0; attribution and ShareAlike apply to transcribed text and adaptations",
+      "rightsStatus": "VERIFIED",
+      "rightsTerritories": [
+        "Worldwide under CC BY-SA 4.0 terms"
+      ],
+      "sourceUrl": "https://sa.wikisource.org/wiki/अनुक्रमणिका:ताजिकनीलकण्ठी_(महीधरकृतभाषाटीकासहिता).pdf",
+      "publisher": "Wikisource contributors",
+      "repository": "Sanskrit Wikisource; https://sa.wikisource.org/",
+      "retrievedAt": "2026-10-01T13:16:48.087874Z",
+      "contentHash": "3ba811a6b537fe0fbecbb89674299107060f14504205c28a5f9bd3d2d47eda76",
+      "version": "revisions:378434,378444,378446",
+      "transcriptionStatus": "The three source pages are marked unproofread on Wikisource; each retained page was manually cross-checked against the scan images.",
+      "attribution": "Wikisource contributors, Tājika Nīlakaṇṭhī (Mahidhar Hindi commentary), Sanskrit Wikisource, revisions 378434, 378444, 378446, CC BY-SA 4.0. AYNVORA adaptations are distributed under CC BY-SA 4.0."
+    }
+  ],
+  "sourceVersions": {
+    "tajika-neelakanthi-1907-scan": "1907-scan-sha256:a6968d0f",
+    "tajika-neelakanthi-wikisource-pages-112-122-124": "revisions:378434,378444,378446"
+  },
+  "sourceSections": [
+    "Muntha phala; source section title not established",
+    "Varshesha Sun indications; heading not established"
+  ],
+  "chapters": [],
+  "pagesInspected": [
+    112,
+    122,
+    124
+  ],
+  "chunks": [
+    {
+      "chunkId": "tajika:112:67faed5b875b2076",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "traditionId": "TAJIKA",
+      "topic": "Chapter/section label not established; Varshesha indications",
+      "text": "The 1907 Hindi commentary describes annual indications for the Sun when it is Varshesha (year lord), distinguishing strong, middling, and weak conditions. It also says natal strength modifies how fully the annual indication manifests.",
+      "structuredFacts": {},
+      "ruleIds": [],
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "VARSHESHA"
+      ],
+      "language": "en",
+      "page": 112,
+      "printedPage": 104,
+      "chapter": null,
+      "licenseStatus": "VERIFIED_CC_BY_SA_4_0",
+      "attribution": "Wikisource contributors, Tājika Nīlakaṇṭhī (Mahidhar Hindi commentary), Sanskrit Wikisource, revisions 378434, 378444, 378446, CC BY-SA 4.0. AYNVORA adaptations are distributed under CC BY-SA 4.0.",
+      "version": "TAJIKA_V1",
+      "checksum": "67faed5b875b207666e2a0cb3fdb6f9f2d352fb223d72ed98609411de065060c",
+      "sourceRef": "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A7%E0%A5%A8#printed-page-104-verse-11-13",
+      "sourcePageProofreadStatus": "UNPROOFREAD_TRANSCRIPTION_VISUALLY_CROSSCHECKED_AGAINST_SCAN"
+    },
+    {
+      "chunkId": "tajika:122:e9972a623eaac15c",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "traditionId": "TAJIKA",
+      "topic": "Muntha phala",
+      "text": "The commentary associates Muntha in the 3rd and 5th houses with favorable traditional indications, and in the 4th and 6th with challenging indications. Its house-specific descriptions are preserved as tradition-attributed themes, not factual forecasts.",
+      "structuredFacts": {},
+      "ruleIds": [],
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "MUNTHA"
+      ],
+      "language": "en",
+      "page": 122,
+      "printedPage": 114,
+      "chapter": null,
+      "licenseStatus": "VERIFIED_CC_BY_SA_4_0",
+      "attribution": "Wikisource contributors, Tājika Nīlakaṇṭhī (Mahidhar Hindi commentary), Sanskrit Wikisource, revisions 378434, 378444, 378446, CC BY-SA 4.0. AYNVORA adaptations are distributed under CC BY-SA 4.0.",
+      "version": "TAJIKA_V1",
+      "checksum": "e9972a623eaac15c3f5391dd1a7889a2b3915cc95d07415207ec096ed9983ffb",
+      "sourceRef": "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%A8#printed-page-114-verse-7-11",
+      "sourcePageProofreadStatus": "UNPROOFREAD_TRANSCRIPTION_VISUALLY_CROSSCHECKED_AGAINST_SCAN"
+    },
+    {
+      "chunkId": "tajika:124:eb1bb62a29e260f3",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "traditionId": "TAJIKA",
+      "topic": "Muntha phala and qualifications",
+      "text": "The commentary qualifies house-based Muntha indications: malefic occupation or hostile malefic aspect can suppress favorable indications and strengthen adverse ones; benefic association/aspect and a strong lord can support favorable indications.",
+      "structuredFacts": {},
+      "ruleIds": [],
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "MUNTHA"
+      ],
+      "language": "en",
+      "page": 124,
+      "printedPage": 116,
+      "chapter": null,
+      "licenseStatus": "VERIFIED_CC_BY_SA_4_0",
+      "attribution": "Wikisource contributors, Tājika Nīlakaṇṭhī (Mahidhar Hindi commentary), Sanskrit Wikisource, revisions 378434, 378444, 378446, CC BY-SA 4.0. AYNVORA adaptations are distributed under CC BY-SA 4.0.",
+      "version": "TAJIKA_V1",
+      "checksum": "eb1bb62a29e260f3c206555d9d350038a6f043c28f8e470c8363710c0103aec7",
+      "sourceRef": "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%AA#printed-page-116-verse-17-20",
+      "sourcePageProofreadStatus": "UNPROOFREAD_TRANSCRIPTION_VISUALLY_CROSSCHECKED_AGAINST_SCAN"
+    }
+  ],
+  "rules": [
+    {
+      "ruleId": "TAJIKA_MUNTHA_H3_001",
+      "traditionId": "TAJIKA",
+      "topic": "Muntha",
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "MUNTHA"
+      ],
+      "conditions": [
+        {
+          "factKey": "muntha_house",
+          "comparison": "EQUALS",
+          "expectedValue": "3",
+          "evidenceRequirementId": "input:muntha_house"
+        }
+      ],
+      "inputs": [
+        "muntha_house"
+      ],
+      "evidenceRequirements": [
+        "input:muntha_house"
+      ],
+      "resultType": "TRADITIONAL_INDICATION",
+      "interpretationKey": "tajika.muntha.house.3",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "sourceRefs": [
+        "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%A8#printed-page-114-verse-7"
+      ],
+      "chapter": "Muntha phala",
+      "page": 122,
+      "printedPage": 114,
+      "verse": "7",
+      "calculationReference": "Consumes explicit annual chart facts; does not calculate the solar return or Muntha position.",
+      "knowledgeVersion": "TAJIKA_V1",
+      "license": "CC BY-SA 4.0",
+      "rightsStatus": "VERIFIED",
+      "meaning": "The source associates Muntha in house 3 with favorable traditional themes including initiative, reputation, comfort, and support.",
+      "checksum": "777b4cfcbd7a4e2353310271ad44f173a425d02a7cddd5ff4c49681209f7709a"
+    },
+    {
+      "ruleId": "TAJIKA_MUNTHA_H4_001",
+      "traditionId": "TAJIKA",
+      "topic": "Muntha",
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "MUNTHA"
+      ],
+      "conditions": [
+        {
+          "factKey": "muntha_house",
+          "comparison": "EQUALS",
+          "expectedValue": "4",
+          "evidenceRequirementId": "input:muntha_house"
+        }
+      ],
+      "inputs": [
+        "muntha_house"
+      ],
+      "evidenceRequirements": [
+        "input:muntha_house"
+      ],
+      "resultType": "TRADITIONAL_INDICATION",
+      "interpretationKey": "tajika.muntha.house.4",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "sourceRefs": [
+        "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%A8#printed-page-114-verse-8"
+      ],
+      "chapter": "Muntha phala",
+      "page": 122,
+      "printedPage": 114,
+      "verse": "8",
+      "calculationReference": "Consumes explicit annual chart facts; does not calculate the solar return or Muntha position.",
+      "knowledgeVersion": "TAJIKA_V1",
+      "license": "CC BY-SA 4.0",
+      "rightsStatus": "VERIFIED",
+      "meaning": "The source associates Muntha in house 4 with challenging traditional themes, including distress and disruption of comfort.",
+      "checksum": "1a6369d73c85d9c58793258b8de1a46530b76aadab37ba3033a7af79dd4f2feb"
+    },
+    {
+      "ruleId": "TAJIKA_MUNTHA_H5_001",
+      "traditionId": "TAJIKA",
+      "topic": "Muntha",
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "MUNTHA"
+      ],
+      "conditions": [
+        {
+          "factKey": "muntha_house",
+          "comparison": "EQUALS",
+          "expectedValue": "5",
+          "evidenceRequirementId": "input:muntha_house"
+        }
+      ],
+      "inputs": [
+        "muntha_house"
+      ],
+      "evidenceRequirements": [
+        "input:muntha_house"
+      ],
+      "resultType": "TRADITIONAL_INDICATION",
+      "interpretationKey": "tajika.muntha.house.5",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "sourceRefs": [
+        "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%A8#printed-page-114-verse-9"
+      ],
+      "chapter": "Muntha phala",
+      "page": 122,
+      "printedPage": 114,
+      "verse": "9",
+      "calculationReference": "Consumes explicit annual chart facts; does not calculate the solar return or Muntha position.",
+      "knowledgeVersion": "TAJIKA_V1",
+      "license": "CC BY-SA 4.0",
+      "rightsStatus": "VERIFIED",
+      "meaning": "The source associates Muntha in house 5 with favorable traditional themes including judgment, happiness, and gain.",
+      "checksum": "2fe637eee3c6ba960e445f645a9e53c2614f0a7b69b170f5068233d26084145c"
+    },
+    {
+      "ruleId": "TAJIKA_MUNTHA_H6_001",
+      "traditionId": "TAJIKA",
+      "topic": "Muntha",
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "MUNTHA"
+      ],
+      "conditions": [
+        {
+          "factKey": "muntha_house",
+          "comparison": "EQUALS",
+          "expectedValue": "6",
+          "evidenceRequirementId": "input:muntha_house"
+        }
+      ],
+      "inputs": [
+        "muntha_house"
+      ],
+      "evidenceRequirements": [
+        "input:muntha_house"
+      ],
+      "resultType": "TRADITIONAL_INDICATION",
+      "interpretationKey": "tajika.muntha.house.6",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "sourceRefs": [
+        "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%A8#printed-page-114-verse-10"
+      ],
+      "chapter": "Muntha phala",
+      "page": 122,
+      "printedPage": 114,
+      "verse": "10",
+      "calculationReference": "Consumes explicit annual chart facts; does not calculate the solar return or Muntha position.",
+      "knowledgeVersion": "TAJIKA_V1",
+      "license": "CC BY-SA 4.0",
+      "rightsStatus": "VERIFIED",
+      "meaning": "The source associates Muntha in house 6 with challenging traditional themes.",
+      "checksum": "cc91ec56168f3e400a9aad87a992fddaedb72058b13f7755baecc890c10ec5c2"
+    },
+    {
+      "ruleId": "TAJIKA_MUNTHA_AFFLICTION_001",
+      "traditionId": "TAJIKA",
+      "topic": "Muntha",
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "MUNTHA"
+      ],
+      "conditions": [
+        {
+          "factKey": "muntha_bhava_malefic_afflicted",
+          "comparison": "EQUALS",
+          "expectedValue": "true",
+          "evidenceRequirementId": "input:muntha_bhava_malefic_afflicted"
+        }
+      ],
+      "inputs": [
+        "muntha_house",
+        "malefic_occupation",
+        "hostile_malefic_aspect"
+      ],
+      "evidenceRequirements": [
+        "input:muntha_house",
+        "input:malefic_occupation",
+        "input:hostile_malefic_aspect"
+      ],
+      "resultType": "QUALIFIER",
+      "interpretationKey": "tajika.muntha.affliction",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "sourceRefs": [
+        "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%AA#printed-page-116-verse-17"
+      ],
+      "chapter": "Muntha phala and qualifications",
+      "page": 124,
+      "printedPage": 116,
+      "verse": "17",
+      "calculationReference": "Consumes explicit annual chart facts; does not calculate the solar return or Muntha position.",
+      "knowledgeVersion": "TAJIKA_V1",
+      "license": "CC BY-SA 4.0",
+      "rightsStatus": "VERIFIED",
+      "meaning": "The source says malefic occupation or hostile malefic aspect can suppress favorable results for the occupied Muntha house and increase adverse indications.",
+      "checksum": "67fa21363be5b4ab03b13799f19aec3a7481e72332d8e9239c1d62925df3566d"
+    },
+    {
+      "ruleId": "TAJIKA_MUNTHA_BENEFIC_001",
+      "traditionId": "TAJIKA",
+      "topic": "Muntha",
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "MUNTHA"
+      ],
+      "conditions": [
+        {
+          "factKey": "muntha_lord_strength",
+          "comparison": "EQUALS",
+          "expectedValue": "strong",
+          "evidenceRequirementId": "input:muntha_lord_strength"
+        }
+      ],
+      "inputs": [
+        "muntha_house",
+        "muntha_lord_strength",
+        "benefic_association",
+        "benefic_aspect"
+      ],
+      "evidenceRequirements": [
+        "input:muntha_house",
+        "input:muntha_lord_strength",
+        "input:benefic_association",
+        "input:benefic_aspect"
+      ],
+      "resultType": "QUALIFIER",
+      "interpretationKey": "tajika.muntha.support",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "sourceRefs": [
+        "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%AA#printed-page-116-verse-18"
+      ],
+      "chapter": "Muntha phala and qualifications",
+      "page": 124,
+      "printedPage": 116,
+      "verse": "18",
+      "calculationReference": "Consumes explicit annual chart facts; does not calculate the solar return or Muntha position.",
+      "knowledgeVersion": "TAJIKA_V1",
+      "license": "CC BY-SA 4.0",
+      "rightsStatus": "VERIFIED",
+      "meaning": "The source says benefic association or aspect and a strong lord can support favorable indications for the Muntha house.",
+      "checksum": "69dee0192d1249c22007c5768aeed77433cb91a22391ed9950610d508828154f"
+    },
+    {
+      "ruleId": "TAJIKA_VARSHESHA_SUN_STRONG_001",
+      "traditionId": "TAJIKA",
+      "topic": "Varshesha",
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "VARSHESHA"
+      ],
+      "conditions": [
+        {
+          "factKey": "varshesha_planet",
+          "comparison": "EQUALS",
+          "expectedValue": "SUN",
+          "evidenceRequirementId": "input:varshesha_planet"
+        }
+      ],
+      "inputs": [
+        "varshesha_planet",
+        "varshesha_strength",
+        "natal_sun_strength"
+      ],
+      "evidenceRequirements": [
+        "input:varshesha_planet",
+        "input:varshesha_strength",
+        "input:natal_sun_strength"
+      ],
+      "resultType": "ANNUAL_PLANETARY_INDICATION",
+      "interpretationKey": "tajika.varshesha.sun.strong",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "sourceRefs": [
+        "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A7%E0%A5%A8#printed-page-104-verse-11"
+      ],
+      "chapter": "Chapter/section label not established; Varshesha indications",
+      "page": 112,
+      "printedPage": 104,
+      "verse": "11",
+      "calculationReference": "Consumes explicit annual chart facts; does not calculate the solar return or Muntha position.",
+      "knowledgeVersion": "TAJIKA_V1",
+      "license": "CC BY-SA 4.0",
+      "rightsStatus": "VERIFIED",
+      "meaning": "The source associates a strong Sun acting as Varshesha with favorable traditional themes; natal strength is stated to modify how completely these indications manifest.",
+      "checksum": "12b23102d26f5d4a7b7ebc2768e4e25f0d2220c96180774ba264384e05216352"
+    },
+    {
+      "ruleId": "TAJIKA_VARSHESHA_SUN_MID_001",
+      "traditionId": "TAJIKA",
+      "topic": "Varshesha",
+      "tags": [
+        "VARSHAPHAL",
+        "TAJIKA",
+        "VARSHESHA"
+      ],
+      "conditions": [
+        {
+          "factKey": "varshesha_planet",
+          "comparison": "EQUALS",
+          "expectedValue": "SUN",
+          "evidenceRequirementId": "input:varshesha_planet"
+        }
+      ],
+      "inputs": [
+        "varshesha_planet",
+        "varshesha_strength"
+      ],
+      "evidenceRequirements": [
+        "input:varshesha_planet",
+        "input:varshesha_strength"
+      ],
+      "resultType": "ANNUAL_PLANETARY_INDICATION",
+      "interpretationKey": "tajika.varshesha.sun.middling",
+      "sourceId": "tajika-neelakanthi-wikisource-pages-112-122-124",
+      "sourceRefs": [
+        "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A7%E0%A5%A8#printed-page-104-verse-12"
+      ],
+      "chapter": "Chapter/section label not established; Varshesha indications",
+      "page": 112,
+      "printedPage": 104,
+      "verse": "12",
+      "calculationReference": "Consumes explicit annual chart facts; does not calculate the solar return or Muntha position.",
+      "knowledgeVersion": "TAJIKA_V1",
+      "license": "CC BY-SA 4.0",
+      "rightsStatus": "VERIFIED",
+      "meaning": "The source describes a middling Sun as Varshesha as giving moderated or mixed traditional indications.",
+      "checksum": "3baebf63ef869dc355b3b931bf6679e837b0d7550f1ad570f75803e4e1141fa7"
+    }
+  ],
+  "glossary": [
+    {
+      "term": "Muntha",
+      "traditionId": "TAJIKA",
+      "definition": "A Tajika annual-chart factor named by the cited source; this pack records source-specific house indications and does not assert equivalence with other traditions.",
+      "sourceRef": "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%A8#printed-page-114-verse-7-11",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "term": "Muntha phala",
+      "traditionId": "TAJIKA",
+      "definition": "The source section's term for Muntha-related indications.",
+      "sourceRef": "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%AA#printed-page-116-verse-17-20",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "term": "Bhava",
+      "traditionId": "TAJIKA",
+      "definition": "House, as used in the cited Hindi commentary.",
+      "sourceRef": "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%AA#printed-page-116-verse-17",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "term": "Krura graha",
+      "traditionId": "TAJIKA",
+      "definition": "A malefic or adverse planet in the terminology of the cited commentary.",
+      "sourceRef": "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%AA#printed-page-116-verse-17-18",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "term": "Shubha graha",
+      "traditionId": "TAJIKA",
+      "definition": "A benefic planet in the terminology of the cited commentary.",
+      "sourceRef": "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A8%E0%A5%AA#printed-page-116-verse-18",
+      "license": "CC BY-SA 4.0"
+    },
+    {
+      "term": "Varshesha",
+      "traditionId": "TAJIKA",
+      "definition": "The annual year lord referred to in the cited commentary; this selected material includes only a short Sun-as-year-lord subsection.",
+      "sourceRef": "https://sa.wikisource.org/wiki/%E0%A4%AA%E0%A5%83%E0%A4%B7%E0%A5%8D%E0%A4%A0%E0%A4%AE%E0%A5%8D%3A%E0%A4%A4%E0%A4%BE%E0%A4%9C%E0%A4%BF%E0%A4%95%E0%A4%A8%E0%A5%80%E0%A4%B2%E0%A4%95%E0%A4%A3%E0%A5%8D%E0%A4%A0%E0%A5%80_%28%E0%A4%AE%E0%A4%B9%E0%A5%80%E0%A4%A7%E0%A4%B0%E0%A4%95%E0%A5%83%E0%A4%A4%E0%A4%AD%E0%A4%BE%E0%A4%B7%E0%A4%BE%E0%A4%9F%E0%A5%80%E0%A4%95%E0%A4%BE%E0%A4%B8%E0%A4%B9%E0%A4%BF%E0%A4%A4%E0%A4%BE%29.pdf/%E0%A5%A7%E0%A5%A7%E0%A5%A8#printed-page-104-verse-11-13",
+      "license": "CC BY-SA 4.0"
+    }
+  ],
+  "buildTimestamp": "2026-10-01T13:16:48.087874Z",
+  "checksum": "513be82525a8a3b846a86b6aaf770ef1575b61fcafe196e0f41de0bd4213301d"
+}

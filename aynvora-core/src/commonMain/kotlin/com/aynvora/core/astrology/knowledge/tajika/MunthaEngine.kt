@@ -1,0 +1,56 @@
+package com.aynvora.core.astrology.knowledge.tajika
+
+import com.aynvora.core.models.Rashi
+import kotlinx.serialization.Serializable
+
+/** Graha named by the 1907 source's sign-lord rule. */
+@Serializable
+enum class MunthaLord { SUN, MOON, MARS, MERCURY, JUPITER, VENUS, SATURN }
+
+@Serializable
+data class MunthaCalculation(
+    val elapsedSolarReturnCycles: Int,
+    val natalAscendantLongitude: Double,
+    val sign: Rashi,
+    val longitude: Double,
+    val lord: MunthaLord,
+    val annualHouse: Int?,
+    val sourceRef: String = "Tājika Nīlakaṇṭhī (1907), Varsha tantra, Muntha chapter, verses 1 and 3; PDF pp.120–121 (printed pp.112–113)",
+    val status: String = "CALCULATED_PRIMARY_SOURCE_VERIFIED",
+)
+
+/** Implements the source's one-sign-per-elapsed-year Muntha progression and sign-lord definition. */
+object MunthaEngine {
+    fun calculate(
+        natalAscendantLongitude: Double,
+        elapsedSolarReturnCycles: Int,
+        annualAscendantSign: Rashi? = null,
+    ): MunthaCalculation {
+        require(natalAscendantLongitude.isFinite() && natalAscendantLongitude >= 0.0 && natalAscendantLongitude < 360.0) {
+            "Natal ascendant longitude must be in [0, 360)."
+        }
+        require(elapsedSolarReturnCycles >= 0) { "Elapsed solar-return cycles cannot be negative." }
+        val natalSign = (natalAscendantLongitude / 30.0).toInt()
+        val sign = Rashi.fromIndex((natalSign + elapsedSolarReturnCycles) % 12)
+        val longitude = sign.index * 30.0 + natalAscendantLongitude % 30.0
+        val house = annualAscendantSign?.let { ((sign.index - it.index + 12) % 12) + 1 }
+        return MunthaCalculation(
+            elapsedSolarReturnCycles = elapsedSolarReturnCycles,
+            natalAscendantLongitude = natalAscendantLongitude,
+            sign = sign,
+            longitude = longitude,
+            lord = lordOf(sign),
+            annualHouse = house,
+        )
+    }
+
+    fun lordOf(sign: Rashi): MunthaLord = when (sign) {
+        Rashi.ARIES, Rashi.SCORPIO -> MunthaLord.MARS
+        Rashi.TAURUS, Rashi.LIBRA -> MunthaLord.VENUS
+        Rashi.GEMINI, Rashi.VIRGO -> MunthaLord.MERCURY
+        Rashi.CANCER -> MunthaLord.MOON
+        Rashi.LEO -> MunthaLord.SUN
+        Rashi.SAGITTARIUS, Rashi.PISCES -> MunthaLord.JUPITER
+        Rashi.CAPRICORN, Rashi.AQUARIUS -> MunthaLord.SATURN
+    }
+}
