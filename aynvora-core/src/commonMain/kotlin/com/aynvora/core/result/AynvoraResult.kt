@@ -100,6 +100,14 @@ sealed interface AynvoraResult<out T> {
         data class InternalFailure(
             override val message: String,
         ) : Failure
+
+        /**
+         * Structured standardized error for UI presentation and analytical taxonomy.
+         */
+        data class Structured(
+            val error: AynvoraStructuredError,
+            override val message: String = error.message,
+        ) : Failure
     }
 
     val isSuccess: Boolean get() = this is Success
@@ -117,3 +125,24 @@ inline fun <T> AynvoraResult<T>.onFailure(action: (failure: AynvoraResult.Failur
     if (this is AynvoraResult.Failure) action(this)
     return this
 }
+
+@kotlinx.serialization.Serializable
+enum class AynvoraErrorCode {
+    INVALID_LOCATION,
+    INVALID_DATETIME,
+    INVALID_TIMEZONE,
+    MISSING_BIRTH_DATA,
+    CALCULATION_ERROR,
+    STORAGE_ERROR,
+    CORRUPTED_DATA,
+    UNSUPPORTED_CONFIGURATION,
+    NETWORK_ERROR,
+    UNKNOWN_ERROR,
+}
+
+@kotlinx.serialization.Serializable
+data class AynvoraStructuredError(
+    val code: AynvoraErrorCode,
+    val message: String,
+    val details: String? = null,
+)

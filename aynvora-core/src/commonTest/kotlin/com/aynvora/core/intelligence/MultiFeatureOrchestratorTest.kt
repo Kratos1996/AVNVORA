@@ -282,10 +282,12 @@ class MultiFeatureOrchestratorTest {
         assertTrue(astroCaps.any { it.capabilityId == "astro_panchang" && it.status == CapabilityStatus.IMPLEMENTED })
 
         val palmCaps = FeatureCapabilityRegistry.getCapabilitiesForDomain(CoreFeatureId.PALMISTRY)
-        assertTrue(palmCaps.all { it.status == CapabilityStatus.FOUNDATION_ONLY })
+        assertTrue(palmCaps.any { it.capabilityId == "palm_image_capture" && it.status == CapabilityStatus.IMPLEMENTED })
+        assertTrue(palmCaps.any { it.capabilityId == "palm_line_detection" && it.status == CapabilityStatus.FOUNDATION_ONLY })
 
         assertTrue(FeatureCapabilityRegistry.isCapabilityImplemented("astro_dashas"))
         assertTrue(FeatureCapabilityRegistry.isCapabilityImplemented("astro_birth_chart"))
+        assertTrue(FeatureCapabilityRegistry.isCapabilityImplemented("palm_image_capture"))
         assertFalse(FeatureCapabilityRegistry.isCapabilityImplemented("palm_line_detection"))
     }
 }

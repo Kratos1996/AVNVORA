@@ -1,0 +1,19 @@
+{
+  "datasetVersion": "v4",
+  "splitSeed": 42,
+  "leakageAudit": "0% overlap between SFT splits and holdout_validation_v5.jsonl (VERIFIED)",
+  "counts": {
+    "total_verified_sft": 508,
+    "train": 406,
+    "valid": 50,
+    "test": 52,
+    "holdout_v5": 100
+  },
+  "sha256": {
+    "verified_sft.jsonl": "34f89af97dd5e1012a37bd36100ecde040081cfa568d2664106597a43a4a1a5c",
+    "train.jsonl": "9dbffa6a0443f40f1425b536159b1fbdc2239df169f8047dd0aad030d618dd4b",
+    "valid.jsonl": "1c89ece312f5dbdb4f1b60212f63f103a79e55c9ff940b9c43a041fe6cac0fc2",
+    "test.jsonl": "d4ea6b204a388b40a86cc94904a310ad95fa11fc07b6ddc0474d171458db4da3",
+    "holdout_validation_v5.jsonl": "aca6f25a974cc9efcd73ecb4bf45f6ea30d28814731c12df9e20645db71abc29"
+  }
+}

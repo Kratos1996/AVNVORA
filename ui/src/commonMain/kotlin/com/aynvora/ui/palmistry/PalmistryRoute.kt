@@ -59,6 +59,7 @@ import com.aynvora.core.palmistry.ImageQualityAssessment
 import com.aynvora.core.palmistry.PalmAnswerFeedback
 import com.aynvora.core.palmistry.PalmFeatureFeedback
 import com.aynvora.core.palmistry.PalmFeatureFeedbackCategory
+import com.aynvora.core.palmistry.PalmCaptureError
 import com.aynvora.core.palmistry.PalmFinding
 import com.aynvora.core.palmistry.PalmImageAnalysisEngine
 import com.aynvora.core.palmistry.PalmImageSource
@@ -849,13 +850,17 @@ private fun PalmCaptureScreen(
             }
         }
 
-        var captureError by remember { mutableStateOf<String?>(null) }
+        var captureError by remember { mutableStateOf<PalmCaptureError?>(null) }
         val imagePicker = rememberPalmImagePicker(
             onImageCaptured = { bytes, isCamera ->
+                captureError = null
+                // Decode actual pixel dimensions from the normalized image bytes so that
+                // PalmImageSource carries truthful resolution metadata (not a hardcoded guess).
+                val (imgW, imgH) = decodePalmImageDimensions(bytes)
                 val source = PalmImageSource(
                     data = bytes,
-                    widthPx = 1080,
-                    heightPx = 1920,
+                    widthPx = imgW,
+                    heightPx = imgH,
                     sourceType = if (isCamera) PalmImageSourceType.CAMERA else PalmImageSourceType.GALLERY,
                     capturedAtEpochMs = System.currentTimeMillis(),
                 )
@@ -868,11 +873,33 @@ private fun PalmCaptureScreen(
 
         if (captureError != null) {
             Spacer(Modifier.height(10.sdp))
-            Text(
-                text = captureError ?: "",
-                color = AynvoraTheme.colors.Error,
-                style = AynvoraTheme.typography.caption12,
-            )
+            AynvoraCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, AynvoraTheme.colors.Error.copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
+            ) {
+                Column(modifier = Modifier.padding(12.sdp)) {
+                    Text(
+                        text = captureError?.message ?: "",
+                        color = AynvoraTheme.colors.Error,
+                        style = AynvoraTheme.typography.caption12,
+                    )
+                    Spacer(Modifier.height(6.sdp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        Text(
+                            text = "Dismiss",
+                            color = AynvoraTheme.colors.Gold,
+                            style = AynvoraTheme.typography.caption12,
+                            modifier = Modifier
+                                .clickable { captureError = null }
+                                .padding(4.sdp),
+                        )
+                    }
+                }
+            }
         }
 
         Spacer(Modifier.height(24.sdp))
@@ -1014,14 +1041,18 @@ private fun PalmQualityCheckScreen(
                             text = translator.translate(TranslationKey.Palmistry.QualityProceed),
                             onClick = onProceed,
                             variant = AynvoraButtonVariant.Primary,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .qaAction(QaActionId.PALMISTRY_PROCEED),
                         )
                     } else {
                         AynvoraButton(
                             text = translator.translate(TranslationKey.Palmistry.QualityRetake),
                             onClick = onRetake,
                             variant = AynvoraButtonVariant.Secondary,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .qaAction(QaActionId.PALMISTRY_RETAKE),
                         )
                     }
                 }

@@ -1,0 +1,48 @@
+{
+  "runId": "run-v1-prepared",
+  "baseModel": {
+    "modelId": "Qwen/Qwen2.5-1.5B-Instruct",
+    "architecture": "qwen2",
+    "parameters": "1.54B",
+    "contextLength": 2048,
+    "license": "Apache-2.0",
+    "chatTemplate": "chatml"
+  },
+  "loraConfig": {
+    "rank": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "targetModules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj"
+    ],
+    "bias": "none",
+    "taskType": "CAUSAL_LM"
+  },
+  "trainingHyperparameters": {
+    "learningRate": 0.0001,
+    "lrScheduler": "cosine",
+    "warmupRatio": 0.05,
+    "batchSize": 4,
+    "gradientAccumulationSteps": 4,
+    "effectiveBatchSize": 16,
+    "numEpochs": 3,
+    "maxSequenceLength": 2048,
+    "optimizer": "adamw",
+    "weightDecay": 0.01,
+    "seed": 42
+  },
+  "dataset": {
+    "datasetVersion": "v4",
+    "trainSplit": "training/dataset-v4/train.jsonl",
+    "validSplit": "training/dataset-v4/valid.jsonl",
+    "testSplit": "training/dataset-v4/test.jsonl",
+    "holdoutSet": "training/dataset-v4/holdout_validation_v5.jsonl",
+    "trainCount": 406,
+    "validCount": 50,
+    "testCount": 52,
+    "holdoutCount": 100
+  }
+}

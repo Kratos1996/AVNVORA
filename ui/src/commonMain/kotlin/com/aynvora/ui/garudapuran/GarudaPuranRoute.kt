@@ -68,6 +68,7 @@ fun GarudaPuranRoute(
     nowEpochMillis: () -> Long,
     analyticsTracker: AnalyticsTracker = NoOpAnalyticsTracker(),
     eventDispatcher: com.aynvora.core.event.AynvoraEventDispatcher? = null,
+    onClose: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var loading by remember { mutableStateOf(true) }
@@ -133,17 +134,32 @@ fun GarudaPuranRoute(
     }
 
     Column(modifier = modifier.fillMaxSize().padding(16.sdp)) {
-        Text(
-            garudaText.text(GarudaPuranTextKey.PAGE_TITLE),
-            style = AynvoraTheme.typography.title20.copy(fontSize = 20.ssp),
-            color = AynvoraTheme.colors.Gold,
-        )
-        Spacer(Modifier.height(4.sdp))
-        Text(
-            garudaText.text(GarudaPuranTextKey.PAGE_SUBTITLE),
-            style = AynvoraTheme.typography.body14.copy(fontSize = 14.ssp),
-            color = AynvoraTheme.colors.TextLightSecondary,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    garudaText.text(GarudaPuranTextKey.PAGE_TITLE),
+                    style = AynvoraTheme.typography.title20.copy(fontSize = 20.ssp),
+                    color = AynvoraTheme.colors.Gold,
+                )
+                Spacer(Modifier.height(4.sdp))
+                Text(
+                    garudaText.text(GarudaPuranTextKey.PAGE_SUBTITLE),
+                    style = AynvoraTheme.typography.body14.copy(fontSize = 14.ssp),
+                    color = AynvoraTheme.colors.TextLightSecondary,
+                )
+            }
+            if (onClose != null) {
+                AynvoraButton(
+                    text = "Close",
+                    variant = AynvoraButtonVariant.Outlined,
+                    onClick = onClose,
+                )
+            }
+        }
         Spacer(Modifier.height(12.sdp))
 
         when {

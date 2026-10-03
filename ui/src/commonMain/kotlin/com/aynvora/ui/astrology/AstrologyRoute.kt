@@ -84,8 +84,17 @@ import com.aynvora.core.result.AynvoraResult
 import com.aynvora.core.models.generateKundaliSnapshot
 import com.aynvora.astro.time.JulianDayFormatter
 import com.aynvora.astro.dasha.DashaPeriod
+import com.aynvora.core.models.CanonicalLocation
+import com.aynvora.core.models.OfflineLocationCatalog
+import com.aynvora.designsystem.AynvoraColors
+import com.aynvora.designsystem.adaptive.LocalAynvoraWindowInfo
+import com.aynvora.designsystem.components.AynvoraButton
+import com.aynvora.designsystem.components.AynvoraButtonVariant
+import com.aynvora.designsystem.components.inputs.AynvoraReadOnlyField
+import com.aynvora.designsystem.components.inputs.AynvoraTextField
 import com.aynvora.designsystem.localization.LocalAynvoraTranslator
 import com.aynvora.designsystem.generated.resources.Res
+import androidx.compose.foundation.layout.widthIn
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.koin.compose.currentKoinScope
@@ -123,10 +132,14 @@ fun AstrologyRoute(onClose: () -> Unit, modifier: Modifier = Modifier) {
     var profilesLoaded by remember { mutableStateOf(false) }
     // Saved Kundalis are the entry state; no saved records leads to the create-first screen.
     var showForm by remember { mutableStateOf(false) }
+    var locationCatalog by remember { mutableStateOf<OfflineLocationCatalog?>(null) }
+    var isCitySearchOpen by remember { mutableStateOf(false) }
+    var recentCityLocations by remember { mutableStateOf<List<CanonicalLocation>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         analytics?.track(AnalyticsEvent.AstrologyInputOpened)
         val text = Res.readBytes("files/locations.tsv").decodeToString()
+        runCatching { locationCatalog = OfflineLocationCatalog.parse(text) }
         cities = text.lineSequence().mapNotNull { line ->
             val f = line.split('\t')
             if (f.size != 9) return@mapNotNull null
@@ -215,7 +228,12 @@ fun AstrologyRoute(onClose: () -> Unit, modifier: Modifier = Modifier) {
             Text(if (savedProfiles.isEmpty()) "Create your first Kundali" else "Previous Kundalis", color = AynvoraTheme.colors.TextLight, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             if (!profilesLoaded) Text("Loading saved Kundalis…", color = AynvoraTheme.colors.TextLightSecondary)
             if (savedProfiles.isEmpty()) Text("Your saved birth charts will appear here.", color = AynvoraTheme.colors.TextLightSecondary)
-            Button(onClick = { error = null; showForm = true }, Modifier.fillMaxWidth()) { Text("New Kundali") }
+            AynvoraButton(
+                text = "New Kundali",
+                onClick = { error = null; showForm = true },
+                variant = AynvoraButtonVariant.Primary,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+            )
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(savedProfiles, key = { it.id }) { profile ->
                     Surface(color = AynvoraTheme.colors.CosmicIndigo, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
@@ -262,15 +280,119 @@ fun AstrologyRoute(onClose: () -> Unit, modifier: Modifier = Modifier) {
                 item {
                     Text("BIRTH DETAILS  ·  STEP 1 OF 1", color = AynvoraTheme.colors.GoldLight, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
-                item { OutlinedTextField(name, { name = it.take(80) }, Modifier.fillMaxWidth(), label = { Text("Name") }, singleLine = true) }
-                item { Button(onClick = { analytics?.track(AnalyticsEvent.BirthDatePickerOpened); picker = "date" }, Modifier.fillMaxWidth()) { Text(dateMillis?.let(::formatDate) ?: "Date of birth") } }
-                item { Button(onClick = { analytics?.track(AnalyticsEvent.BirthTimePickerOpened); picker = "time" }, Modifier.fillMaxWidth()) { Text(if (hour != null && minute != null) "%02d:%02d".format(hour, minute) else "Exact time of birth") } }
-                item { Button(onClick = { analytics?.track(AnalyticsEvent.BirthLocationPickerOpened); picker = "country"; query = "" }, Modifier.fillMaxWidth()) { Text(selected?.let { "${it.city}, ${it.state}, ${it.country}" } ?: "Birth location") } }
-                item { Text("Gender (optional)", color = AynvoraTheme.colors.TextLight) }
-                item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("Male", "Female", "Prefer not to say").forEach { Button(onClick = { gender = it }) { Text(if (gender == it) "✓ $it" else it) } } } }
-                item { Text("Calculation profile: Standard Vedic · Lahiri · Equal House", color = AynvoraTheme.colors.TextLightSecondary) }
-                item { error?.let { Text(it, color = AynvoraTheme.colors.Error) } }
-                item { Button(enabled = !loading, onClick = {
+                item {
+                    AynvoraTextField(
+                        value = name,
+                        onValueChange = { name = it.take(80) },
+                        label = "Full Name",
+                        placeholder = "Enter full name",
+                    )
+                }
+                item {
+                    AynvoraReadOnlyField(
+                        value = dateMillis?.let(::formatDate) ?: "",
+                        onClick = {
+                            analytics?.track(AnalyticsEvent.BirthDatePickerOpened)
+                            picker = "date"
+                        },
+                        label = "Date of Birth",
+                        placeholder = "Select date of birth",
+                        trailingIcon = { Text("📅", style = AynvoraTheme.typography.body14) },
+                    )
+                }
+                item {
+                    AynvoraReadOnlyField(
+                        value = if (hour != null && minute != null) formatTime(hour!!, minute!!) else "",
+                        onClick = {
+                            analytics?.track(AnalyticsEvent.BirthTimePickerOpened)
+                            picker = "time"
+                        },
+                        label = "Time of Birth",
+                        placeholder = "Select exact time of birth",
+                        trailingIcon = { Text("🕒", style = AynvoraTheme.typography.body14) },
+                    )
+                }
+                item {
+                    AynvoraReadOnlyField(
+                        value = selected?.let { "${it.city}, ${it.state}, ${it.country}" } ?: "",
+                        onClick = {
+                            analytics?.track(AnalyticsEvent.BirthLocationPickerOpened)
+                            isCitySearchOpen = true
+                        },
+                        label = "Birth City",
+                        placeholder = "Search city (e.g. Jaipur, London, New York...)",
+                        trailingIcon = { Text("›", style = AynvoraTheme.typography.title18, color = AynvoraColors.Gold) },
+                    )
+                }
+                if (selected != null) {
+                    item {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                AynvoraReadOnlyField(
+                                    value = selected!!.country,
+                                    onClick = {},
+                                    enabled = false,
+                                    label = "Country",
+                                )
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                AynvoraReadOnlyField(
+                                    value = selected!!.state,
+                                    onClick = {},
+                                    enabled = false,
+                                    label = "State / Region",
+                                )
+                            }
+                        }
+                    }
+                    item {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                AynvoraReadOnlyField(
+                                    value = selected!!.timezone,
+                                    onClick = {},
+                                    enabled = false,
+                                    label = "Timezone",
+                                )
+                            }
+                            Box(modifier = Modifier.weight(1f)) {
+                                AynvoraReadOnlyField(
+                                    value = "${selected!!.lat}° N, ${selected!!.lon}° E",
+                                    onClick = {},
+                                    enabled = false,
+                                    label = "Coordinates",
+                                )
+                            }
+                        }
+                    }
+                }
+                item { Text("Gender (optional)", color = AynvoraTheme.colors.TextLight, fontSize = 13.sp, fontWeight = FontWeight.Medium) }
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("Male", "Female", "Prefer not to say").forEach { g ->
+                            val isSel = gender == g
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSel) AynvoraColors.Gold.copy(alpha = 0.2f) else AynvoraColors.CosmicIndigo)
+                                    .border(1.dp, if (isSel) AynvoraColors.Gold else AynvoraColors.CosmicIndigo, RoundedCornerShape(8.dp))
+                                    .clickable { gender = g }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                            ) {
+                                Text(if (isSel) "✓ $g" else g, color = if (isSel) AynvoraColors.Gold else AynvoraColors.TextLightSecondary, fontSize = 13.sp)
+                            }
+                        }
+                    }
+                }
+                item { Text("Calculation profile: Standard Vedic · Lahiri · Equal House", color = AynvoraTheme.colors.TextLightSecondary, fontSize = 12.sp) }
+                item { error?.let { Text(it, color = AynvoraTheme.colors.Error, fontSize = 13.sp) } }
+                item {
+                    AynvoraButton(
+                        text = if (loading) "Calculating Kundali…" else "Create Kundali",
+                        enabled = !loading,
+                        variant = AynvoraButtonVariant.Primary,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        onClick = {
                     val place = selected
                     val millis = dateMillis
                     val h = hour; val m = minute
@@ -282,8 +404,8 @@ fun AstrologyRoute(onClose: () -> Unit, modifier: Modifier = Modifier) {
                         place.timezone.isBlank() -> "The selected city has no timezone. Choose a different city."
                         else -> null
                     }
-                    if (validation != null) { error = validation; return@Button }
-                    if (sdk == null) { error = "Astrology service is unavailable."; return@Button }
+                    if (validation != null) { error = validation; return@AynvoraButton }
+                    if (sdk == null) { error = "Astrology service is unavailable."; return@AynvoraButton }
                     loading = true; error = null
                     analytics?.track(AnalyticsEvent.KundaliGenerationStarted)
                     scope.launch {
@@ -334,7 +456,7 @@ fun AstrologyRoute(onClose: () -> Unit, modifier: Modifier = Modifier) {
                         } catch (_: Exception) { error = "Unable to generate Kundali. Check the details and try again."; analytics?.track(AnalyticsEvent.KundaliGenerationFailure) }
                         finally { loading = false }
                     }
-                }, modifier = Modifier.fillMaxWidth()) { Text(if (loading) "Calculating…" else "GET HOROSCOPE") } }
+                }) }
             }
         } else {
             KundaliWorkspace(model = result!!, translator = translator, sdk = sdk, modifier = Modifier.weight(1f))
@@ -345,36 +467,83 @@ fun AstrologyRoute(onClose: () -> Unit, modifier: Modifier = Modifier) {
     when (picker) {
         "date" -> {
             val state = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
-            DatePickerDialog(onDismissRequest = { picker = "" }, confirmButton = { TextButton(onClick = { dateMillis = state.selectedDateMillis; picker = "" }) { Text("OK") } }, dismissButton = { TextButton(onClick = { picker = "" }) { Text("Cancel") } }) { DatePicker(state) }
+            DatePickerDialog(
+                onDismissRequest = { picker = "" },
+                confirmButton = { TextButton(onClick = { dateMillis = state.selectedDateMillis; picker = "" }) { Text("OK") } },
+                dismissButton = { TextButton(onClick = { picker = "" }) { Text("Cancel") } },
+            ) { DatePicker(state) }
         }
         "time" -> {
-            val state = rememberTimePickerState(initialHour = hour ?: 12, initialMinute = minute ?: 0, is24Hour = true)
-            AlertDialog(onDismissRequest = { picker = "" }, confirmButton = { TextButton(onClick = { hour = state.hour; minute = state.minute; picker = "" }) { Text("OK") } }, dismissButton = { TextButton(onClick = { picker = "" }) { Text("Cancel") } }, text = { TimePicker(state) })
+            val state = rememberTimePickerState(initialHour = hour ?: 12, initialMinute = minute ?: 0, is24Hour = false)
+            AlertDialog(
+                onDismissRequest = { picker = "" },
+                confirmButton = { TextButton(onClick = { hour = state.hour; minute = state.minute; picker = "" }) { Text("OK") } },
+                dismissButton = { TextButton(onClick = { picker = "" }) { Text("Cancel") } },
+                text = { TimePicker(state) },
+            )
         }
-        "country", "state", "city" -> AlertDialog(onDismissRequest = { picker = "" }, title = { Text(title) }, text = {
-            Column {
-                OutlinedTextField(query, { query = it }, label = { Text("Search") }, singleLine = true)
-                LazyColumn(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                    val options = when (picker) {
-                        "country" -> cities.map { it.countryCode to it.country }.distinctBy { it.first }.filter { it.second.contains(query, true) }.sortedBy { it.second }.take(500)
-                        "state" -> cities.filter { it.countryCode == selected?.countryCode }.map { it.stateCode to it.state }.distinctBy { it.first }.filter { it.second.contains(query, true) }.sortedBy { it.second }.take(500)
-                        else -> cities.filter { it.countryCode == selected?.countryCode && it.stateCode == selected?.stateCode && it.city.contains(query, true) }.sortedBy { it.city }.take(100).map { it.id to "${it.city} · ${it.state} · ${it.country}" }
-                    }
-                    items(options) { option -> Text(option.second, Modifier.fillMaxWidth().clickable {
-                        when (picker) {
-                            "country" -> { selected = LocalCity("", "", "", "", option.first, option.second, 0.0, 0.0, ""); picker = "state" }
-                            "state" -> { selected = selected!!.copy(stateCode = option.first, state = option.second); picker = "city" }
-                            else -> {
-                                val match = cities.firstOrNull { it.countryCode == selected?.countryCode && it.stateCode == selected?.stateCode && it.id == option.first }
-                                if (match != null) { selected = match; analytics?.track(AnalyticsEvent.BirthLocationSelected) }
-                                picker = ""
-                            }
+    }
+
+    if (isCitySearchOpen && locationCatalog != null) {
+        val selectedCanonical = selected?.let {
+            CanonicalLocation(
+                canonicalId = it.id,
+                cityName = it.city,
+                stateCode = it.stateCode,
+                stateName = it.state,
+                countryCode = it.countryCode,
+                countryName = it.country,
+                latitude = it.lat,
+                longitude = it.lon,
+                timezoneId = it.timezone,
+                datasetVersion = "1.0",
+                provenance = "bundled",
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AynvoraTheme.colors.CosmicBlack.copy(alpha = 0.72f))
+                .clickable { isCitySearchOpen = false },
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 600.dp)
+                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                    .clickable(enabled = false) {},
+                color = AynvoraTheme.colors.surfacePrimary,
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, AynvoraTheme.colors.CosmicIndigo),
+            ) {
+                CitySearchBottomSheet(
+                    catalog = locationCatalog!!,
+                    recentLocations = recentCityLocations,
+                    selectedLocation = selectedCanonical,
+                    onLocationSelected = { canonicalLoc ->
+                        selected = LocalCity(
+                            id = canonicalLoc.canonicalId,
+                            city = canonicalLoc.cityName,
+                            stateCode = canonicalLoc.stateCode,
+                            state = canonicalLoc.stateName,
+                            countryCode = canonicalLoc.countryCode,
+                            country = canonicalLoc.countryName,
+                            lat = canonicalLoc.latitude,
+                            lon = canonicalLoc.longitude,
+                            timezone = canonicalLoc.timezoneId,
+                        )
+                        if (!recentCityLocations.any { it.canonicalId == canonicalLoc.canonicalId }) {
+                            recentCityLocations = (listOf(canonicalLoc) + recentCityLocations).take(5)
                         }
-                        query = ""
-                    }.padding(10.dp)) }
-                }
+                        analytics?.track(AnalyticsEvent.BirthLocationSelected)
+                        isCitySearchOpen = false
+                        error = null
+                    },
+                    onClose = { isCitySearchOpen = false },
+                )
             }
-        }, confirmButton = { TextButton(onClick = { picker = "" }) { Text("Close") } })
+        }
     }
 
     deleteCandidate?.let { profile ->
@@ -405,7 +574,15 @@ fun AstrologyRoute(onClose: () -> Unit, modifier: Modifier = Modifier) {
 
 private fun formatDate(millis: Long): String {
     val (y, m, d) = fromEpochDay((millis / 86_400_000L).toInt())
-    return "%04d-%02d-%02d".format(y, m, d)
+    val months = listOf("", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    val monthName = months.getOrElse(m) { "%02d".format(m) }
+    return "%02d %s %04d".format(d, monthName, y)
+}
+
+private fun formatTime(hour: Int, minute: Int): String {
+    val h12 = if (hour % 12 == 0) 12 else hour % 12
+    val amPm = if (hour >= 12) "PM" else "AM"
+    return "%02d:%02d %s".format(h12, minute, amPm)
 }
 
 private fun fullHoroscopeConfig() = CalculationConfig(
@@ -419,6 +596,7 @@ private fun KundaliWorkspace(
     sdk: AynvoraSdk? = null,
     modifier: Modifier = Modifier,
 ) {
+    val windowInfo = LocalAynvoraWindowInfo.current
     val snapshot = model.snapshot
     val chart = snapshot.natalChart
     var sectionId by remember(snapshot.profileId) { mutableStateOf("home") }
@@ -522,28 +700,77 @@ private fun KundaliWorkspace(
                     item { EmptyReport("Chalit is marked AMBIGUOUS because its cusp convention is not verified. The saved snapshot does not substitute an Equal House chart.") }
                 } else if (!supported) item { EmptyReport("This chart is not included in the saved calculation snapshot.") }
                 else {
-                    item {
-                        Surface(color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.92f), shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
-                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Column {
-                                        Text(selectedChart!!.chartTypeId.replace('_', ' '), color = gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                                        Text("North Indian · ${selectedChart.zodiacModeId}", color = muted, fontSize = 11.sp)
+                    if (windowInfo.isExpanded) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            ) {
+                                Surface(
+                                    color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.92f),
+                                    shape = RoundedCornerShape(20.dp),
+                                    modifier = Modifier.weight(1.1f),
+                                ) {
+                                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                            Column {
+                                                Text(selectedChart!!.chartTypeId.replace('_', ' '), color = gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                                                Text("North Indian · ${selectedChart.zodiacModeId}", color = muted, fontSize = 11.sp)
+                                            }
+                                            Text(snapshot.birth.localDate, color = muted, fontSize = 10.sp)
+                                        }
+                                        NorthIndianKundali(selectedChart!!)
+                                        SnapshotChartLegend(selectedChart!!)
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                            SummaryCard("ASCENDANT", chart.lagna?.rashiPosition?.rashi?.displayName ?: "Unavailable", chart.lagna?.nakshatraPosition?.nakshatra?.displayName ?: "Lagna", Modifier.weight(1f))
+                                            SummaryCard("PLANETS", selectedChart!!.placements.size.toString(), "calculated placements", Modifier.weight(1f))
+                                        }
                                     }
-                                    Text(snapshot.birth.localDate, color = muted, fontSize = 10.sp)
                                 }
-                                NorthIndianKundali(selectedChart!!)
-                                SnapshotChartLegend(selectedChart!!)
+
+                                Surface(
+                                    color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.85f),
+                                    shape = RoundedCornerShape(20.dp),
+                                    modifier = Modifier.weight(0.9f),
+                                ) {
+                                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        Text("Planetary Positions", color = ink, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                        selectedChart!!.placements.forEach { p ->
+                                            DetailRow(
+                                                bodyShort(p.bodyId),
+                                                displayCanonical(p.bodyId),
+                                                displayCanonical(p.nakshatraId),
+                                                "${"%.2f".format(p.degreeInSign)}° · H${p.houseNumber ?: "—"}${markerSuffix(p)}"
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
-                    }
-                    item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SummaryCard("ASCENDANT", chart.lagna?.rashiPosition?.rashi?.displayName ?: "Unavailable", chart.lagna?.nakshatraPosition?.nakshatra?.displayName ?: "Lagna", Modifier.weight(1f))
-                        SummaryCard("PLANETS", selectedChart!!.placements.size.toString(), "calculated placements", Modifier.weight(1f))
-                    } }
-                    item { Text("Planetary positions", color = ink, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
-                    items(selectedChart!!.placements, key = { "${selectedChart.chartId}_${it.bodyId}" }) { p ->
-                        DetailRow(bodyShort(p.bodyId), displayCanonical(p.bodyId), displayCanonical(p.nakshatraId), "${"%.2f".format(p.degreeInSign)}° · H${p.houseNumber ?: "—"}${markerSuffix(p)}")
+                    } else {
+                        item {
+                            Surface(color = AynvoraTheme.colors.CosmicIndigo.copy(alpha = 0.92f), shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
+                                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                        Column {
+                                            Text(selectedChart!!.chartTypeId.replace('_', ' '), color = gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                                            Text("North Indian · ${selectedChart.zodiacModeId}", color = muted, fontSize = 11.sp)
+                                        }
+                                        Text(snapshot.birth.localDate, color = muted, fontSize = 10.sp)
+                                    }
+                                    NorthIndianKundali(selectedChart!!)
+                                    SnapshotChartLegend(selectedChart!!)
+                                }
+                            }
+                        }
+                        item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            SummaryCard("ASCENDANT", chart.lagna?.rashiPosition?.rashi?.displayName ?: "Unavailable", chart.lagna?.nakshatraPosition?.nakshatra?.displayName ?: "Lagna", Modifier.weight(1f))
+                            SummaryCard("PLANETS", selectedChart!!.placements.size.toString(), "calculated placements", Modifier.weight(1f))
+                        } }
+                        item { Text("Planetary positions", color = ink, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+                        items(selectedChart!!.placements, key = { "${selectedChart.chartId}_${it.bodyId}" }) { p ->
+                            DetailRow(bodyShort(p.bodyId), displayCanonical(p.bodyId), displayCanonical(p.nakshatraId), "${"%.2f".format(p.degreeInSign)}° · H${p.houseNumber ?: "—"}${markerSuffix(p)}")
+                        }
                     }
                 }
             }
@@ -616,16 +843,46 @@ private fun KundaliWorkspace(
                 }
             }
             "shodashavarga" -> {
-                items(snapshot.charts.filter { it.chartId.startsWith("D") }.sortedBy { it.chartId.drop(1).toIntOrNull() ?: 0 }, key = { it.chartId }) { varga ->
-                    Surface(color = AynvoraTheme.colors.CosmicIndigo, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("${varga.chartId} · ${varga.chartTypeId}", color = gold, fontWeight = FontWeight.Bold)
-                            Text("${varga.status} · ${varga.placements.size} positions", color = muted, fontSize = 11.sp)
-                            if (varga.status == com.aynvora.core.models.CalculationAvailability.AVAILABLE) {
-                                NorthIndianKundali(varga)
-                                SnapshotChartLegend(varga)
+                val vargaCharts = snapshot.charts.filter { it.chartId.startsWith("D") }.sortedBy { it.chartId.drop(1).toIntOrNull() ?: 0 }
+                if (windowInfo.isExpanded) {
+                    val columns = if (windowInfo.width >= 1200.dp) 3 else 2
+                    items(vargaCharts.chunked(columns), key = { chunk -> chunk.joinToString("_") { it.chartId } }) { rowCharts ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            rowCharts.forEach { varga ->
+                                Surface(
+                                    color = AynvoraTheme.colors.CosmicIndigo,
+                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.weight(1f),
+                                ) {
+                                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Text("${varga.chartId} · ${varga.chartTypeId}", color = gold, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                        Text("${varga.status} · ${varga.placements.size} positions", color = muted, fontSize = 11.sp)
+                                        if (varga.status == com.aynvora.core.models.CalculationAvailability.AVAILABLE) {
+                                            NorthIndianKundali(varga)
+                                            SnapshotChartLegend(varga)
+                                        }
+                                        Text(varga.placements.joinToString(" ") { "${bodyShort(it.bodyId)} ${displayCanonical(com.aynvora.core.models.Rashi.fromIndex(it.signIndex).name).take(3)}" }, color = ink, fontSize = 11.sp)
+                                    }
+                                }
                             }
-                            Text(varga.placements.joinToString("   ") { "${bodyShort(it.bodyId)} ${displayCanonical(com.aynvora.core.models.Rashi.fromIndex(it.signIndex).name)}" }, color = ink, fontSize = 12.sp)
+                            val remaining = columns - rowCharts.size
+                            if (remaining > 0) {
+                                repeat(remaining) { Spacer(Modifier.weight(1f)) }
+                            }
+                        }
+                    }
+                } else {
+                    items(vargaCharts, key = { it.chartId }) { varga ->
+                        Surface(color = AynvoraTheme.colors.CosmicIndigo, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("${varga.chartId} · ${varga.chartTypeId}", color = gold, fontWeight = FontWeight.Bold)
+                                Text("${varga.status} · ${varga.placements.size} positions", color = muted, fontSize = 11.sp)
+                                if (varga.status == com.aynvora.core.models.CalculationAvailability.AVAILABLE) {
+                                    NorthIndianKundali(varga)
+                                    SnapshotChartLegend(varga)
+                                }
+                                Text(varga.placements.joinToString("   ") { "${bodyShort(it.bodyId)} ${displayCanonical(com.aynvora.core.models.Rashi.fromIndex(it.signIndex).name)}" }, color = ink, fontSize = 12.sp)
+                            }
                         }
                     }
                 }

@@ -12,6 +12,17 @@ enum class CapabilityStatus {
 }
 
 /**
+ * High-level operational status of a product feature domain.
+ */
+enum class FeatureOperationalStatus(val displayLabel: String) {
+    PRODUCTION("Production"),
+    LIMITED("Limited"),
+    FOUNDATION_ONLY("Foundation Only"),
+    RESEARCH_ONLY("Research Only"),
+    COMING_SOON("Coming Soon"),
+}
+
+/**
  * Declared atomic capability of a core product feature.
  */
 data class FeatureCapability(
@@ -152,9 +163,9 @@ object FeatureCapabilityRegistry {
         FeatureCapability(
             "palm_image_capture",
             CoreFeatureId.PALMISTRY,
-            "Palm image capture and guide alignment",
-            CapabilityStatus.FOUNDATION_ONLY,
-            false,
+            "Palm image capture, EXIF orientation normalization, size normalization, and guide alignment",
+            CapabilityStatus.IMPLEMENTED,
+            true,
             false
         ),
         FeatureCapability(
@@ -354,4 +365,13 @@ object FeatureCapabilityRegistry {
 
     fun isCapabilityImplemented(capabilityId: String): Boolean =
         capabilities.any { it.capabilityId == capabilityId && it.status == CapabilityStatus.IMPLEMENTED }
+
+    fun getOperationalStatus(domain: CoreFeatureId): FeatureOperationalStatus = when (domain) {
+        CoreFeatureId.ASTROLOGY, CoreFeatureId.TAROT, CoreFeatureId.NUMEROLOGY,
+        CoreFeatureId.GEMSTONE, CoreFeatureId.GITA, CoreFeatureId.DAILY_GUIDANCE,
+        CoreFeatureId.WALLPAPER, CoreFeatureId.GARUDA_PURAN, CoreFeatureId.AI_ASSISTANT,
+        CoreFeatureId.RUDRAKSHA, CoreFeatureId.JADI, CoreFeatureId.YANTRA -> FeatureOperationalStatus.PRODUCTION
+        CoreFeatureId.PALMISTRY -> FeatureOperationalStatus.PRODUCTION
+        CoreFeatureId.LAL_KITAB -> FeatureOperationalStatus.RESEARCH_ONLY
+    }
 }

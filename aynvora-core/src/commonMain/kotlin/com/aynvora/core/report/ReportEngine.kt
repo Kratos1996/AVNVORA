@@ -1,6 +1,7 @@
 package com.aynvora.core.report
 
 import com.aynvora.astro.dasha.DashaPeriod
+import com.aynvora.astro.yogas.YogaDoshaEngine
 import com.aynvora.core.AynvoraSdk
 import com.aynvora.core.analytics.AnalyticsEvent
 import com.aynvora.core.analytics.AnalyticsTracker
@@ -23,6 +24,7 @@ class ReportGeneratorRegistry(
         PalmistryReportGenerator(),
         NumerologyReportGenerator(),
         GemstoneReportGenerator(),
+        GitaReportGenerator(),
     )
 ) {
     private val entries = generators.toList()
@@ -780,8 +782,66 @@ class KundaliReportGenerator : ReportGenerator {
             ReportTextKey.TRANSITS,
             ReportUnavailableReason.TRANSIT_EPOCH_NOT_REQUESTED
         )
-        omit("yogas", ReportTextKey.YOGAS, ReportUnavailableReason.NOT_PROVIDED_BY_ASTRO_ENGINE)
-        omit("dosha", ReportTextKey.DOSHA, ReportUnavailableReason.NOT_PROVIDED_BY_ASTRO_ENGINE)
+        if (input.includeYogas || input.includeDoshas) {
+            val planetHouses = mutableMapOf<String, Int>()
+            for (p in chart.planetaryPositions) {
+                planetHouses[p.body.name] = p.houseNumber
+            }
+            val evaluation = YogaDoshaEngine.evaluate(planetHouses)
+
+            if (input.includeYogas) {
+                val presentYogas = evaluation.yogas.filter { it.isPresent }
+                if (presentYogas.isNotEmpty()) {
+                    val rows = presentYogas.map {
+                        listOf(it.name, it.description, it.ruleReference)
+                    }
+                    include(
+                        "yogas",
+                        ReportTextKey.YOGAS,
+                        listOf(
+                            table(
+                                listOf(ReportTextKey.VALUE, ReportTextKey.STATUS, ReportTextKey.RULESET),
+                                rows,
+                                ReportContentKind.CALCULATION
+                            )
+                        ),
+                        "yogas:parashari"
+                    )
+                } else {
+                    omit("yogas", ReportTextKey.YOGAS, ReportUnavailableReason.NOT_PROVIDED_BY_ASTRO_ENGINE)
+                }
+            } else {
+                omit("yogas", ReportTextKey.YOGAS, ReportUnavailableReason.NOT_PROVIDED_BY_ASTRO_ENGINE)
+            }
+
+            if (input.includeDoshas) {
+                val presentDoshas = evaluation.doshas.filter { it.isPresent }
+                if (presentDoshas.isNotEmpty()) {
+                    val rows = presentDoshas.map {
+                        listOf(it.name, it.strength, it.ruleReference)
+                    }
+                    include(
+                        "dosha",
+                        ReportTextKey.DOSHA,
+                        listOf(
+                            table(
+                                listOf(ReportTextKey.VALUE, ReportTextKey.STATUS, ReportTextKey.RULESET),
+                                rows,
+                                ReportContentKind.CALCULATION
+                            )
+                        ),
+                        "doshas:parashari"
+                    )
+                } else {
+                    omit("dosha", ReportTextKey.DOSHA, ReportUnavailableReason.NOT_PROVIDED_BY_ASTRO_ENGINE)
+                }
+            } else {
+                omit("dosha", ReportTextKey.DOSHA, ReportUnavailableReason.NOT_PROVIDED_BY_ASTRO_ENGINE)
+            }
+        } else {
+            omit("yogas", ReportTextKey.YOGAS, ReportUnavailableReason.NOT_PROVIDED_BY_ASTRO_ENGINE)
+            omit("dosha", ReportTextKey.DOSHA, ReportUnavailableReason.NOT_PROVIDED_BY_ASTRO_ENGINE)
+        }
         omit(
             "timing",
             ReportTextKey.TIMING,

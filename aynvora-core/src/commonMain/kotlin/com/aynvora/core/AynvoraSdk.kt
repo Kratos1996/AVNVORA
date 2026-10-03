@@ -594,4 +594,5 @@ private fun AynvoraResult.Failure.analyticsErrorCode(): String = when (this) {
     is AynvoraResult.Failure.MigrationFailure -> "migration_failure"
     is AynvoraResult.Failure.SyncFailure -> "sync_failure"
     is AynvoraResult.Failure.InternalFailure -> "internal_failure"
+    is AynvoraResult.Failure.Structured -> "structured_error"
 }

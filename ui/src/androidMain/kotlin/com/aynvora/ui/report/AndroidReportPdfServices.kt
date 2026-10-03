@@ -42,11 +42,29 @@ class AndroidReportPdfGenerator(
             color = android.graphics.Color.rgb(138, 99, 25); textSize = 22f; typeface =
             Typeface.create("sans-serif-medium", Typeface.BOLD)
         }
+        val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.rgb(220, 224, 230)
+            strokeWidth = 0.8f
+        }
+        val goldLinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.rgb(180, 140, 45)
+            strokeWidth = 1.2f
+        }
+
         var pageNumber = 0
         var page: PdfDocument.Page? = null
         var canvas: android.graphics.Canvas? = null
         var y = margin
+
+        fun drawFooter() {
+            canvas?.let { c ->
+                c.drawLine(margin, pageHeight - margin + 8f, pageWidth - margin, pageHeight - margin + 8f, linePaint)
+                c.drawText("AYNVORA • Page $pageNumber", margin, pageHeight - margin + 22f, metaPaint)
+            }
+        }
+
         fun startPage() {
+            drawFooter()
             page?.let(pdf::finishPage)
             pageNumber += 1
             page = pdf.startPage(
@@ -55,6 +73,12 @@ class AndroidReportPdfGenerator(
             canvas = page!!.canvas
             canvas!!.drawColor(android.graphics.Color.WHITE)
             y = margin
+
+            if (pageNumber > 1) {
+                canvas!!.drawText(document.title.value, margin, margin - 14f, metaPaint)
+                canvas!!.drawLine(margin, margin - 8f, pageWidth - margin, margin - 8f, linePaint)
+                y = margin + 10f
+            }
         }
 
         fun draw(line: ReportPdfLine) {
@@ -68,18 +92,25 @@ class AndroidReportPdfGenerator(
                 ReportPdfLineKind.TITLE -> 30f
                 ReportPdfLineKind.HEADING -> 24f
                 ReportPdfLineKind.SUBHEADING -> 20f
+                ReportPdfLineKind.TABLE_HEADER -> 18f
                 else -> 16f
             }
             val textLines = wrap(line.text, paint, pageWidth - margin * 2)
             textLines.forEach { text ->
-                if (y + lineHeight > pageHeight - margin) startPage()
+                if (y + lineHeight > pageHeight - margin - 16f) startPage()
                 canvas!!.drawText(text, margin, y, paint)
                 y += lineHeight
             }
-            if (line.kind == ReportPdfLineKind.HEADING || line.kind == ReportPdfLineKind.TITLE) y += 3f
+            if (line.kind == ReportPdfLineKind.HEADING || line.kind == ReportPdfLineKind.TITLE) {
+                y += 2f
+                canvas!!.drawLine(margin, y, margin + 60f, y, goldLinePaint)
+                y += 6f
+            }
         }
+
         startPage()
         document.toReportPdfLines(resolver).forEach(::draw)
+        drawFooter()
         page?.let(pdf::finishPage)
         val output = ByteArrayOutputStream()
         pdf.writeTo(output)

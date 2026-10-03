@@ -46,6 +46,9 @@ sealed interface FeatureAvailability {
 
     /** Feature not supported on the current execution platform (e.g. camera on desktop). */
     data class UnsupportedOnPlatform(val platform: String) : FeatureAvailability
+
+    /** Dedicated classical research repository and exploratory domain (e.g. Lal Kitab). */
+    data object ResearchOnly : FeatureAvailability
 }
 
 /**

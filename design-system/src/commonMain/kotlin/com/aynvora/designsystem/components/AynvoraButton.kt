@@ -22,11 +22,13 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.aynvora.core.event.AynvoraClickEvent
 import com.aynvora.designsystem.AynvoraBorders
 import com.aynvora.designsystem.AynvoraColors
 import com.aynvora.designsystem.AynvoraShapes
 import com.aynvora.designsystem.AynvoraSpacing
 import com.aynvora.designsystem.AynvoraTheme
+import com.aynvora.designsystem.event.LocalAynvoraEventDispatcher
 
 /**
  * Visual variant options for [AynvoraButton].
@@ -40,27 +42,20 @@ enum class AynvoraButtonVariant {
 
 /**
  * Standard AYNVORA Button Component.
- *
- * Contract:
- * - Purpose: Primary and secondary call-to-action button adhering to Master UI Style Guide.
- * - Anatomy: Container, optional leading icon, text label, optional trailing icon, optional loading indicator.
- * - Tokens: AynvoraColors, AynvoraSpacing, AynvoraShapes, AynvoraTypography.
- * - States: Default, pressed, disabled, loading.
- * - Accessibility: 48dp minimum interactive touch target height, semantic button role.
  */
 @Composable
 fun AynvoraButton(
     text: String,
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
-    event: com.aynvora.core.event.AynvoraClickEvent? = null,
+    event: AynvoraClickEvent? = null,
     variant: AynvoraButtonVariant = AynvoraButtonVariant.Primary,
     enabled: Boolean = true,
     loading: Boolean = false,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
 ) {
-    val ambientDispatcher = com.aynvora.designsystem.event.LocalAynvoraEventDispatcher.current
+    val ambientDispatcher = LocalAynvoraEventDispatcher.current
     val effectiveOnClick: () -> Unit = {
         if (event != null) {
             ambientDispatcher?.invoke(event)
@@ -178,6 +173,121 @@ fun AynvoraButton(
             }
         }
     }
+}
+
+/** Convenience Primary Button wrapper. */
+@Composable
+fun AynvoraPrimaryButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    loading: Boolean = false,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
+) {
+    AynvoraButton(
+        text = text,
+        onClick = onClick,
+        modifier = modifier,
+        variant = AynvoraButtonVariant.Primary,
+        enabled = enabled,
+        loading = loading,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+    )
+}
+
+/** Convenience Small Primary Button wrapper. */
+@Composable
+fun AynvoraPrimaryButtonSmall(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    loading: Boolean = false,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
+) {
+    AynvoraButton(
+        text = text,
+        onClick = onClick,
+        modifier = modifier.defaultMinSize(minHeight = 36.dp),
+        variant = AynvoraButtonVariant.Primary,
+        enabled = enabled,
+        loading = loading,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+    )
+}
+
+/** Convenience Secondary Button wrapper. */
+@Composable
+fun AynvoraSecondaryButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    loading: Boolean = false,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
+) {
+    AynvoraButton(
+        text = text,
+        onClick = onClick,
+        modifier = modifier,
+        variant = AynvoraButtonVariant.Secondary,
+        enabled = enabled,
+        loading = loading,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+    )
+}
+
+/** Convenience Outlined Button wrapper. */
+@Composable
+fun AynvoraOutlinedButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    loading: Boolean = false,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
+) {
+    AynvoraButton(
+        text = text,
+        onClick = onClick,
+        modifier = modifier,
+        variant = AynvoraButtonVariant.Outlined,
+        enabled = enabled,
+        loading = loading,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+    )
+}
+
+/** Convenience Ghost Button wrapper. */
+@Composable
+fun AynvoraGhostButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    loading: Boolean = false,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
+) {
+    AynvoraButton(
+        text = text,
+        onClick = onClick,
+        modifier = modifier,
+        variant = AynvoraButtonVariant.Ghost,
+        enabled = enabled,
+        loading = loading,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+    )
 }
 
 @Composable

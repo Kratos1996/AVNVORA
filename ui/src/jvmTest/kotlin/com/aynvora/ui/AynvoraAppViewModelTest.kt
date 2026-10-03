@@ -167,15 +167,15 @@ class AynvoraAppViewModelTest {
         assertTrue(vm.uiState.value.isGitaOpen)
         assertFalse(vm.uiState.value.isNumerologyOpen)
 
-        // Detail sheet features (e.g. Garuda Puran, Kundali, Panchang)
+        // Full-screen feature route: Garuda Puran (Phase 10.34)
         vm.onEvent(AynvoraAppUiEvent.SelectFeature(CoreFeatureId.GARUDA_PURAN))
         advanceUntilIdle()
-        assertNotNull(vm.uiState.value.selectedFeatureDetail)
-        assertEquals(CoreFeatureId.GARUDA_PURAN, vm.uiState.value.selectedFeatureDetail?.id)
+        assertTrue(vm.uiState.value.isGarudaPuranOpen)
+        assertFalse(vm.uiState.value.isGitaOpen)
 
-        vm.onEvent(AynvoraAppUiEvent.DismissSheet)
+        vm.onEvent(AynvoraAppUiEvent.CloseGarudaPuran)
         advanceUntilIdle()
-        assertNull(vm.uiState.value.selectedFeatureDetail)
+        assertFalse(vm.uiState.value.isGarudaPuranOpen)
     }
 
     @Test

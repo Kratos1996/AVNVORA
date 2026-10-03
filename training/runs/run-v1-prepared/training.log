@@ -1,0 +1,20 @@
+[2026-10-03T23:32:39+05:30] Phase 10.29 SFT/LoRA Fine-Tuning Pipeline Initiated.
+[2026-10-03T23:33:26+05:30] Checking host architecture: detected x86_64 (MacBookPro16,2, Intel Core i5-1038NG7 @ 2.00GHz).
+[2026-10-03T23:33:32+05:30] Investigating Apple Silicon MLX / MLX-LM training backend compatibility.
+[2026-10-03T23:33:57+05:30] ERROR: No matching distribution found for mlx on x86_64 host. MLX strictly requires Apple Silicon (arm64).
+[2026-10-03T23:35:47+05:30] Checking system memory: Total 16 GB, available ~1.78 GB, 14 GB occupied by active system processes.
+[2026-10-03T23:36:14+05:30] Investigating Python 3.14 environment: pip install torch dry-run returned no matching distribution for Python 3.14.
+[2026-10-03T23:36:59+05:30] Audited Dataset v4 (508 examples) against Holdout v5 (100 examples): 0% leakage verified.
+[2026-10-03T23:36:59+05:30] Deterministic splits created: train=406, valid=50, test=52 (Seed 42).
+[2026-10-03T23:37:03+05:30] Validated all splits against approved sources in training/verified_sources.json: 100% PASS.
+[2026-10-03T23:37:51+05:30] Section 39 Execution Gate Invoked:
+  - Hardware is Intel x86_64, not Apple Silicon.
+  - MLX/MLX-LM is unavailable on x86_64.
+  - Python 3.14 lacks ML wheels; free memory (1.78 GB) insufficient for backpropagation.
+  - Zero fabrication policy enforced.
+  - Status recorded:
+      FINE_TUNING = TRAINING_PREPARED
+      MODEL_EVALUATION = NOT_RUN
+      SYSTEM_GROUNDING_EVALUATION = VERIFIED
+      MODEL_DEPLOYMENT = PRODUCTION
+[2026-10-03T23:38:15+05:30] Production model qwen2.5-1.5b-instruct-q5_k_m.gguf preserved in active deployment.

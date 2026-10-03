@@ -1,6 +1,12 @@
 package com.aynvora.data.di
 
+import com.aynvora.core.ai.AiDeviceCapabilityDetector
+import com.aynvora.core.ai.AiModelStorageRepository
 import com.aynvora.core.garudapuran.GarudaPuranRepository
+import com.aynvora.core.gemstone.GemstoneRepository
+import com.aynvora.core.numerology.NumerologyHistoryRepository
+import com.aynvora.core.numerology.NumerologyRepository
+import com.aynvora.core.palmistry.PalmistryRepository
 import com.aynvora.core.repository.BirthProfileRepository
 import com.aynvora.core.repository.ContentRepository
 import com.aynvora.core.repository.ContentSyncRepository
@@ -9,8 +15,20 @@ import com.aynvora.core.repository.UserPreferencesRepository
 import com.aynvora.core.repository.UserProfileRepository
 import com.aynvora.core.sync.ContentVerifier
 import com.aynvora.core.sync.StubContentVerifier
+import com.aynvora.core.tarot.TarotAssetRepository
+import com.aynvora.core.tarot.TarotAssetVerifier
 import com.aynvora.core.tarot.TarotRepository
+import com.aynvora.core.tarot.TarotSessionRepository
+import com.aynvora.data.ai.AiModelStorageRepositoryImpl
+import com.aynvora.data.ai.DefaultAiDeviceCapabilityDetector
 import com.aynvora.data.database.AynvoraDatabase
+import com.aynvora.data.garudapuran.ContentBackedGarudaPuranRepository
+import com.aynvora.data.gemstone.GemstoneRepositoryImpl
+import com.aynvora.data.numerology.NumerologyHistoryRepositoryImpl
+import com.aynvora.data.numerology.NumerologyRepositoryImpl
+import com.aynvora.data.palmistry.DriverPalmSessionStorage
+import com.aynvora.data.palmistry.PalmSessionRepositoryImpl
+import com.aynvora.data.palmistry.PalmSessionStorage
 import com.aynvora.data.repository.BirthProfileRepositoryImpl
 import com.aynvora.data.repository.ContentRepositoryImpl
 import com.aynvora.data.repository.ContentSyncRepositoryImpl
@@ -23,6 +41,12 @@ import com.aynvora.data.storage.AynvoraStorageEngine
 import com.aynvora.data.storage.InMemoryStorageDriver
 import com.aynvora.data.storage.MigrationRunner
 import com.aynvora.data.storage.StorageDriver
+import com.aynvora.data.tarot.DriverTarotSessionStorage
+import com.aynvora.data.tarot.TarotAssetRepositoryImpl
+import com.aynvora.data.tarot.TarotAssetVerifierImpl
+import com.aynvora.data.tarot.TarotRepositoryImpl
+import com.aynvora.data.tarot.TarotSessionRepositoryImpl
+import com.aynvora.data.tarot.TarotSessionStorage
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -68,13 +92,13 @@ val coreDataModule: Module = module {
 
     single<TarotRepository> {
         val database: AynvoraDatabase = get()
-        com.aynvora.data.tarot.TarotRepositoryImpl(
+        TarotRepositoryImpl(
             tarotDao = database.tarotDao(),
         )
     }
 
     single<GarudaPuranRepository> {
-        com.aynvora.data.garudapuran.ContentBackedGarudaPuranRepository(get())
+        ContentBackedGarudaPuranRepository(get())
     }
 
     // Phase 8.3 — Bhagavad Gita: Room-backed, offline-first, 701 verses from gita/gita (Public Domain)
@@ -85,59 +109,59 @@ val coreDataModule: Module = module {
         )
     }
 
-    single<com.aynvora.core.tarot.TarotAssetVerifier> {
-        com.aynvora.data.tarot.TarotAssetVerifierImpl()
+    single<TarotAssetVerifier> {
+        TarotAssetVerifierImpl()
     }
 
-    single<com.aynvora.core.tarot.TarotAssetRepository> {
-        com.aynvora.data.tarot.TarotAssetRepositoryImpl(verifier = get())
+    single<TarotAssetRepository> {
+        TarotAssetRepositoryImpl(verifier = get())
     }
 
     // On-Device AI Data & Storage (Phase 8.6)
-    single<com.aynvora.core.ai.AiModelStorageRepository> {
-        com.aynvora.data.ai.AiModelStorageRepositoryImpl(driver = get())
+    single<AiModelStorageRepository> {
+        AiModelStorageRepositoryImpl(driver = get())
     }
 
-    single<com.aynvora.core.ai.AiDeviceCapabilityDetector> {
-        com.aynvora.data.ai.DefaultAiDeviceCapabilityDetector()
+    single<AiDeviceCapabilityDetector> {
+        DefaultAiDeviceCapabilityDetector()
     }
 
     // Tarot Conversational Session Repository (Phase 8.9)
-    single<com.aynvora.data.tarot.TarotSessionStorage> {
-        com.aynvora.data.tarot.DriverTarotSessionStorage(driver = get())
+    single<TarotSessionStorage> {
+        DriverTarotSessionStorage(driver = get())
     }
 
-    single<com.aynvora.core.tarot.TarotSessionRepository> {
-        com.aynvora.data.tarot.TarotSessionRepositoryImpl(storage = get())
+    single<TarotSessionRepository> {
+        TarotSessionRepositoryImpl(storage = get())
     }
 
     // Palmistry Session Repository (Phase 8.10)
-    single<com.aynvora.data.palmistry.PalmSessionStorage> {
-        com.aynvora.data.palmistry.DriverPalmSessionStorage(driver = get())
+    single<PalmSessionStorage> {
+        DriverPalmSessionStorage(driver = get())
     }
 
-    single<com.aynvora.data.palmistry.PalmSessionRepositoryImpl> {
-        com.aynvora.data.palmistry.PalmSessionRepositoryImpl(storage = get())
+    single<PalmSessionRepositoryImpl> {
+        PalmSessionRepositoryImpl(storage = get())
     }
 
     single<com.aynvora.core.palmistry.PalmSessionRepository> {
-        get<com.aynvora.data.palmistry.PalmSessionRepositoryImpl>()
+        get<PalmSessionRepositoryImpl>()
     }
 
-    single<com.aynvora.core.palmistry.PalmistryRepository> {
-        get<com.aynvora.data.palmistry.PalmSessionRepositoryImpl>()
+    single<PalmistryRepository> {
+        get<PalmSessionRepositoryImpl>()
     }
 
     // Numerology Domain Repository (Phase 10.0 & 10.4)
-    single<com.aynvora.core.numerology.NumerologyRepository> {
-        com.aynvora.data.numerology.NumerologyRepositoryImpl()
+    single<NumerologyRepository> {
+        NumerologyRepositoryImpl()
     }
-    single<com.aynvora.core.numerology.NumerologyHistoryRepository> {
-        com.aynvora.data.numerology.NumerologyHistoryRepositoryImpl(driver = get())
+    single<NumerologyHistoryRepository> {
+        NumerologyHistoryRepositoryImpl(driver = get())
     }
 
     // Gemstone Domain Repository (Phase 8.2)
-    single<com.aynvora.core.gemstone.GemstoneRepository> {
-        com.aynvora.data.gemstone.GemstoneRepositoryImpl(driver = get())
+    single<GemstoneRepository> {
+        GemstoneRepositoryImpl(driver = get())
     }
 }

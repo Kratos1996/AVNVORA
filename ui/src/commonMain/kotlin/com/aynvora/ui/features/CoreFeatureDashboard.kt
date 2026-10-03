@@ -152,6 +152,7 @@ private fun resolveStatusVariant(availability: FeatureAvailability): AynvoraStat
         is FeatureAvailability.ConfigurationRequired -> AynvoraStatusChipVariant.Warning
         is FeatureAvailability.UpdateRequired -> AynvoraStatusChipVariant.Warning
         is FeatureAvailability.UnsupportedOnPlatform -> AynvoraStatusChipVariant.Error
+        is FeatureAvailability.ResearchOnly -> AynvoraStatusChipVariant.InDevelopment
     }
 }
 
@@ -170,6 +171,7 @@ private fun resolveBadgeLabel(
         is FeatureAvailability.ConfigurationRequired -> translator.translate(TranslationKey.FeatureDetail.StatusSetupRequired)
         is FeatureAvailability.UpdateRequired -> translator.translate(TranslationKey.FeatureDetail.StatusUpdateRequired)
         is FeatureAvailability.UnsupportedOnPlatform -> translator.translate(TranslationKey.FeatureDetail.StatusUnsupported)
+        is FeatureAvailability.ResearchOnly -> "Research Only"
     }
 }
 

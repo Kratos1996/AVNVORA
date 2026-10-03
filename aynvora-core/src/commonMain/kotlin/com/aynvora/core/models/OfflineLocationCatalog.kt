@@ -73,6 +73,57 @@ class OfflineLocationCatalog private constructor(
         .filter { it.stateCode.equals(stateCode, ignoreCase = true) && (countryCode == null || it.countryCode.equals(countryCode, ignoreCase = true)) && (query.isBlank() || it.cityName.contains(query, ignoreCase = true)) }
         .sortedWith(compareBy<CanonicalLocation> { it.cityName.lowercase() }.thenBy { it.canonicalId })
 
+    /** Global city-first search across all countries and states without mandatory country filtering. */
+    fun searchCitiesGlobal(
+        query: String = "",
+        countryCode: String? = null,
+        stateCode: String? = null,
+        maxResults: Int = 100,
+    ): List<CanonicalLocation> {
+        val q = query.trim()
+        val filtered = locations.asSequence().filter { loc ->
+            (countryCode.isNullOrBlank() || loc.countryCode.equals(countryCode, ignoreCase = true)) &&
+                (stateCode.isNullOrBlank() || loc.stateCode.equals(stateCode, ignoreCase = true))
+        }
+
+        if (q.isBlank()) {
+            val popularCities = setOf("Delhi", "Mumbai", "Jaipur", "Bengaluru", "London", "New York", "Dubai", "Singapore", "Tokyo", "Sydney")
+            return filtered
+                .filter { loc -> popularCities.any { p -> loc.cityName.equals(p, ignoreCase = true) } }
+                .take(maxResults)
+                .toList()
+        }
+
+        val qLower = q.lowercase()
+
+        val exactMatches = mutableListOf<CanonicalLocation>()
+        val startsWithMatches = mutableListOf<CanonicalLocation>()
+        val containsMatches = mutableListOf<CanonicalLocation>()
+        val stateCountryMatches = mutableListOf<CanonicalLocation>()
+
+        for (loc in filtered) {
+            val cityLower = loc.cityName.lowercase()
+            val stateLower = loc.stateName.lowercase()
+            val countryLower = loc.countryName.lowercase()
+
+            when {
+                cityLower == qLower -> exactMatches.add(loc)
+                cityLower.startsWith(qLower) -> startsWithMatches.add(loc)
+                cityLower.contains(qLower) -> containsMatches.add(loc)
+                stateLower.contains(qLower) || countryLower.contains(qLower) -> stateCountryMatches.add(loc)
+            }
+        }
+
+        exactMatches.sortBy { it.cityName }
+        startsWithMatches.sortBy { it.cityName }
+        containsMatches.sortBy { it.cityName }
+        stateCountryMatches.sortBy { it.cityName }
+
+        return (exactMatches + startsWithMatches + containsMatches + stateCountryMatches)
+            .distinctBy { it.canonicalId }
+            .take(maxResults)
+    }
+
     fun resolve(canonicalId: String): CanonicalLocation? = locations.singleOrNull { it.canonicalId == canonicalId }
 
     /** Name search may return many records; the caller must choose an ID explicitly. */

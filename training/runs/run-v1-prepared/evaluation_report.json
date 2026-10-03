@@ -1,0 +1,16 @@
+{
+  "reportTitle": "AYNVORA Phase 10.29 Model Evaluation Receipt",
+  "runId": "run-v1-prepared",
+  "evaluationType": "TRUE_MODEL_EVALUATION (Base Model vs Fine-Tuned Model)",
+  "status": "NOT_RUN",
+  "blockerReason": "LoRA fine-tuning was not executed on host due to physical hardware architecture (Intel x86_64 lacks Apple Silicon MLX/Metal execution backend; Python 3.14 lacks ML wheels; free memory 1.78 GB). Per Section 39 Zero-Fabrication mandate, MODEL_EVALUATION must remain NOT_RUN until an adapter is physically trained.",
+  "systemGroundingStatus": "VERIFIED (Maintained from Phase 10.28 Holdout-v5)",
+  "holdoutDataset": {
+    "path": "training/dataset-v4/holdout_validation_v5.jsonl",
+    "totalQuestions": 100,
+    "sha256": "aca6f25a974cc9efcd73ecb4bf45f6ea30d28814731c12df9e20645db71abc29",
+    "trainingLeakage": "0% verified"
+  },
+  "candidateAdapter": null,
+  "metrics": null
+}

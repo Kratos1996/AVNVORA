@@ -1,0 +1,51 @@
+{
+  "datasetVersion": "v4",
+  "tokenizer": "cl100k_base (ChatML format)",
+  "fullConversationTokens": {
+    "count": 508,
+    "min": 180,
+    "max": 559,
+    "mean": 278.94,
+    "p50": 260.5,
+    "p90": 353.3,
+    "p95": 365.0,
+    "p99": 551.0
+  },
+  "userTurnTokens": {
+    "count": 508,
+    "min": 11,
+    "max": 80,
+    "mean": 38.98,
+    "p50": 30.0,
+    "p90": 71.0,
+    "p95": 76.0,
+    "p99": 78.0
+  },
+  "toolTurnTokens": {
+    "count": 508,
+    "min": 46,
+    "max": 248,
+    "mean": 73.61,
+    "p50": 69.0,
+    "p90": 87.0,
+    "p95": 96.0,
+    "p99": 244.0
+  },
+  "assistantTurnTokens": {
+    "count": 508,
+    "min": 24,
+    "max": 145,
+    "mean": 67.84,
+    "p50": 60.0,
+    "p90": 107.0,
+    "p95": 111.0,
+    "p99": 143.0
+  },
+  "recommendedMaxSeqLength": 1024,
+  "contextCapacityRatio": {
+    "modelMaxContext": 2048,
+    "datasetP99": 551.0,
+    "safetyMarginTokens": 1497.0
+  },
+  "truncationRisk": "0.00% (All examples fit well within 1024 and 2048 token boundaries)"
+}

@@ -335,6 +335,8 @@ data class KundaliReportInput(
     val generatedAtEpochMs: Long,
     val language: ReportLanguage,
     val evidenceGraph: EvidenceGraph? = null,
+    val includeYogas: Boolean = false,
+    val includeDoshas: Boolean = false,
 ) : ReportGeneratorInput
 
 interface ReportTextResolver {

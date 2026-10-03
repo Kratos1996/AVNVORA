@@ -1,18 +1,46 @@
 # AYNVORA Master UI Style Guide
-Version: 1.2
+Version: 1.3
 
-## Colors
+## Colors & Adaptive Color Scheme
 Gold #C9A227; Light Gold #E4C65A; Deep Gold #8F6F16.
 Cosmic Black #080B14; Cosmic Navy #0D1224; Cosmic Indigo #151B38.
 Ivory #FAF8F2; White #FFFFFF; Soft Gold #F7F1DE.
 Celestial Blue #6B8CFF.
 Functional: Success #2E8B67, Warning #D99A2B, Error #C94B4B, Info #4D7CFE.
 
-## Typography
-Cormorant Garamond for display/brand moments.
-Inter for product/data.
-Noto Sans family for Indian scripts.
+### Adaptive Theme Tokens (`AynvoraColorScheme`)
+Color resolution automatically selects appropriate light/dark tokens based on `AynvoraTheme.isDark`:
+- `AynvoraTheme.colors.textPrimary` (Light text in dark mode, dark text in light mode)
+- `AynvoraTheme.colors.textSecondary` (Secondary text token)
+- `AynvoraTheme.colors.textMuted` (Muted/disabled text token)
+- `AynvoraTheme.colors.background` (Cosmic Black in dark mode, Ivory in light mode)
+- `AynvoraTheme.colors.surfacePrimary` (Cosmic Navy in dark mode, White in light mode)
+- `AynvoraTheme.colors.surfaceSecondary` (Cosmic Indigo in dark mode, Soft Gold in light mode)
+
+## Typography Components (Mandatory)
+Cormorant Garamond for display/brand moments; Inter for product/data; Noto Sans family for Indian scripts.
 Scale: 40, 36, 32, 28, 24, 20, 18, 16, 14, 12, 11sp.
+
+**Mandatory Typography Usage Rule**:
+Raw `Text(text = ..., style = ...)` with inline `.copy(fontSize = ...)` is strictly prohibited in UI screens.
+All text must be rendered using standardized design system components from `com.aynvora.designsystem.components`:
+- `AynvoraDisplay` (40sp / 36sp Display)
+- `AynvoraTitle`, `AynvoraTitleMedium`, `AynvoraTitleSmall` (20sp / 18sp / 16sp Title)
+- `AynvoraRegularText`, `AynvoraRegularMedium`, `AynvoraRegularBold`, `AynvoraRegularExtraBold`, `AynvoraRegularUnderline` (16sp Body)
+- `AynvoraSmallText`, `AynvoraSmallMedium`, `AynvoraSmallBold` (14sp Small)
+- `AynvoraExtraSmallText`, `AynvoraExtraSmallBold` (12sp Caption)
+
+## Form Input Components (Mandatory)
+- Free text inputs MUST use `AynvoraEditText`.
+- Read-only date, time, and location picker fields MUST use `AynvoraReadOnlyField`.
+- Picker fields MUST NOT open soft keyboards or show text cursors. Tapping anywhere on the field opens the corresponding modal dialog or bottom sheet.
+
+## Buttons (Mandatory)
+Primary, secondary, outlined, and ghost actions MUST consume standard button components:
+- `AynvoraPrimaryButton` & `AynvoraPrimaryButtonSmall`
+- `AynvoraSecondaryButton`
+- `AynvoraOutlinedButton`
+- `AynvoraGhostButton`
 
 ## Spacing
 4, 8, 12, 16, 20, 24, 32, 40, 48, 64dp.
@@ -53,7 +81,7 @@ Single-column phone UI must never be stretched unconstrained across tablet or de
 
 ## Components
 Approved component families:
-Button, Card, TextField, Chip, Tabs, Dialog, BottomSheet, List, Navigation, Chart, Planet, Zodiac, Dasha, Panchang, Report.
+AynvoraButton (Primary, Secondary, Outlined, Ghost), AynvoraCard, AynvoraEditText, AynvoraReadOnlyField, AynvoraChip, AynvoraTabs, AynvoraDialog, AynvoraBottomSheet, AynvoraList, AynvoraDesktopSidebar, AynvoraChart, AynvoraDesktopDataTable, Report.
 
 ## Accessibility
 48dp minimum interactive target; support dynamic font scaling, semantics, keyboard focus, contrast, reduced motion, and non-color state communication.

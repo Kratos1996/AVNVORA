@@ -66,8 +66,22 @@ class JvmReportPdfGenerator(
         var image: BufferedImage? = null
         var graphics: Graphics2D? = null
         var y = margin
+        var pageNumber = 0
+
+        fun drawFooter() {
+            graphics?.let { g ->
+                g.color = Color(220, 224, 230)
+                g.drawLine(margin, pageHeight - margin + 15, pageWidth - margin, pageHeight - margin + 15)
+                g.font = baseFont.deriveFont(Font.PLAIN, 18f)
+                g.color = Color(120, 126, 138)
+                g.drawString("AYNVORA • Page $pageNumber", margin, pageHeight - margin + 45)
+            }
+        }
+
         fun newPage() {
+            drawFooter()
             graphics?.dispose()
+            pageNumber += 1
             image = BufferedImage(pageWidth, pageHeight, BufferedImage.TYPE_INT_RGB)
             graphics = image!!.createGraphics().apply {
                 setRenderingHint(
@@ -79,6 +93,14 @@ class JvmReportPdfGenerator(
                 fillRect(0, 0, pageWidth, pageHeight)
             }
             y = margin
+            if (pageNumber > 1) {
+                graphics!!.font = baseFont.deriveFont(Font.PLAIN, 18f)
+                graphics!!.color = Color(120, 126, 138)
+                graphics!!.drawString(lines.firstOrNull()?.text ?: "AYNVORA Report", margin, margin - 25)
+                graphics!!.color = Color(220, 224, 230)
+                graphics!!.drawLine(margin, margin - 15, pageWidth - margin, margin - 15)
+                y = margin + 20
+            }
         }
         newPage()
         lines.forEach { line ->
@@ -113,7 +135,8 @@ class JvmReportPdfGenerator(
             val wrapped = wrap(line.text, metrics, pageWidth - margin * 2)
             val lineHeight = if (line.kind == ReportPdfLineKind.TITLE) 58 else size + 13
             wrapped.forEach { text ->
-                if (y + lineHeight > pageHeight - margin) {
+                if (y + lineHeight > pageHeight - margin - 35) {
+                    drawFooter()
                     output += image!!
                     newPage()
                     graphics!!.font = textFont
@@ -122,8 +145,13 @@ class JvmReportPdfGenerator(
                 graphics!!.drawString(text, margin, y)
                 y += lineHeight
             }
-            if (line.kind == ReportPdfLineKind.TITLE || line.kind == ReportPdfLineKind.HEADING) y += 7
+            if (line.kind == ReportPdfLineKind.TITLE || line.kind == ReportPdfLineKind.HEADING) {
+                g.color = Color(180, 140, 45)
+                g.drawLine(margin, y, margin + 120, y)
+                y += 12
+            }
         }
+        drawFooter()
         graphics?.dispose()
         output += image!!
         return output

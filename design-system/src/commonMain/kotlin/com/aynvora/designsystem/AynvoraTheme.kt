@@ -5,6 +5,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -13,7 +14,7 @@ import com.aynvora.designsystem.adaptive.AynvoraWindowInfo
 import com.aynvora.designsystem.adaptive.LocalAynvoraWindowInfo
 
 /**
- * AYNVORA Color Palette (Master UI Style Guide v1.0).
+ * Static AYNVORA Color Palette Constants.
  */
 object AynvoraColors {
     // Primary / Brand Gold
@@ -51,7 +52,48 @@ object AynvoraColors {
     val Info = Color(0xFF4D7CFE)
 }
 
-val LocalAynvoraColors = staticCompositionLocalOf { AynvoraColors }
+/**
+ * Dynamic, adaptive color scheme that automatically resolves primary text, secondary text,
+ * surfaces, backgrounds, and borders based on dark/light theme mode.
+ */
+@Immutable
+data class AynvoraColorScheme(
+    val isDark: Boolean = true,
+    val textPrimary: Color = if (isDark) AynvoraColors.TextLight else AynvoraColors.TextDark,
+    val textSecondary: Color = if (isDark) AynvoraColors.TextLightSecondary else AynvoraColors.TextSecondary,
+    val textMuted: Color = if (isDark) AynvoraColors.TextLightMuted else AynvoraColors.TextMuted,
+    val background: Color = if (isDark) AynvoraColors.CosmicBlack else AynvoraColors.Ivory,
+    val surfacePrimary: Color = if (isDark) AynvoraColors.CosmicNavy else AynvoraColors.White,
+    val surfaceSecondary: Color = if (isDark) AynvoraColors.CosmicIndigo else AynvoraColors.SoftGold,
+    val border: Color = if (isDark) AynvoraColors.CosmicIndigo else AynvoraColors.Gold.copy(alpha = 0.35f),
+    val selectedGold: Color =  AynvoraColors.Gold.copy(alpha = if (isDark) 0.15f else 0.22f),
+
+    // Backward-compatible static aliases
+    val TextDark: Color = AynvoraColors.TextDark,
+    @get:kotlin.jvm.JvmName("getLegacyTextSecondary")
+    val TextSecondary: Color = AynvoraColors.TextSecondary,
+    @get:kotlin.jvm.JvmName("getLegacyTextMuted")
+    val TextMuted: Color = AynvoraColors.TextMuted,
+    val TextLight: Color = AynvoraColors.TextLight,
+    val TextLightSecondary: Color = AynvoraColors.TextLightSecondary,
+    val TextLightMuted: Color = AynvoraColors.TextLightMuted,
+    val CosmicBlack: Color = AynvoraColors.CosmicBlack,
+    val CosmicNavy: Color = AynvoraColors.CosmicNavy,
+    val CosmicIndigo: Color = AynvoraColors.CosmicIndigo,
+    val Ivory: Color = AynvoraColors.Ivory,
+    val White: Color = AynvoraColors.White,
+    val SoftGold: Color = AynvoraColors.SoftGold,
+    val CelestialBlue: Color = AynvoraColors.CelestialBlue,
+    val Success: Color = AynvoraColors.Success,
+    val Warning: Color = AynvoraColors.Warning,
+    val Error: Color = AynvoraColors.Error,
+    val Info: Color = AynvoraColors.Info,
+    val Gold: Color = AynvoraColors.Gold,
+    val GoldLight: Color = AynvoraColors.GoldLight,
+    val GoldDeep: Color = AynvoraColors.GoldDeep,
+)
+
+val LocalAynvoraColorScheme = staticCompositionLocalOf { AynvoraColorScheme(isDark = true) }
 val LocalAynvoraDarkTheme = staticCompositionLocalOf { true }
 val LocalAynvoraTypography = staticCompositionLocalOf { DefaultAynvoraTypography }
 val LocalAynvoraSpacing = staticCompositionLocalOf { AynvoraSpacing }
@@ -104,10 +146,10 @@ object AynvoraTheme {
         @ReadOnlyComposable
         get() = LocalAynvoraDarkTheme.current
 
-    val colors: AynvoraColors
+    val colors: AynvoraColorScheme
         @Composable
         @ReadOnlyComposable
-        get() = LocalAynvoraColors.current
+        get() = LocalAynvoraColorScheme.current
 
     val typography: AynvoraTypography
         @Composable
@@ -150,11 +192,12 @@ fun AynvoraTheme(
     content: @Composable () -> Unit,
 ) {
     val colorScheme = if (darkTheme) DarkScheme else LightScheme
+    val aynvoraColorScheme = AynvoraColorScheme(isDark = darkTheme)
 
     AynvoraAdaptiveProvider {
         CompositionLocalProvider(
             LocalAynvoraDarkTheme provides darkTheme,
-            LocalAynvoraColors provides AynvoraColors,
+            LocalAynvoraColorScheme provides aynvoraColorScheme,
             LocalAynvoraTypography provides typography,
             LocalAynvoraSpacing provides AynvoraSpacing,
             LocalAynvoraShapes provides AynvoraShapes,
@@ -169,4 +212,3 @@ fun AynvoraTheme(
         }
     }
 }
-

@@ -80,7 +80,14 @@ data class QaActionId(
         val PALMISTRY_OPEN_GALLERY =
             of("palmistry", "input_selection", "gallery_button", "open_gallery")
         val PALMISTRY_ANALYZE = of("palmistry", "analysis", "analyze_button", "start")
+        val PALMISTRY_RETAKE = of("palmistry", "quality", "retake_button", "retake")
+        val PALMISTRY_PROCEED = of("palmistry", "quality", "proceed_button", "proceed")
         val PALMISTRY_CLOSE = of("palmistry", "screen", "close_button", "close")
+
+        // Canonical Report actions
+        val REPORT_GENERATE_PDF = of("report", "viewer", "generate_pdf_button", "generate")
+        val REPORT_SHARE_PDF = of("report", "viewer", "share_pdf_button", "share")
+        val REPORT_CLOSE = of("report", "screen", "close_button", "close")
 
         // Canonical Gemstone actions (Phase 8.2)
         val GEMSTONE_OPEN = of("gemstone", "dashboard", "feature_card", "open")

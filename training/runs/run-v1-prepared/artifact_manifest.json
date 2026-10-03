@@ -1,0 +1,25 @@
+{
+  "runId": "run-v1-prepared",
+  "baseModel": {
+    "modelId": "Qwen/Qwen2.5-1.5B-Instruct",
+    "sha256": "N/A (base repository weights)",
+    "license": "Apache-2.0"
+  },
+  "runtimeProductionModel": {
+    "modelId": "qwen2.5-1.5b-instruct-q5_k_m",
+    "filename": "qwen2.5-1.5b-instruct-q5_k_m.gguf",
+    "fileSizeBytes": 1285494304,
+    "sha256": "b46661073c18e5b56a41fa320975f866a00def1ff08feef4718e013258896f8c",
+    "status": "PRODUCTION (Active on Samsung Galaxy S23 Ultra SM-S918B)"
+  },
+  "candidateAdapter": {
+    "status": "TRAINING_PREPARED",
+    "blocker": "Host architecture is Intel x86_64, which lacks Apple Silicon MLX/Metal execution environment; default Python 3.14 lacks ML wheels.",
+    "adapterArtifact": null,
+    "adapterSha256": null
+  },
+  "trainingStatus": "TRAINING_PREPARED",
+  "modelEvaluationStatus": "NOT_RUN",
+  "systemGroundingStatus": "VERIFIED",
+  "modelDeploymentStatus": "PRODUCTION"
+}

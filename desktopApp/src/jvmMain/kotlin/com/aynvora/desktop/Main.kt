@@ -4,6 +4,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.aynvora.core.ai.AiDeviceCapabilityDetector
+import com.aynvora.data.ai.JvmAiDeviceCapabilityDetector
 import com.aynvora.data.database.AynvoraDatabase
 import com.aynvora.data.database.AynvoraDatabaseMigrations
 import com.aynvora.data.gita.GitaDataSeeder
@@ -38,6 +40,7 @@ fun initDesktopSqlite() {
 }
 
 val jvmDataModule = module {
+    single<AiDeviceCapabilityDetector> { JvmAiDeviceCapabilityDetector() }
     single<AynvoraDatabase> {
         val dbFile =
             File(System.getProperty("user.home"), ".aynvora/${AynvoraDatabase.DATABASE_NAME}")

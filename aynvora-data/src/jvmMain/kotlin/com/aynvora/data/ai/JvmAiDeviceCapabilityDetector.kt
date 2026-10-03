@@ -7,26 +7,38 @@ import com.aynvora.core.ai.AiRuntimeType
 import com.aynvora.core.ai.CpuArchitecture
 import com.aynvora.core.ai.OsPlatform
 import java.io.File
+import java.lang.management.ManagementFactory
 
 /**
- * JVM host implementation of [AiDeviceCapabilityDetector].
- * Inspects live runtime memory, disk space, and processor architecture.
+ * Live JVM host implementation of [AiDeviceCapabilityDetector].
+ * Inspects live runtime memory, physical host disk space, and processor architecture
+ * for Mac OS X, Windows, and Linux desktop hosts.
  */
 class JvmAiDeviceCapabilityDetector : AiDeviceCapabilityDetector {
 
     override suspend fun detectCapability(): AiDeviceProfile {
-        val runtime = Runtime.getRuntime()
-        val maxMemory = runtime.maxMemory()
-        val totalMemory = runtime.totalMemory()
-        val freeMemory = runtime.freeMemory()
+        val osName = System.getProperty("os.name") ?: "Desktop JVM"
+        val osVersion = System.getProperty("os.version") ?: ""
+        val osArch = System.getProperty("os.arch")?.lowercase() ?: "x86_64"
 
-        // Available memory is allocatable space up to JVM max limit
-        val availableRam = (maxMemory - totalMemory) + freeMemory
+        val isMac = osName.contains("Mac", ignoreCase = true)
+        val isWindows = osName.contains("Windows", ignoreCase = true)
+        val isLinux = osName.contains("Linux", ignoreCase = true)
 
-        val rootDir = File(".")
-        val usableStorage = rootDir.usableSpace
+        val manufacturer = when {
+            isMac -> "Apple"
+            isWindows -> "Microsoft / PC"
+            isLinux -> "Linux Workstation"
+            else -> osName
+        }
 
-        val osArch = System.getProperty("os.arch")?.lowercase().orEmpty()
+        val modelName = when {
+            isMac -> if (osArch.contains("aarch64") || osArch.contains("arm64")) "Mac (Apple Silicon $osArch)" else "Mac (Intel $osArch)"
+            isWindows -> "PC Workstation ($osArch)"
+            isLinux -> "Linux PC ($osArch)"
+            else -> "$osName ($osArch)"
+        }
+
         val cpuArchitecture = when {
             osArch.contains("aarch64") || osArch.contains("arm64") -> CpuArchitecture.ARM64
             osArch.contains("arm") -> CpuArchitecture.ARM32
@@ -35,17 +47,50 @@ class JvmAiDeviceCapabilityDetector : AiDeviceCapabilityDetector {
             else -> CpuArchitecture.UNKNOWN
         }
 
+        val rootDir = File(".")
+        val freeStorage = rootDir.usableSpace
+        val totalStorage = rootDir.totalSpace
+
+        // Query physical system memory using ManagementFactory
+        var totalRam = Runtime.getRuntime().maxMemory()
+        var availableRam = Runtime.getRuntime().freeMemory()
+
+        try {
+            val osBean = ManagementFactory.getOperatingSystemMXBean()
+            val totalMemMethod = osBean.javaClass.methods.firstOrNull { it.name == "getTotalMemorySize" || it.name == "getTotalPhysicalMemorySize" }
+            val freeMemMethod = osBean.javaClass.methods.firstOrNull { it.name == "getFreeMemorySize" || it.name == "getFreePhysicalMemorySize" }
+
+            if (totalMemMethod != null && freeMemMethod != null) {
+                val sysTotal = totalMemMethod.invoke(osBean) as? Long
+                val sysFree = freeMemMethod.invoke(osBean) as? Long
+                if (sysTotal != null && sysTotal > 0) totalRam = sysTotal
+                if (sysFree != null && sysFree > 0) availableRam = sysFree
+            }
+        } catch (_: Throwable) {
+            // Fallback to JVM process memory
+        }
+
+        val accelerators = mutableSetOf(AiAcceleratorType.CPU)
+        if (isMac && (osArch.contains("aarch64") || osArch.contains("arm64"))) {
+            accelerators.add(AiAcceleratorType.GPU)
+            accelerators.add(AiAcceleratorType.NEURAL_ENGINE)
+        }
+
         return AiDeviceProfile(
-            totalRamBytes = maxMemory,
+            totalRamBytes = totalRam,
             availableRamBytes = availableRam,
-            freeStorageBytes = usableStorage,
+            freeStorageBytes = freeStorage,
+            totalStorageBytes = totalStorage,
             cpuArchitecture = cpuArchitecture,
             osPlatform = OsPlatform.JVM_DESKTOP,
-            osVersion = System.getProperty("os.name")
-                .orEmpty() + " " + System.getProperty("os.version").orEmpty(),
+            osVersion = "$osName $osVersion",
+            manufacturer = manufacturer,
+            modelName = modelName,
+            cpuAbi = osArch,
+            sdkInt = 0,
             supportedRuntimes = setOf(AiRuntimeType.GGUF, AiRuntimeType.DETERMINISTIC_FALLBACK),
-            supportedAccelerators = setOf(AiAcceleratorType.CPU),
-            supportedLanguages = setOf("en", "hi"),
+            supportedAccelerators = accelerators,
+            supportedLanguages = setOf("en", "hi", "ar"),
         )
     }
 }

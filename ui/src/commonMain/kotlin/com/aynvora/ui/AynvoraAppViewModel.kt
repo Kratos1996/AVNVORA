@@ -40,6 +40,13 @@ data class AynvoraAppState(
     val isGemstoneOpen: Boolean = false,
     val isGitaOpen: Boolean = false,
     val isAiDiagnosticsOpen: Boolean = false,
+    val isGarudaPuranOpen: Boolean = false,
+    val isLalKitabOpen: Boolean = false,
+    val isDailyGuidanceOpen: Boolean = false,
+    val isWallpaperStudioOpen: Boolean = false,
+    val isRudrakshaOpen: Boolean = false,
+    val isJadiOpen: Boolean = false,
+    val isYantraOpen: Boolean = false,
     val selectedFeatureDetail: CoreFeatureDescriptor? = null,
     val isLanguagePickerOpen: Boolean = false,
     val aiLifecycleState: AiModelLifecycleState = AiModelLifecycleState.NotInstalled,
@@ -148,6 +155,27 @@ sealed class AynvoraAppUiEvent(
 
     data object CloseGita :
         AynvoraAppUiEvent("gita.close_clicked", screenId = "gita", componentId = "close_button")
+
+    data object CloseGarudaPuran :
+        AynvoraAppUiEvent("garuda.close_clicked", screenId = "garuda", componentId = "close_button")
+
+    data object CloseLalKitab :
+        AynvoraAppUiEvent("lalkitab.close_clicked", screenId = "lalkitab", componentId = "close_button")
+
+    data object CloseDailyGuidance :
+        AynvoraAppUiEvent("guidance.close_clicked", screenId = "guidance", componentId = "close_button")
+
+    data object CloseWallpaperStudio :
+        AynvoraAppUiEvent("wallpaper.close_clicked", screenId = "wallpaper", componentId = "close_button")
+
+    data object CloseRudraksha :
+        AynvoraAppUiEvent("rudraksha.close_clicked", screenId = "rudraksha", componentId = "close_button")
+
+    data object CloseJadi :
+        AynvoraAppUiEvent("jadi.close_clicked", screenId = "jadi", componentId = "close_button")
+
+    data object CloseYantra :
+        AynvoraAppUiEvent("yantra.close_clicked", screenId = "yantra", componentId = "close_button")
 
     data class SelectFeature(val featureId: CoreFeatureId) : AynvoraAppUiEvent(
         "dashboard.feature.open_clicked",
@@ -393,8 +421,59 @@ class AynvoraAppViewModel(
                 emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.Close))
             }
 
+            is AynvoraAppUiEvent.CloseGarudaPuran -> {
+                updateState { copy(isGarudaPuranOpen = false) }
+                emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.Close))
+            }
+
+            is AynvoraAppUiEvent.CloseLalKitab -> {
+                updateState { copy(isLalKitabOpen = false) }
+                emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.Close))
+            }
+
+            is AynvoraAppUiEvent.CloseDailyGuidance -> {
+                updateState { copy(isDailyGuidanceOpen = false) }
+                emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.Close))
+            }
+
+            is AynvoraAppUiEvent.CloseWallpaperStudio -> {
+                updateState { copy(isWallpaperStudioOpen = false) }
+                emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.Close))
+            }
+
+            is AynvoraAppUiEvent.CloseRudraksha -> {
+                updateState { copy(isRudrakshaOpen = false) }
+                emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.Close))
+            }
+
+            is AynvoraAppUiEvent.CloseJadi -> {
+                updateState { copy(isJadiOpen = false) }
+                emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.Close))
+            }
+
+            is AynvoraAppUiEvent.CloseYantra -> {
+                updateState { copy(isYantraOpen = false) }
+                emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.Close))
+            }
+
             is AynvoraAppUiEvent.SelectFeature -> {
                 when (event.featureId) {
+                    CoreFeatureId.ASTROLOGY -> {
+                        updateState {
+                            copy(
+                                isAstrologyOpen = true,
+                                isGitaOpen = false,
+                                isGemstoneOpen = false,
+                                isTarotOpen = false,
+                                isPalmistryOpen = false,
+                                isNumerologyOpen = false,
+                                isAiDiagnosticsOpen = false,
+                                selectedFeatureDetail = null,
+                            )
+                        }
+                        emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.AstrologyHome))
+                    }
+
                     CoreFeatureId.TAROT -> {
                         updateState {
                             copy(
@@ -402,7 +481,9 @@ class AynvoraAppViewModel(
                                 isPalmistryOpen = false,
                                 isAstrologyOpen = false,
                                 isNumerologyOpen = false,
-                                isGemstoneOpen = false
+                                isGemstoneOpen = false,
+                                isGitaOpen = false,
+                                selectedFeatureDetail = null,
                             )
                         }
                         emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.TarotHome))
@@ -415,7 +496,9 @@ class AynvoraAppViewModel(
                                 isTarotOpen = false,
                                 isAstrologyOpen = false,
                                 isNumerologyOpen = false,
-                                isGemstoneOpen = false
+                                isGemstoneOpen = false,
+                                isGitaOpen = false,
+                                selectedFeatureDetail = null,
                             )
                         }
                         emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.PalmistryHome))
@@ -428,7 +511,9 @@ class AynvoraAppViewModel(
                                 isTarotOpen = false,
                                 isPalmistryOpen = false,
                                 isAstrologyOpen = false,
-                                isGemstoneOpen = false
+                                isGemstoneOpen = false,
+                                isGitaOpen = false,
+                                selectedFeatureDetail = null,
                             )
                         }
                         emitEffect(AynvoraNavigationEffect(AynvoraNavigationTarget.NumerologyHome))
@@ -457,6 +542,175 @@ class AynvoraAppViewModel(
                                 isPalmistryOpen = false,
                                 isAstrologyOpen = false,
                                 isNumerologyOpen = false,
+                                selectedFeatureDetail = null,
+                            )
+                        }
+                    }
+
+                    CoreFeatureId.AI_ASSISTANT -> {
+                        updateState {
+                            copy(
+                                isAiDiagnosticsOpen = true,
+                                isGitaOpen = false,
+                                isGemstoneOpen = false,
+                                isTarotOpen = false,
+                                isPalmistryOpen = false,
+                                isAstrologyOpen = false,
+                                isNumerologyOpen = false,
+                                selectedFeatureDetail = null,
+                            )
+                        }
+                    }
+
+                    CoreFeatureId.GARUDA_PURAN -> {
+                        updateState {
+                            copy(
+                                isGarudaPuranOpen = true,
+                                isGitaOpen = false,
+                                isGemstoneOpen = false,
+                                isTarotOpen = false,
+                                isPalmistryOpen = false,
+                                isAstrologyOpen = false,
+                                isNumerologyOpen = false,
+                                isAiDiagnosticsOpen = false,
+                                isLalKitabOpen = false,
+                                isDailyGuidanceOpen = false,
+                                isWallpaperStudioOpen = false,
+                                isRudrakshaOpen = false,
+                                isJadiOpen = false,
+                                isYantraOpen = false,
+                                selectedFeatureDetail = null,
+                            )
+                        }
+                    }
+
+                    CoreFeatureId.LAL_KITAB -> {
+                        updateState {
+                            copy(
+                                isLalKitabOpen = true,
+                                isGarudaPuranOpen = false,
+                                isGitaOpen = false,
+                                isGemstoneOpen = false,
+                                isTarotOpen = false,
+                                isPalmistryOpen = false,
+                                isAstrologyOpen = false,
+                                isNumerologyOpen = false,
+                                isAiDiagnosticsOpen = false,
+                                isDailyGuidanceOpen = false,
+                                isWallpaperStudioOpen = false,
+                                isRudrakshaOpen = false,
+                                isJadiOpen = false,
+                                isYantraOpen = false,
+                                selectedFeatureDetail = null,
+                            )
+                        }
+                    }
+
+                    CoreFeatureId.DAILY_GUIDANCE -> {
+                        updateState {
+                            copy(
+                                isDailyGuidanceOpen = true,
+                                isGarudaPuranOpen = false,
+                                isLalKitabOpen = false,
+                                isGitaOpen = false,
+                                isGemstoneOpen = false,
+                                isTarotOpen = false,
+                                isPalmistryOpen = false,
+                                isAstrologyOpen = false,
+                                isNumerologyOpen = false,
+                                isAiDiagnosticsOpen = false,
+                                isWallpaperStudioOpen = false,
+                                isRudrakshaOpen = false,
+                                isJadiOpen = false,
+                                isYantraOpen = false,
+                                selectedFeatureDetail = null,
+                            )
+                        }
+                    }
+
+                    CoreFeatureId.WALLPAPER -> {
+                        updateState {
+                            copy(
+                                isWallpaperStudioOpen = true,
+                                isGarudaPuranOpen = false,
+                                isLalKitabOpen = false,
+                                isDailyGuidanceOpen = false,
+                                isGitaOpen = false,
+                                isGemstoneOpen = false,
+                                isTarotOpen = false,
+                                isPalmistryOpen = false,
+                                isAstrologyOpen = false,
+                                isNumerologyOpen = false,
+                                isAiDiagnosticsOpen = false,
+                                isRudrakshaOpen = false,
+                                isJadiOpen = false,
+                                isYantraOpen = false,
+                                selectedFeatureDetail = null,
+                            )
+                        }
+                    }
+
+                    CoreFeatureId.RUDRAKSHA -> {
+                        updateState {
+                            copy(
+                                isRudrakshaOpen = true,
+                                isGarudaPuranOpen = false,
+                                isLalKitabOpen = false,
+                                isDailyGuidanceOpen = false,
+                                isWallpaperStudioOpen = false,
+                                isGitaOpen = false,
+                                isGemstoneOpen = false,
+                                isTarotOpen = false,
+                                isPalmistryOpen = false,
+                                isAstrologyOpen = false,
+                                isNumerologyOpen = false,
+                                isAiDiagnosticsOpen = false,
+                                isJadiOpen = false,
+                                isYantraOpen = false,
+                                selectedFeatureDetail = null,
+                            )
+                        }
+                    }
+
+                    CoreFeatureId.JADI -> {
+                        updateState {
+                            copy(
+                                isJadiOpen = true,
+                                isGarudaPuranOpen = false,
+                                isLalKitabOpen = false,
+                                isDailyGuidanceOpen = false,
+                                isWallpaperStudioOpen = false,
+                                isRudrakshaOpen = false,
+                                isGitaOpen = false,
+                                isGemstoneOpen = false,
+                                isTarotOpen = false,
+                                isPalmistryOpen = false,
+                                isAstrologyOpen = false,
+                                isNumerologyOpen = false,
+                                isAiDiagnosticsOpen = false,
+                                isYantraOpen = false,
+                                selectedFeatureDetail = null,
+                            )
+                        }
+                    }
+
+                    CoreFeatureId.YANTRA -> {
+                        updateState {
+                            copy(
+                                isYantraOpen = true,
+                                isGarudaPuranOpen = false,
+                                isLalKitabOpen = false,
+                                isDailyGuidanceOpen = false,
+                                isWallpaperStudioOpen = false,
+                                isRudrakshaOpen = false,
+                                isJadiOpen = false,
+                                isGitaOpen = false,
+                                isGemstoneOpen = false,
+                                isTarotOpen = false,
+                                isPalmistryOpen = false,
+                                isAstrologyOpen = false,
+                                isNumerologyOpen = false,
+                                isAiDiagnosticsOpen = false,
                                 selectedFeatureDetail = null,
                             )
                         }
