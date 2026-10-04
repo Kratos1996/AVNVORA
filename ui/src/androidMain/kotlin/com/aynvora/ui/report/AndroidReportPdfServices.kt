@@ -159,6 +159,12 @@ class AndroidReportShareService(
             }
         val file = File(directory, name)
         file.writeBytes(artifact.bytes)
+        try {
+            val extDir = context.getExternalFilesDir(null)
+            if (extDir != null) {
+                File(extDir, name).writeBytes(artifact.bytes)
+            }
+        } catch (_: Exception) {}
         val uri = FileProvider.getUriForFile(context, authority, file)
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = artifact.mimeType

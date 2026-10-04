@@ -842,6 +842,186 @@ class KundaliReportGenerator : ReportGenerator {
             omit("yogas", ReportTextKey.YOGAS, ReportUnavailableReason.NOT_PROVIDED_BY_ASTRO_ENGINE)
             omit("dosha", ReportTextKey.DOSHA, ReportUnavailableReason.NOT_PROVIDED_BY_ASTRO_ENGINE)
         }
+
+        input.kpResult?.let { kp ->
+            val cuspRows = kp.cusps.map { c ->
+                listOf(
+                    "Cusp ${c.houseNumber}",
+                    c.signName,
+                    c.formattedLongitude,
+                    c.signLord,
+                    c.starLord,
+                    c.subLord,
+                    c.subSubLord,
+                )
+            }
+            val planetRows = kp.planets.map { p ->
+                listOf(
+                    p.planetName + (if (p.isRetrograde) " (R)" else ""),
+                    p.signName,
+                    p.formattedLongitude,
+                    "House ${p.houseNumber}",
+                    p.starLord,
+                    p.subLord,
+                )
+            }
+            val subsections = listOf(
+                ReportSubsection(
+                    id = "kp_cusps",
+                    title = ReportText("kp.cusps", "Cuspal Positions (Placidus)"),
+                    blocks = listOf(
+                        table(
+                            listOf(ReportTextKey.HOUSE, ReportTextKey.SIGN, ReportTextKey.DEGREE, ReportTextKey.VALUE, ReportTextKey.VALUE, ReportTextKey.VALUE, ReportTextKey.VALUE),
+                            cuspRows,
+                            ReportContentKind.CALCULATION
+                        )
+                    )
+                ),
+                ReportSubsection(
+                    id = "kp_planets",
+                    title = ReportText("kp.planets", "KP Planetary Significators"),
+                    blocks = listOf(
+                        table(
+                            listOf(ReportTextKey.BODY, ReportTextKey.SIGN, ReportTextKey.DEGREE, ReportTextKey.HOUSE, ReportTextKey.VALUE, ReportTextKey.VALUE),
+                            planetRows,
+                            ReportContentKind.CALCULATION
+                        )
+                    )
+                )
+            )
+            include("kp", ReportTextKey.KP, emptyList(), "kp:${kp.calculationProfile}", subsections)
+        } ?: omit("kp", ReportTextKey.KP)
+
+        input.jaiminiResult?.let { jm ->
+            val karakaRows = jm.karakas.map { k ->
+                listOf(
+                    k.role.name,
+                    k.planetName,
+                    k.rashiName,
+                    k.formattedDegree,
+                )
+            }
+            val arudhaRows = jm.arudhas.map { a ->
+                listOf(
+                    a.label,
+                    "House ${a.houseNumber}",
+                    a.rashiName,
+                    if (a.appliedException) "Exception Applied" else "Standard",
+                )
+            }
+            val subsections = listOf(
+                ReportSubsection(
+                    id = "jaimini_karakas",
+                    title = ReportText("jaimini.karakas", "Chara Karakas (7-Karaka Scheme)"),
+                    blocks = listOf(
+                        table(
+                            listOf(ReportTextKey.VALUE, ReportTextKey.BODY, ReportTextKey.SIGN, ReportTextKey.DEGREE),
+                            karakaRows,
+                            ReportContentKind.CALCULATION
+                        )
+                    )
+                ),
+                ReportSubsection(
+                    id = "jaimini_arudhas",
+                    title = ReportText("jaimini.arudhas", "Arudha Padas"),
+                    blocks = listOf(
+                        table(
+                            listOf(ReportTextKey.VALUE, ReportTextKey.HOUSE, ReportTextKey.SIGN, ReportTextKey.STATUS),
+                            arudhaRows,
+                            ReportContentKind.CALCULATION
+                        )
+                    )
+                )
+            )
+            include("jaimini", ReportTextKey.JAIMINI, emptyList(), "jaimini:classical", subsections)
+        } ?: omit("jaimini", ReportTextKey.JAIMINI)
+
+        input.varshaphalResult?.let { vp ->
+            val rows = listOf(
+                ReportKeyValue(ReportText("vp.target_year", "Target Year"), vp.targetYear.toString()),
+                ReportKeyValue(ReportText("vp.moment_utc", "Solar Return Moment (UTC)"), vp.utcTimestamp ?: "N/A"),
+                ReportKeyValue(ReportText("vp.sun_lon", "Natal Sun Longitude"), vp.natalSunLongitude?.let(::number) ?: "N/A"),
+                ReportKeyValue(ReportText("vp.return_lon", "Return Sun Longitude"), vp.returnSunLongitude?.let(::number) ?: "N/A"),
+                ReportKeyValue(ReportText("vp.status", "Calculation Status"), vp.status.name),
+            )
+            include("varshaphal", ReportTextKey.VARSHAPHAL, rows, "varshaphal:${vp.targetYear}")
+        } ?: omit("varshaphal", ReportTextKey.VARSHAPHAL)
+
+        input.prashnaResult?.let { pr ->
+            val rows = listOf(
+                ReportKeyValue(ReportText("pr.query", "Query"), pr.queryText),
+                ReportKeyValue(ReportText("pr.theme", "Signified House Theme"), "House ${pr.primaryHouseSignified} — ${pr.houseTheme}"),
+                ReportKeyValue(ReportText("pr.lagna", "Query Lagna"), "${pr.queryLagnaSign} (Lord: ${pr.queryLagnaLord})"),
+                ReportKeyValue(ReportText("pr.ruling", "Favorable Ruling Planets"), pr.favorableRulingPlanets.joinToString()),
+                ReportKeyValue(ReportText("pr.judgment", "Horary Judgment"), pr.horaryJudgment),
+                ReportKeyValue(ReportText("pr.status", "Operational Status"), pr.prashnaCoreStatus),
+            )
+            include("prashna", ReportTextKey.PRASHNA, rows, "prashna:horary")
+        } ?: omit("prashna", ReportTextKey.PRASHNA)
+
+        input.muhurtaResult?.let { mh ->
+            val summaryRows = listOf(
+                ReportKeyValue(ReportText("mh.weekday", "Weekday"), mh.weekday),
+                ReportKeyValue(ReportText("mh.day_lord", "Day Lord (Vara Lord)"), mh.dayLorda),
+                ReportKeyValue(ReportText("mh.hora", "Active Hora"), "${mh.currentHora.lord} (${mh.currentHora.quality})"),
+                ReportKeyValue(ReportText("mh.choghadiya", "Active Choghadiya"), "${mh.currentChoghadiya.name} (${mh.currentChoghadiya.quality})"),
+                ReportKeyValue(ReportText("mh.status", "Operational Status"), mh.status),
+            )
+            val choghadiyaRows = mh.choghadiyaList.map { c ->
+                listOf(
+                    c.name,
+                    c.lord,
+                    c.quality.name,
+                    if (c.isDay) "Day" else "Night"
+                )
+            }
+            val subsections = listOf(
+                ReportSubsection(
+                    id = "muhurta_choghadiya",
+                    title = ReportText("mh.choghadiya_table", "Choghadiya Sequence"),
+                    blocks = listOf(
+                        table(
+                            listOf(ReportTextKey.VALUE, ReportTextKey.BODY, ReportTextKey.STATUS, ReportTextKey.VALUE),
+                            choghadiyaRows,
+                            ReportContentKind.CALCULATION
+                        )
+                    )
+                )
+            )
+            include("muhurta", ReportTextKey.MUHURTA, summaryRows, "muhurta:classical", subsections)
+        } ?: omit("muhurta", ReportTextKey.MUHURTA)
+
+        input.compatibilityResult?.let { cp ->
+            val summaryRows = listOf(
+                ReportKeyValue(ReportText("cp.gunas", "Total Ashtakoota Gunas"), "${cp.totalGunaPoints} / ${cp.maxPoints}"),
+                ReportKeyValue(ReportText("cp.percentage", "Match Percentage"), "${(cp.percentage * 100).toInt()}%"),
+                ReportKeyValue(ReportText("cp.verdict", "Compatibility Verdict"), if (cp.isFavorable) "Favorable (>= 18 Gunas)" else "Requires Deeper Remedial Review"),
+                ReportKeyValue(ReportText("cp.status", "Operational Status"), cp.status),
+            )
+            val kootaRows = cp.ashtakoota.map { k ->
+                listOf(
+                    k.kootaName,
+                    "${k.pointsObtained} / ${k.maxPoints}",
+                    if (k.passed) "Passed" else "Deficient",
+                    k.description
+                )
+            }
+            val subsections = listOf(
+                ReportSubsection(
+                    id = "compatibility_ashtakoota",
+                    title = ReportText("cp.ashtakoota_table", "Ashtakoota Detailed Breakdown (36 Gunas)"),
+                    blocks = listOf(
+                        table(
+                            listOf(ReportTextKey.VALUE, ReportTextKey.DEGREE, ReportTextKey.STATUS, ReportTextKey.VALUE),
+                            kootaRows,
+                            ReportContentKind.CALCULATION
+                        )
+                    )
+                )
+            )
+            include("compatibility", ReportTextKey.COMPATIBILITY, summaryRows, "compatibility:${cp.calculationProfile}", subsections)
+        } ?: omit("compatibility", ReportTextKey.COMPATIBILITY)
+
         omit(
             "timing",
             ReportTextKey.TIMING,
@@ -1035,6 +1215,12 @@ class KundaliReportGenerator : ReportGenerator {
             "transits",
             "yogas",
             "dosha",
+            "kp",
+            "jaimini",
+            "varshaphal",
+            "prashna",
+            "muhurta",
+            "compatibility",
             "timing",
             "predictions",
             "evidence",

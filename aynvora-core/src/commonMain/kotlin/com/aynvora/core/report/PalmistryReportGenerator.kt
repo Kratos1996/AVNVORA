@@ -153,7 +153,88 @@ class PalmistryReportGenerator : ReportGenerator {
             blocks = lineBlocks,
         )
 
-        // 4. Questions & Answers (if present)
+        // 4. Capture Intelligence & Structured Evidence (when PalmEvidence is present)
+        val evidence = session.finding?.evidence ?: session.evidence
+        if (evidence != null) {
+            val evidenceBlocks = mutableListOf<ReportBlock>()
+            evidenceBlocks += ReportKeyValue(
+                label = ReportText("ev.validation_status", "Hand Validation Status"),
+                value = "${evidence.validationStatus.name} (Selected: ${evidence.selectedHand.name}, Detected: ${evidence.detectedHand?.name ?: "UNKNOWN"})",
+                kind = ReportContentKind.FACT,
+            )
+            evidenceBlocks += ReportKeyValue(
+                label = ReportText("ev.confidence", "Detection Confidence"),
+                value = "${(evidence.handConfidence * 100).toInt()}%",
+                kind = ReportContentKind.FACT,
+            )
+
+            // Quality metrics table
+            val q = evidence.palmQuality
+            evidenceBlocks += ReportTable(
+                headers = listOf(
+                    ReportText("ev.metric_name", "Quality Metric"),
+                    ReportText("ev.metric_score", "Score"),
+                    ReportText("ev.metric_status", "Threshold Assessment"),
+                ),
+                rows = listOf(
+                    listOf("Overall Usability", "${(q.overallScore * 100).toInt()}%", if (q.isUsable) "PASS" else "FAIL"),
+                    listOf("Blur Clarity", "${(q.blurScore * 100).toInt()}%", if (q.blurScore >= 0.4f) "Acceptable" else "Blur Detected"),
+                    listOf("Brightness / Exposure", "${(q.brightnessScore * 100).toInt()}%", if (q.brightnessScore in 0.25f..0.85f) "Balanced" else "Suboptimal"),
+                    listOf("Palm Frame Coverage", "${(q.palmCoverageScore * 100).toInt()}%", if (q.palmCoverageScore >= 0.25f) "Good" else "Insufficient"),
+                    listOf("Occlusion Freedom", "${(q.occlusionScore * 100).toInt()}%", if (q.occlusionScore >= 0.6f) "Clear" else "Occluded"),
+                    listOf("Orientation Alignment", "${(q.orientationScore * 100).toInt()}%", if (q.orientationScore >= 0.6f) "Upright" else "Rotated"),
+                ),
+                kind = ReportContentKind.CALCULATION,
+            )
+
+            // Detected palm lines geometry table
+            val detectedLines = listOfNotNull(
+                evidence.heartLine,
+                evidence.headLine,
+                evidence.lifeLine,
+                evidence.fateLine,
+            ) + evidence.additionalDetectedLines
+
+            if (detectedLines.isNotEmpty()) {
+                evidenceBlocks += ReportTable(
+                    headers = listOf(
+                        ReportText("ev.line_name", "Palm Line"),
+                        ReportText("ev.line_detected", "Detected"),
+                        ReportText("ev.line_confidence", "Confidence"),
+                        ReportText("ev.line_continuity", "Continuity"),
+                        ReportText("ev.line_length", "Relative Length"),
+                    ),
+                    rows = detectedLines.map { line ->
+                        listOf(
+                            line.type.name.replace('_', ' '),
+                            if (line.detected) "Yes" else "No",
+                            "${(line.confidence * 100).toInt()}%",
+                            "${(line.continuity * 100).toInt()}%",
+                            "${(line.normalizedLength * 100).toInt()}%",
+                        )
+                    },
+                    kind = ReportContentKind.CALCULATION,
+                )
+            }
+
+            // User context watermark info
+            val userCtx = evidence.userContext ?: session.userContext
+            if (userCtx != null) {
+                evidenceBlocks += ReportKeyValue(
+                    label = ReportText("ev.watermark", "Image Metadata Watermark"),
+                    value = "${userCtx.displayName} · ${userCtx.selectedHand.name} · ${userCtx.captureSource.name}",
+                    kind = ReportContentKind.USER_CONTEXT,
+                )
+            }
+
+            sections += ReportSection(
+                id = "capture_evidence",
+                title = ReportText("palmistry.report.evidence.title", "Capture Intelligence & Structured Evidence"),
+                blocks = evidenceBlocks,
+            )
+        }
+
+        // 5. Questions & Answers (if present)
         if (session.questions.isNotEmpty()) {
             val qnaTitle = resolver.rawText(
                 "palmistry.report.qna.title",
@@ -181,15 +262,20 @@ class PalmistryReportGenerator : ReportGenerator {
             )
         }
 
-        // 5. Source Attribution
-        val attrTitle = resolver.rawText("palmistry.report.attr.title", "Source & Provenance")
+        // 6. Source Attribution & Model Provenance
+        val attrTitle = resolver.rawText("palmistry.report.attr.title", "Source, Model & Provenance")
+        val modelMeta = evidence?.modelMetadata
+        val modelDetails = if (modelMeta != null) {
+            "\nVision Model: ${modelMeta.handDetectorModel} (v${modelMeta.handDetectorVersion}, License: ${modelMeta.handDetectorLicense}, SHA-256: ${modelMeta.handDetectorSha256.take(16)}...)."
+        } else ""
+
         val attrBody = resolver.rawText(
             "palmistry.report.attr.body",
             mapOf(
                 "source" to PalmistryContentPackage.SOURCE_SAMUDRIKA,
                 "version" to PalmistryContentPackage.CONTENT_VERSION
             ),
-            "Content Source: ${PalmistryContentPackage.SOURCE_SAMUDRIKA} (Version ${PalmistryContentPackage.CONTENT_VERSION}). Analyzed strictly on-device by the AYNVORA Palm Vision & Intelligence Platform.",
+            "Content Source: ${PalmistryContentPackage.SOURCE_SAMUDRIKA} (Version ${PalmistryContentPackage.CONTENT_VERSION}). Analyzed strictly on-device by the AYNVORA Palm Vision & Intelligence Platform.$modelDetails Biometric imagery is processed offline and never transmitted off-device.",
         )
 
         sections += ReportSection(

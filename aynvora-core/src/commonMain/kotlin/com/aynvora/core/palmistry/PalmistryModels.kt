@@ -40,7 +40,153 @@ enum class PalmLineType {
     SUN_LINE,        // Surya Rekha
     MERCURY_LINE,    // Budh Rekha
     MARRIAGE_LINE,   // Vivah Rekha
+    INTUITION_LINE,  // Intuition Line
+    HEALTH_LINE,     // Health Line
 }
+
+/**
+ * Validation match result between selected hand and detected hand.
+ */
+@Serializable
+enum class PalmHandValidationStatus {
+    PASS,
+    WRONG_HAND,
+    RETRY,
+}
+
+/**
+ * 2D normalized coordinate in [0.0..1.0] image space.
+ */
+@Serializable
+data class Point2D(
+    val x: Float,
+    val y: Float,
+)
+
+/**
+ * Bounding rectangle in normalized [0.0..1.0] image space.
+ */
+@Serializable
+data class PalmRect(
+    val left: Float,
+    val top: Float,
+    val right: Float,
+    val bottom: Float,
+)
+
+/**
+ * Anatomical 21-landmark model point matching MediaPipe Hand Landmarker standards.
+ */
+@Serializable
+data class HandLandmark(
+    val index: Int,
+    val name: String,
+    val x: Float,
+    val y: Float,
+    val z: Float = 0.0f,
+)
+
+/**
+ * Structured geometric measurement of an identified palm line.
+ */
+@Serializable
+data class PalmLineGeometry(
+    val type: PalmLineType,
+    val detected: Boolean,
+    val confidence: Float,
+    val continuity: Float,
+    val normalizedLength: Float,
+    val curvature: Float,
+    val originPoint: Point2D,
+    val terminationPoint: Point2D,
+    val geometry: List<Point2D> = emptyList(),
+)
+
+/**
+ * Comprehensive, multi-metric palm image quality validation result.
+ */
+@Serializable
+data class PalmQualityResult(
+    val overallScore: Float,
+    val isUsable: Boolean,
+    val blurScore: Float,
+    val brightnessScore: Float,
+    val palmCoverageScore: Float,
+    val occlusionScore: Float,
+    val orientationScore: Float,
+    val failures: List<String> = emptyList(),
+)
+
+/**
+ * Verifiable provenance and licensing metadata for external ML models.
+ */
+@Serializable
+data class PalmModelMetadata(
+    val handDetectorModel: String = "MediaPipe Hand Landmarker (Google AI Edge)",
+    val handDetectorVersion: String = "0.10.14",
+    val handDetectorLicense: String = "Apache-2.0",
+    val handDetectorSha256: String = "c3f8e586b971a8bc8f7c9e0a293bf6dfa996df4482b6c7a9171f654b03692bf9",
+    val lineSegmentationModel: String = "AYNVORA Boundary Ridge Segmenter",
+    val lineSegmentationVersion: String = "1.0.0",
+    val lineSegmentationLicense: String = "Proprietary / In-House",
+    val isOfflineOnDevice: Boolean = true,
+    val tfliteAuditResult: String = "TensorFlow/TFLite palm-line model integration not completed because no acceptable licensed/technically compatible model was verified.",
+)
+
+/**
+ * Machine-readable palm evidence object capturing all verified vision telemetry.
+ */
+@Serializable
+data class PalmEvidence(
+    val imageId: String,
+    val selectedHand: HandType,
+    val detectedHand: HandType?,
+    val handConfidence: Float,
+    val palmQuality: PalmQualityResult,
+    val landmarks: List<HandLandmark>,
+    val palmBounds: PalmRect,
+    val orientation: Float,
+    val heartLine: PalmLineGeometry?,
+    val headLine: PalmLineGeometry?,
+    val lifeLine: PalmLineGeometry?,
+    val fateLine: PalmLineGeometry?,
+    val additionalDetectedLines: List<PalmLineGeometry> = emptyList(),
+    val modelMetadata: PalmModelMetadata = PalmModelMetadata(),
+    val annotationVersion: String = "1.0.0",
+    val validationStatus: PalmHandValidationStatus = when {
+        detectedHand == null || handConfidence < 0.6f -> PalmHandValidationStatus.RETRY
+        detectedHand == selectedHand -> PalmHandValidationStatus.PASS
+        else -> PalmHandValidationStatus.WRONG_HAND
+    },
+    val userContext: PalmUserContext? = null,
+)
+
+/**
+ * User context associated with palm capture.
+ * Stored separately so AI reasoning does NOT rely on OCR.
+ */
+@Serializable
+data class PalmUserContext(
+    val displayName: String,
+    val selectedHand: HandType,
+    val detectedHand: HandType?,
+    val handConfidence: Float,
+    val captureSource: PalmImageSourceType,
+    val captureTimestamp: Long,
+    val qualityScore: Float,
+)
+
+/**
+ * Triple image bundle preserving non-destructive original image.
+ */
+data class PalmImageBundle(
+    val originalImage: ByteArray,
+    val normalizedImage: ByteArray,
+    val annotatedImage: ByteArray,
+    val evidence: PalmEvidence,
+    val userContext: PalmUserContext,
+    val watermarkText: String? = null,
+)
 
 /**
  * Evaluated geometric/anatomical shape of the palm.
@@ -66,6 +212,7 @@ data class HandImageReference(
     val widthPx: Int,
     val heightPx: Int,
     val isLocalEncrypted: Boolean = true,
+    val rawBytes: ByteArray? = null,
 )
 
 /**
@@ -135,10 +282,12 @@ object PalmistryAnalysisCapabilities {
     val isHeartLineSupported: Boolean = true
     val isFateLineSupported: Boolean = true
 
-    // Minor Lines (Explicitly Unsupported / Not Detected in Phase 8.10)
+    // Minor Lines (Architecture supports future expansion)
     val isSunLineSupported: Boolean = false
     val isMercuryLineSupported: Boolean = false
     val isMarriageLineSupported: Boolean = false
+    val isIntuitionLineSupported: Boolean = false
+    val isHealthLineSupported: Boolean = false
 
     // Mounts
     val isMountAnalysisSupported: Boolean = true
@@ -181,6 +330,7 @@ data class PalmFinding(
     val overallClarity: Float = 0.8f,
     val shape: PalmShape = PalmShape.RECTANGULAR,
     val analysisVersion: String = PalmistryAnalysisCapabilities.ANALYSIS_VERSION,
+    val evidence: PalmEvidence? = null,
 )
 
 /**
@@ -364,6 +514,8 @@ data class PalmReadingSession(
     val feedback: PalmFeedback? = null,
     val status: PalmReadingStatus = PalmReadingStatus.ACTIVE,
     val language: String = "en",
+    val evidence: PalmEvidence? = null,
+    val userContext: PalmUserContext? = null,
 )
 
 /**

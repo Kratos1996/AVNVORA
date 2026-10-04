@@ -337,6 +337,12 @@ data class KundaliReportInput(
     val evidenceGraph: EvidenceGraph? = null,
     val includeYogas: Boolean = false,
     val includeDoshas: Boolean = false,
+    val kpResult: com.aynvora.astro.kp.KPResult? = null,
+    val jaiminiResult: com.aynvora.astro.jaimini.JaiminiResult? = null,
+    val varshaphalResult: com.aynvora.astro.varshaphal.SolarReturnMoment? = null,
+    val prashnaResult: com.aynvora.astro.prashna.PrashnaResult? = null,
+    val muhurtaResult: com.aynvora.astro.muhurta.MuhurtaResult? = null,
+    val compatibilityResult: com.aynvora.astro.compatibility.CompatibilityResult? = null,
 ) : ReportGeneratorInput
 
 interface ReportTextResolver {
@@ -379,6 +385,8 @@ enum class ReportTextKey(val key: String) {
     MOON_SIGN("report.section.moon_sign"), NAKSHATRA("report.section.nakshatra"), PLANETARY_POSITIONS(
         "report.section.planetary_positions"
     ),
+    KP("report.section.kp"), JAIMINI("report.section.jaimini"), VARSHAPHAL("report.section.varshaphal"),
+    PRASHNA("report.section.prashna"), MUHURTA("report.section.muhurta"), COMPATIBILITY("report.section.compatibility"),
     HOUSE_PLACEMENTS("report.section.house_placements"), RETROGRADE("report.section.retrograde"), COMBUSTION(
         "report.section.combustion"
     ),

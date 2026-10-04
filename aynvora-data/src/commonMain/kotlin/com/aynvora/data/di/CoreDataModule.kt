@@ -2,10 +2,15 @@ package com.aynvora.data.di
 
 import com.aynvora.core.ai.AiDeviceCapabilityDetector
 import com.aynvora.core.ai.AiModelStorageRepository
+import com.aynvora.core.family.FamilyRepository
 import com.aynvora.core.garudapuran.GarudaPuranRepository
 import com.aynvora.core.gemstone.GemstoneRepository
+import com.aynvora.core.gita.GitaRepository
+import com.aynvora.core.guidance.DailyGuidanceRepository
+import com.aynvora.core.guidance.DefaultDailyGuidanceRepository
 import com.aynvora.core.numerology.NumerologyHistoryRepository
 import com.aynvora.core.numerology.NumerologyRepository
+import com.aynvora.core.palmistry.PalmSessionRepository
 import com.aynvora.core.palmistry.PalmistryRepository
 import com.aynvora.core.repository.BirthProfileRepository
 import com.aynvora.core.repository.ContentRepository
@@ -22,6 +27,7 @@ import com.aynvora.core.tarot.TarotSessionRepository
 import com.aynvora.data.ai.AiModelStorageRepositoryImpl
 import com.aynvora.data.ai.DefaultAiDeviceCapabilityDetector
 import com.aynvora.data.database.AynvoraDatabase
+import com.aynvora.data.family.FamilyRepositoryImpl
 import com.aynvora.data.garudapuran.ContentBackedGarudaPuranRepository
 import com.aynvora.data.gemstone.GemstoneRepositoryImpl
 import com.aynvora.data.numerology.NumerologyHistoryRepositoryImpl
@@ -102,7 +108,7 @@ val coreDataModule: Module = module {
     }
 
     // Phase 8.3 — Bhagavad Gita: Room-backed, offline-first, 701 verses from gita/gita (Public Domain)
-    single<com.aynvora.core.gita.GitaRepository> {
+    single<GitaRepository> {
         val database: AynvoraDatabase = get()
         com.aynvora.data.gita.RoomGitaRepository(
             dao = database.gitaDao(),
@@ -144,7 +150,7 @@ val coreDataModule: Module = module {
         PalmSessionRepositoryImpl(storage = get())
     }
 
-    single<com.aynvora.core.palmistry.PalmSessionRepository> {
+    single<PalmSessionRepository> {
         get<PalmSessionRepositoryImpl>()
     }
 
@@ -163,5 +169,15 @@ val coreDataModule: Module = module {
     // Gemstone Domain Repository (Phase 8.2)
     single<GemstoneRepository> {
         GemstoneRepositoryImpl(driver = get())
+    }
+
+    // Family Graph & Couple Intelligence Repository
+    single<FamilyRepository> {
+        FamilyRepositoryImpl(driver = get())
+    }
+
+    // Daily Guidance Repository
+    single<DailyGuidanceRepository> {
+        DefaultDailyGuidanceRepository()
     }
 }

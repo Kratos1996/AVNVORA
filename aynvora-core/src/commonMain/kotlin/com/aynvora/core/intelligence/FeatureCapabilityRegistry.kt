@@ -169,11 +169,83 @@ object FeatureCapabilityRegistry {
             false
         ),
         FeatureCapability(
+            "palm_hand_detection",
+            CoreFeatureId.PALMISTRY,
+            "On-device 21-landmark topology and handedness verification (foundation-ready; awaiting physical device verification)",
+            CapabilityStatus.FOUNDATION_ONLY,
+            false,
+            false
+        ),
+        FeatureCapability(
             "palm_line_detection",
             CoreFeatureId.PALMISTRY,
             "Heart, Head, and Life line geometric segmentation",
             CapabilityStatus.FOUNDATION_ONLY,
             false,
+            false
+        ),
+        FeatureCapability(
+            "palm_quality_check",
+            CoreFeatureId.PALMISTRY,
+            "Multi-metric luminance, contrast, sharpness variance, occlusion, and coverage validation",
+            CapabilityStatus.IMPLEMENTED,
+            true,
+            false
+        ),
+        FeatureCapability(
+            "palm_camera",
+            CoreFeatureId.PALMISTRY,
+            "CameraX capture pipeline on Android (awaiting physical hardware QA); unsupported on Desktop",
+            CapabilityStatus.FOUNDATION_ONLY,
+            false,
+            false
+        ),
+        FeatureCapability(
+            "palm_gallery",
+            CoreFeatureId.PALMISTRY,
+            "Gallery image import with EXIF orientation normalization and local processing",
+            CapabilityStatus.IMPLEMENTED,
+            true,
+            false
+        ),
+        FeatureCapability(
+            "palm_annotation",
+            CoreFeatureId.PALMISTRY,
+            "Multi-layer interactive canvas with toggleable ridge overlays, landmarks, and subtle watermark",
+            CapabilityStatus.IMPLEMENTED,
+            true,
+            false
+        ),
+        FeatureCapability(
+            "palm_ai_grounding",
+            CoreFeatureId.PALMISTRY,
+            "Structured PalmEvidence grounding layer with tri-level separation (Observed, Derived, Traditional)",
+            CapabilityStatus.IMPLEMENTED,
+            true,
+            false
+        ),
+        FeatureCapability(
+            "pdf_report_generator",
+            CoreFeatureId.ASTROLOGY,
+            "Deterministic multi-feature report generator independent of presentation layer",
+            CapabilityStatus.IMPLEMENTED,
+            true,
+            false
+        ),
+        FeatureCapability(
+            "pdf_android_export",
+            CoreFeatureId.ASTROLOGY,
+            "Android PdfDocument export pipeline (foundation-ready; awaiting physical device verification)",
+            CapabilityStatus.FOUNDATION_ONLY,
+            true,
+            false
+        ),
+        FeatureCapability(
+            "pdf_desktop_export",
+            CoreFeatureId.ASTROLOGY,
+            "JVM PDF-1.4 rasterized export service with headers, footers, and page numbers",
+            CapabilityStatus.IMPLEMENTED,
+            true,
             false
         ),
 
