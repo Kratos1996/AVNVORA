@@ -1,8 +1,8 @@
-# AYNVORA SDK Integration Guide (Phase 10.45)
+# AYNVORA SDK Integration Guide (Phase 10.46)
 
 AYNVORA is a production-grade, modular Kotlin Multiplatform SDK for astrology, palmistry, numerology, tarot, gemstone recommendations, sacred scriptures, AI grounding, and composite report synthesis.
 
-Starting with Phase 10.45, AYNVORA is structured as an **engine-first modular library**. Consumers do NOT need to import or bundle the entire application suite; applications declare dependencies on only the specific feature engines they require.
+Starting with Phase 10.46, AYNVORA is structured as a **fully distributable, engine-first modular library** published to Maven with strict dependency isolation. Consumers do NOT need to import or bundle the entire application suite; applications declare dependencies on only the specific feature engines they require.
 
 ---
 
@@ -25,8 +25,8 @@ Starting with Phase 10.45, AYNVORA is structured as an **engine-first modular li
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.aynvora:aynvora-sdk:10.45.0")
-    implementation("com.aynvora:astro-engine:10.45.0")
+    implementation("com.aynvora:aynvora-sdk:10.46.0")
+    implementation("com.aynvora:astro-engine:10.46.0")
 }
 ```
 
@@ -72,8 +72,8 @@ when (result) {
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.aynvora:aynvora-sdk:10.45.0")
-    implementation("com.aynvora:palmistry-engine:10.45.0")
+    implementation("com.aynvora:aynvora-sdk:10.46.0")
+    implementation("com.aynvora:palmistry-engine:10.46.0")
 }
 ```
 
