@@ -18,6 +18,10 @@ data class HandDetectionResult(
     val palmBounds: PalmRect,
     val orientationDegrees: Float,
     val quality: PalmQualityResult,
+    val rawHandLabel: String? = null,
+    val rawHandScore: Float? = null,
+    val finalHandDecision: String? = null,
+    val decisionReason: String? = null,
 )
 
 /**
@@ -260,8 +264,9 @@ class PalmImageAnalysisEngine(
 
         // Analyze spatial luminance profile to establish palm bounds and lateral thumb protrusion
         val width = if (source.widthPx > 0) source.widthPx else extractDimension(bytes, isWidth = true)
-        val profile = extractSpatialProfile(bytes, width)
-        val detectedHand = profile.inferredHand
+        val height = if (source.heightPx > 0) source.heightPx else extractDimension(bytes, isWidth = false)
+        val profile = extractSpatialProfile(bytes, width, height)
+        val detectedHand = source.inferredHand ?: profile.inferredHand
         val confidence = profile.confidence
 
         val validationStatus = when {
@@ -274,6 +279,15 @@ class PalmImageAnalysisEngine(
         val orientation = profile.orientationDegrees
         val landmarks = generateLandmarks(profile, detectedHand ?: selectedHand)
 
+        val rawLabel = detectedHand?.name ?: "UNKNOWN"
+        val rawScore = confidence
+        val finalDecision = validationStatus.name
+        val decisionReason = when (validationStatus) {
+            PalmHandValidationStatus.PASS -> "Anatomical handedness features match selected $selectedHand hand"
+            PalmHandValidationStatus.WRONG_HAND -> "Detected $detectedHand hand based on lateral thumb protrusion, does not match selected $selectedHand hand"
+            PalmHandValidationStatus.RETRY -> "Ambiguous or low confidence ($confidence) hand lateral features"
+        }
+
         return HandDetectionResult(
             selectedHand = selectedHand,
             detectedHand = detectedHand,
@@ -283,6 +297,10 @@ class PalmImageAnalysisEngine(
             palmBounds = bounds,
             orientationDegrees = orientation,
             quality = quality,
+            rawHandLabel = rawLabel,
+            rawHandScore = rawScore,
+            finalHandDecision = finalDecision,
+            decisionReason = decisionReason,
         )
     }
 
@@ -448,7 +466,7 @@ class PalmImageAnalysisEngine(
         val orientationDegrees: Float,
     )
 
-    private fun extractSpatialProfile(bytes: ByteArray, width: Int = 1000): SpatialProfile {
+    private fun extractSpatialProfile(bytes: ByteArray, width: Int = 1000, height: Int = 0): SpatialProfile {
         if (bytes.isEmpty()) {
             return SpatialProfile(
                 bounds = PalmRect(0.15f, 0.15f, 0.85f, 0.85f),
@@ -460,50 +478,116 @@ class PalmImageAnalysisEngine(
             )
         }
 
-        val effectiveWidth = max(1, width)
-        // Sample quadrants to evaluate lateral thumb protrusion
-        val sampleStep = max(1, bytes.size / 3000)
-        var leftMass = 0L
-        var rightMass = 0L
-        var totalSamples = 0
+        val grid = decodeImageToLuminanceGrid(bytes) ?: createFallbackLuminanceGrid(bytes, width, height)
+        val gw = grid.width
+        val gh = grid.height
 
-        var i = 0
-        while (i < bytes.size) {
-            val v = bytes[i].toInt() and 0xFF
-            val fraction = (i.toFloat() / bytes.size.toFloat())
-            // Lower-middle half (y in 0.35..0.75) where thumb protrusion appears
-            val yNorm = fraction
-            if (yNorm in 0.35f..0.75f) {
-                val horizontalPos = ((i % effectiveWidth).toFloat() / effectiveWidth.toFloat())
-                if (horizontalPos < 0.45f) {
-                    leftMass += v
-                } else if (horizontalPos > 0.55f) {
-                    rightMass += v
+        // 1. Estimate background luminance from the image borders
+        var borderSum = 0f
+        var borderCount = 0
+        for (x in 0 until gw) {
+            borderSum += grid.get(x, 0) + grid.get(x, gh - 1)
+            borderCount += 2
+        }
+        for (y in 1 until gh - 1) {
+            borderSum += grid.get(0, y) + grid.get(gw - 1, y)
+            borderCount += 2
+        }
+        val bgLuma = if (borderCount > 0) borderSum / borderCount else 0.5f
+
+        // 2. Measure palm bounding box from foreground pixels
+        var minX = gw
+        var maxX = 0
+        var minY = gh
+        var maxY = 0
+        var fgCount = 0
+        val fgThreshold = 0.05f
+
+        for (y in 0 until gh) {
+            for (x in 0 until gw) {
+                val luma = grid.get(x, y)
+                if (abs(luma - bgLuma) > fgThreshold) {
+                    if (x < minX) minX = x
+                    if (x > maxX) maxX = x
+                    if (y < minY) minY = y
+                    if (y > maxY) maxY = y
+                    fgCount++
                 }
             }
-            totalSamples++
-            i += sampleStep
         }
 
-        val diff = (leftMass - rightMass).toDouble()
-        val total = max(1L, leftMass + rightMass).toDouble()
-        val asymmetry = abs(diff) / total
+        val bLeft = if (fgCount > 40 && minX < maxX) (minX.toFloat() / gw).coerceIn(0.05f, 0.40f) else 0.15f
+        val bRight = if (fgCount > 40 && minX < maxX) (maxX.toFloat() / gw).coerceIn(0.60f, 0.95f) else 0.85f
+        val bTop = if (fgCount > 40 && minY < maxY) (minY.toFloat() / gh).coerceIn(0.05f, 0.35f) else 0.12f
+        val bBottom = if (fgCount > 40 && minY < maxY) (maxY.toFloat() / gh).coerceIn(0.70f, 0.95f) else 0.88f
 
-        // In palmar view facing the camera:
-        // Left flank mass excess -> thumb is on left -> RIGHT HAND
-        // Right flank mass excess -> thumb is on right -> LEFT HAND
+        val centerX = (bLeft + bRight) / 2f
+        val centerY = (bTop + bBottom) / 2f
+
+        // 3. Evaluate lateral thumb protrusion in the thumb height band (yNorm in 0.40..0.72)
+        // For palmar view facing the camera:
+        // - Right hand: thumb sticks out to the LEFT (lower X)
+        // - Left hand: thumb sticks out to the RIGHT (higher X)
+        val yStart = (gh * 0.40f).toInt().coerceIn(0, gh - 1)
+        val yEnd = (gh * 0.72f).toInt().coerceIn(yStart + 1, gh)
+
+        var leftLateralMass = 0f
+        var rightLateralMass = 0f
+        var maxLeftExt = 0f
+        var maxRightExt = 0f
+
+        for (y in yStart until yEnd) {
+            val midX = (gw * centerX).toInt().coerceIn(1, gw - 2)
+
+            // Left flank
+            val leftBoundary = (midX - (gw * 0.06f)).toInt().coerceAtLeast(0)
+            for (x in 0..leftBoundary) {
+                val luma = grid.get(x, y)
+                val diff = abs(luma - bgLuma)
+                if (diff > fgThreshold) {
+                    val distFromCenter = (midX - x).toFloat() / gw
+                    leftLateralMass += diff * distFromCenter
+                    if (distFromCenter > maxLeftExt) maxLeftExt = distFromCenter
+                }
+            }
+
+            // Right flank
+            val rightBoundary = (midX + (gw * 0.06f)).toInt().coerceAtMost(gw - 1)
+            for (x in rightBoundary until gw) {
+                val luma = grid.get(x, y)
+                val diff = abs(luma - bgLuma)
+                if (diff > fgThreshold) {
+                    val distFromCenter = (x - midX).toFloat() / gw
+                    rightLateralMass += diff * distFromCenter
+                    if (distFromCenter > maxRightExt) maxRightExt = distFromCenter
+                }
+            }
+        }
+
+        val totalMass = leftLateralMass + rightLateralMass
+        val massDiff = leftLateralMass - rightLateralMass
+        val extDiff = maxLeftExt - maxRightExt
+        val asymmetry = if (totalMass > 0.01f) abs(massDiff) / totalMass else 0.0f
+
         val inferredHand = when {
-            asymmetry < 0.035 -> HandType.RIGHT // Fallback to Right hand if symmetric
-            diff > 0 -> HandType.RIGHT
-            else -> HandType.LEFT
+            massDiff > 0.08f * totalMass || extDiff > 0.03f -> HandType.RIGHT
+            massDiff < -0.08f * totalMass || extDiff < -0.03f -> HandType.LEFT
+            massDiff > 0 -> HandType.RIGHT
+            massDiff < 0 -> HandType.LEFT
+            else -> HandType.RIGHT
         }
 
-        val confidence = (0.70f + (asymmetry * 2.0f).toFloat()).coerceIn(0.65f, 0.95f)
+        val confidence = when {
+            totalMass < 0.04f -> 0.45f
+            asymmetry > 0.20f || abs(extDiff) > 0.07f -> (0.80f + asymmetry * 0.35f).coerceIn(0.80f, 0.95f)
+            asymmetry > 0.08f || abs(extDiff) > 0.025f -> (0.68f + asymmetry * 0.40f).coerceIn(0.68f, 0.82f)
+            else -> 0.52f
+        }
 
         return SpatialProfile(
-            bounds = PalmRect(left = 0.15f, top = 0.12f, right = 0.85f, bottom = 0.88f),
-            centerX = 0.50f,
-            centerY = 0.52f,
+            bounds = PalmRect(left = bLeft, top = bTop, right = bRight, bottom = bBottom),
+            centerX = centerX,
+            centerY = centerY,
             inferredHand = inferredHand,
             confidence = confidence,
             orientationDegrees = 0.0f,

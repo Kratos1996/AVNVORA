@@ -57,6 +57,7 @@ dependencies {
     implementation(project(":aynvora-data"))
     implementation(project(":aynvora-qa-core"))
     implementation(project(":aynvora-qa-android"))
+    implementation(project(":aynvora-localization"))
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.sqlite.bundled)
     implementation(libs.androidx.activity.compose)

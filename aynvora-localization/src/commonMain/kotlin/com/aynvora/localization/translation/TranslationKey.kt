@@ -831,6 +831,46 @@ sealed class TranslationKey : LocalizationKey {
         object QuestionFailedTitle : TranslationKey() {
             override val key = "palmistry.question.failed_title"
         }
+
+        object StatusPass : TranslationKey() { override val key = "palmistry.status.pass" }
+        object StatusWrongHand : TranslationKey() { override val key = "palmistry.status.wrong_hand" }
+        object StatusRetry : TranslationKey() { override val key = "palmistry.status.retry" }
+
+        object ShapeSquare : TranslationKey() { override val key = "palmistry.shape.square" }
+        object ShapeRectangular : TranslationKey() { override val key = "palmistry.shape.rectangular" }
+        object ShapeLong : TranslationKey() { override val key = "palmistry.shape.long" }
+        object ShapeWide : TranslationKey() { override val key = "palmistry.shape.wide" }
+        object ShapeEarth : TranslationKey() { override val key = "palmistry.shape.earth" }
+        object ShapeAir : TranslationKey() { override val key = "palmistry.shape.air" }
+        object ShapeFire : TranslationKey() { override val key = "palmistry.shape.fire" }
+        object ShapeWater : TranslationKey() { override val key = "palmistry.shape.water" }
+        object ShapeStandard : TranslationKey() { override val key = "palmistry.shape.standard" }
+        object ShapeUnknown : TranslationKey() { override val key = "palmistry.shape.unknown" }
+
+        object LineHeart : TranslationKey() { override val key = "palmistry.line.heart" }
+        object LineHead : TranslationKey() { override val key = "palmistry.line.head" }
+        object LineLife : TranslationKey() { override val key = "palmistry.line.life" }
+        object LineFate : TranslationKey() { override val key = "palmistry.line.fate" }
+        object LineSun : TranslationKey() { override val key = "palmistry.line.sun" }
+        object LineMercury : TranslationKey() { override val key = "palmistry.line.mercury" }
+        object LineMarriage : TranslationKey() { override val key = "palmistry.line.marriage" }
+        object LineIntuition : TranslationKey() { override val key = "palmistry.line.intuition" }
+        object LineHealth : TranslationKey() { override val key = "palmistry.line.health" }
+
+        object HandUnknown : TranslationKey() { override val key = "palmistry.hand.unknown" }
+        object ValidationSelectedHandPrefix : TranslationKey() { override val key = "palmistry.validation.selected_hand_prefix" }
+        object ValidationDetectedHandPrefix : TranslationKey() { override val key = "palmistry.validation.detected_hand_prefix" }
+        object ValidationResultPrefix : TranslationKey() { override val key = "palmistry.validation.validation_result_prefix" }
+        object ValidationPassDesc : TranslationKey() { override val key = "palmistry.validation.pass_desc" }
+        object ValidationWrongHandDesc : TranslationKey() { override val key = "palmistry.validation.wrong_hand_desc" }
+        object ValidationRetryDesc : TranslationKey() { override val key = "palmistry.validation.retry_desc" }
+        object ValidationSwitchProceed : TranslationKey() { override val key = "palmistry.validation.switch_proceed" }
+        object ValidationRetakeHand : TranslationKey() { override val key = "palmistry.validation.retake_hand" }
+        object QualityAssessmentTitle : TranslationKey() { override val key = "palmistry.quality_assessment_title" }
+        object ProceedButton : TranslationKey() { override val key = "palmistry.proceed_button" }
+        object ObservedTag : TranslationKey() { override val key = "palmistry.tag.observed" }
+        object DerivedTag : TranslationKey() { override val key = "palmistry.tag.derived" }
+        object TraditionalTag : TranslationKey() { override val key = "palmistry.tag.traditional" }
     }
 
     object Report {

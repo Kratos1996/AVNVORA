@@ -14,7 +14,8 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(project(":astro-engine"))
+            api(project(":aynvora-contracts"))
+            compileOnly(project(":astro-engine"))
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.koin.core)
@@ -24,9 +25,12 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(project(":astro-engine"))
         }
         jvmTest.dependencies {
             implementation(kotlin("test"))
+            implementation(project(":astro-engine"))
         }
     }
 }

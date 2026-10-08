@@ -22,6 +22,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":design-system"))
             implementation(project(":aynvora-core"))
+            compileOnly(project(":astro-engine"))
             implementation(project(":aynvora-data"))
             implementation(project(":aynvora-localization"))
             implementation(project(":aynvora-qa-core"))
@@ -39,6 +40,7 @@ kotlin {
         }
         jvmTest.dependencies {
             implementation(kotlin("test"))
+            implementation(project(":astro-engine"))
             implementation(libs.kotlinx.coroutines.test)
             @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
             implementation(compose.uiTest)

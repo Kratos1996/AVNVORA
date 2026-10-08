@@ -94,6 +94,8 @@ import com.aynvora.core.palmistry.PalmHandValidationStatus
 import com.aynvora.core.palmistry.PalmQualityResult
 import com.aynvora.core.palmistry.PalmEvidence
 import com.aynvora.core.palmistry.PalmUserContext
+import com.aynvora.core.palmistry.PalmShape
+import com.aynvora.core.palmistry.PalmLineType
 import com.aynvora.designsystem.adaptive.LocalAynvoraWindowInfo
 import com.aynvora.core.result.AynvoraResult
 import com.aynvora.designsystem.AynvoraColors
@@ -125,6 +127,52 @@ import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 import kotlin.math.abs
 import kotlin.math.sin
+import com.aynvora.localization.translation.AynvoraTranslator
+
+private fun HandType.localized(translator: AynvoraTranslator): String =
+    if (this == HandType.LEFT) translator.translate(TranslationKey.Palmistry.HandLeftLabel)
+    else translator.translate(TranslationKey.Palmistry.HandRightLabel)
+
+private fun PalmHandValidationStatus.localized(translator: AynvoraTranslator): String = when (this) {
+    PalmHandValidationStatus.PASS -> translator.translate(TranslationKey.Palmistry.StatusPass)
+    PalmHandValidationStatus.WRONG_HAND -> translator.translate(TranslationKey.Palmistry.StatusWrongHand)
+    PalmHandValidationStatus.RETRY -> translator.translate(TranslationKey.Palmistry.StatusRetry)
+}
+
+private fun PalmShape.localized(translator: AynvoraTranslator): String = when (this) {
+    PalmShape.SQUARE -> translator.translate(TranslationKey.Palmistry.ShapeSquare)
+    PalmShape.RECTANGULAR -> translator.translate(TranslationKey.Palmistry.ShapeRectangular)
+    PalmShape.LONG -> translator.translate(TranslationKey.Palmistry.ShapeLong)
+    PalmShape.WIDE -> translator.translate(TranslationKey.Palmistry.ShapeWide)
+    PalmShape.UNKNOWN -> translator.translate(TranslationKey.Palmistry.ShapeUnknown)
+}
+
+private fun PalmLineType.localized(translator: AynvoraTranslator): String = when (this) {
+    PalmLineType.HEART_LINE -> translator.translate(TranslationKey.Palmistry.LineHeart)
+    PalmLineType.HEAD_LINE -> translator.translate(TranslationKey.Palmistry.LineHead)
+    PalmLineType.LIFE_LINE -> translator.translate(TranslationKey.Palmistry.LineLife)
+    PalmLineType.FATE_LINE -> translator.translate(TranslationKey.Palmistry.LineFate)
+    PalmLineType.SUN_LINE -> translator.translate(TranslationKey.Palmistry.LineSun)
+    PalmLineType.MERCURY_LINE -> translator.translate(TranslationKey.Palmistry.LineMercury)
+    PalmLineType.MARRIAGE_LINE -> translator.translate(TranslationKey.Palmistry.LineMarriage)
+    PalmLineType.INTUITION_LINE -> translator.translate(TranslationKey.Palmistry.LineIntuition)
+    PalmLineType.HEALTH_LINE -> translator.translate(TranslationKey.Palmistry.LineHealth)
+}
+
+private fun PalmTimelineEventType.localized(): String = when (this) {
+    PalmTimelineEventType.READING_STARTED -> "Reading Started"
+    PalmTimelineEventType.HAND_SELECTED -> "Hand Selected"
+    PalmTimelineEventType.IMAGE_CAPTURED -> "Image Captured"
+    PalmTimelineEventType.QUALITY_VALIDATED -> "Quality Validated"
+    PalmTimelineEventType.ANALYSIS_COMPLETED -> "Analysis Completed"
+    PalmTimelineEventType.FEATURES_DETECTED -> "Features Detected"
+    PalmTimelineEventType.QUESTION_ASKED -> "Question Asked"
+    PalmTimelineEventType.AI_ANSWER_GENERATED -> "Reflection Generated"
+    PalmTimelineEventType.AI_ANSWER_FALLBACK -> "Fallback Guidance"
+    PalmTimelineEventType.FEEDBACK_SUBMITTED -> "Feedback Submitted"
+    PalmTimelineEventType.READING_SATISFIED -> "Reading Satisfied"
+    PalmTimelineEventType.READING_COMPLETED -> "Reading Completed"
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Navigation Destinations
@@ -514,10 +562,10 @@ private fun PalmLanguagePickerSheet(
                             .clip(RoundedCornerShape(8.dp))
                             .background(if (isSelected) AynvoraTheme.colors.Gold.copy(alpha = 0.15f) else Color.Transparent)
                             .clickable {
+                                onDismiss()
                                 scope.launch {
                                     localeManager.setLocale(loc)
                                 }
-                                onDismiss()
                             }
                             .padding(horizontal = 12.sdp, vertical = 10.sdp),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -636,7 +684,7 @@ private fun PalmHomeScreen(
                     ) {
                         Column {
                             Text(
-                                text = "${sess.handType} Hand • ${sess.finding?.shape?.name ?: "Standard"}",
+                                text = "${sess.handType.localized(translator)} • ${sess.finding?.shape?.localized(translator) ?: translator.translate(TranslationKey.Palmistry.ShapeStandard)}",
                                 style = AynvoraTheme.typography.body14.copy(fontWeight = FontWeight.Bold),
                                 color = AynvoraTheme.colors.Gold,
                             )
@@ -1027,6 +1075,7 @@ private fun PalmQualityCheckScreen(
             onBack = onBack,
         )
 
+        val selectedHandStr = hand.localized(translator)
         val assess = assessment
         val quality = palmQuality
         if (assess == null || quality == null) {
@@ -1107,8 +1156,11 @@ private fun PalmQualityCheckScreen(
 
                     Spacer(Modifier.height(8.sdp))
 
+                    val selHandStr = hand.localized(translator)
+                    val detHandStr = detectedHandResult?.localized(translator) ?: translator.translate(TranslationKey.Palmistry.HandUnknown)
+
                     Text(
-                        text = "Selected Hand: ${hand.name}  •  Detected Hand: ${detectedHandResult?.name ?: "Unknown"}",
+                        text = "${translator.translate(TranslationKey.Palmistry.ValidationSelectedHandPrefix)}: $selHandStr  •  ${translator.translate(TranslationKey.Palmistry.ValidationDetectedHandPrefix)}: $detHandStr",
                         style = AynvoraTheme.typography.body14.copy(fontWeight = FontWeight.SemiBold),
                         color = AynvoraTheme.colors.TextLight,
                     )
@@ -1118,11 +1170,21 @@ private fun PalmQualityCheckScreen(
                     Text(
                         text = when (handValidationStatus) {
                             PalmHandValidationStatus.PASS ->
-                                "On-device MediaPipe Hand Landmarker model confirmed your ${hand.name} hand. Hand anatomy is correctly aligned for classical Samudrika analysis."
+                                translator.translateWithArgs(
+                                    TranslationKey.Palmistry.ValidationPassDesc,
+                                    "hand" to selHandStr
+                                )
                             PalmHandValidationStatus.WRONG_HAND ->
-                                "You selected ${hand.name} Hand, but our on-device model detected ${detectedHandResult?.name} Hand. Please switch your hand selection or retake with your ${hand.name} hand."
+                                translator.translateWithArgs(
+                                    TranslationKey.Palmistry.ValidationWrongHandDesc,
+                                    "selectedHand" to selHandStr,
+                                    "detectedHand" to detHandStr
+                                )
                             PalmHandValidationStatus.RETRY ->
-                                "Hand confidence is low (${(handConfidenceResult * 100).toInt()}%). Landmarks could not be localized with high certainty. Please place palm flat with fingers spread under clear lighting."
+                                translator.translateWithArgs(
+                                    TranslationKey.Palmistry.ValidationRetryDesc,
+                                    "confidence" to "${(handConfidenceResult * 100).toInt()}"
+                                )
                         },
                         style = AynvoraTheme.typography.caption12,
                         color = AynvoraTheme.colors.TextLightSecondary,
@@ -1149,7 +1211,7 @@ private fun PalmQualityCheckScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Palm Quality Assessment",
+                            text = translator.translate(TranslationKey.Palmistry.QualityAssessmentTitle),
                             style = AynvoraTheme.typography.body14.copy(fontWeight = FontWeight.Bold),
                             color = AynvoraTheme.colors.Gold,
                         )
@@ -1190,7 +1252,7 @@ private fun PalmQualityCheckScreen(
             // Action Buttons
             if (handValidationStatus == PalmHandValidationStatus.PASS && quality.isUsable && assess.isAcceptable) {
                 AynvoraButton(
-                    text = "Proceed to Palm Analysis",
+                    text = translator.translate(TranslationKey.Palmistry.ProceedButton),
                     onClick = onProceed,
                     variant = AynvoraButtonVariant.Primary,
                     modifier = Modifier
@@ -1198,15 +1260,24 @@ private fun PalmQualityCheckScreen(
                         .qaAction(QaActionId.PALMISTRY_PROCEED),
                 )
             } else if (handValidationStatus == PalmHandValidationStatus.WRONG_HAND && detectedHandResult != null) {
-                AynvoraButton(
-                    text = "Switch to ${detectedHandResult?.name} Hand & Proceed",
-                    onClick = { onSwitchHand(detectedHandResult!!) },
-                    variant = AynvoraButtonVariant.Primary,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                val targetHand = detectedHandResult
+                if (targetHand != null) {
+                    AynvoraButton(
+                        text = translator.translateWithArgs(
+                            TranslationKey.Palmistry.ValidationSwitchProceed,
+                            "hand" to targetHand.localized(translator)
+                        ),
+                        onClick = { onSwitchHand(targetHand) },
+                        variant = AynvoraButtonVariant.Primary,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 Spacer(Modifier.height(10.sdp))
                 AynvoraButton(
-                    text = "Retake ${hand.name} Hand Photo",
+                    text = translator.translateWithArgs(
+                        TranslationKey.Palmistry.ValidationRetakeHand,
+                        "hand" to selectedHandStr
+                    ),
                     onClick = onRetake,
                     variant = AynvoraButtonVariant.Secondary,
                     modifier = Modifier
@@ -1436,7 +1507,7 @@ private fun PalmDesktopWorkspace(
     val finding = session.finding
     val meanings = session.meanings
     val evidence = session.evidence ?: finding?.evidence
-    val watermark = "${session.userContext?.displayName ?: "Ishant"} · ${session.handType.name} · 04 OCT 2026"
+    val watermark = "${session.userContext?.displayName ?: "Ishant"} · ${session.handType.localized(translator)} · 04 OCT 2026"
 
     Column(
         modifier = Modifier
@@ -1537,10 +1608,10 @@ private fun PalmDesktopWorkspace(
                     Column(modifier = Modifier.padding(12.sdp)) {
                         Text("Hand Validation Telemetry", style = AynvoraTheme.typography.caption12.copy(fontWeight = FontWeight.Bold), color = AynvoraTheme.colors.Gold)
                         Spacer(Modifier.height(4.sdp))
-                        Text("Selected Hand: ${session.handType.name}", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.TextLight)
-                        Text("Detected Hand: ${evidence?.detectedHand?.name ?: session.handType.name}", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.TextLight)
+                        Text("${translator.translate(TranslationKey.Palmistry.ValidationSelectedHandPrefix)}: ${session.handType.localized(translator)}", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.TextLight)
+                        Text("${translator.translate(TranslationKey.Palmistry.ValidationDetectedHandPrefix)}: ${evidence?.detectedHand?.localized(translator) ?: session.handType.localized(translator)}", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.TextLight)
                         Text("Lateral Confidence: ${((evidence?.handConfidence ?: 0.90f) * 100).toInt()}%", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.Success)
-                        Text("Validation Result: ${evidence?.validationStatus?.name ?: "PASS"}", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.Success)
+                        Text("${translator.translate(TranslationKey.Palmistry.ValidationResultPrefix)}: ${(evidence?.validationStatus ?: PalmHandValidationStatus.PASS).localized(translator)}", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.Success)
                     }
                 }
 
@@ -1641,7 +1712,7 @@ private fun PalmDesktopWorkspace(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("👁 OBSERVED FROM IMAGE", style = AynvoraTheme.typography.caption12.copy(fontWeight = FontWeight.Bold), color = AynvoraTheme.colors.CelestialBlue)
                         }
-                        Text("Palm shape: ${finding?.shape?.name ?: "STANDARD"}, ${finding?.lines?.count { it.detected } ?: 4} major ridges traced.", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.TextLight)
+                        Text("Palm shape: ${finding?.shape?.localized(translator) ?: translator.translate(TranslationKey.Palmistry.ShapeStandard)}, ${finding?.lines?.count { it.detected } ?: 4} major ridges traced.", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.TextLight)
                         Spacer(Modifier.height(8.sdp))
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1751,7 +1822,7 @@ private fun PalmMobileWorkspace(
     val finding = session.finding
     val meanings = session.meanings
     val evidence = session.evidence ?: finding?.evidence
-    val watermark = "${session.userContext?.displayName ?: "Ishant"} · ${session.handType.name} · 04 OCT 2026"
+    val watermark = "${session.userContext?.displayName ?: "Ishant"} · ${session.handType.localized(translator)} · 04 OCT 2026"
 
     Column(
         modifier = Modifier
@@ -1822,7 +1893,7 @@ private fun PalmMobileWorkspace(
                             .padding(horizontal = 8.sdp, vertical = 4.sdp)
                     ) {
                         Text(
-                            text = finding?.shape?.name ?: "SQUARE",
+                            text = finding?.shape?.localized(translator) ?: translator.translate(TranslationKey.Palmistry.ShapeSquare),
                             style = AynvoraTheme.typography.caption12.copy(fontWeight = FontWeight.Bold),
                             color = AynvoraTheme.colors.Gold,
                         )
@@ -1866,7 +1937,7 @@ private fun PalmMobileWorkspace(
                 if (showTechnicalDetails) {
                     Spacer(Modifier.height(8.sdp))
                     val q = evidence?.palmQuality
-                    Text("Quality Score: ${((q?.overallScore ?: 0.85f) * 100).toInt()}% • Hand Match: ${evidence?.validationStatus?.name ?: "PASS"}", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.Success)
+                    Text("Quality Score: ${((q?.overallScore ?: 0.85f) * 100).toInt()}% • Hand Match: ${(evidence?.validationStatus ?: PalmHandValidationStatus.PASS).localized(translator)}", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.Success)
                     Text("Model: Google AI Edge MediaPipe (v0.10.14, Apache-2.0)", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.TextLightSecondary)
                     Text("Privacy: Offline processing. Biometrics never leave device.", style = AynvoraTheme.typography.caption12, color = AynvoraTheme.colors.Success)
                 }
@@ -1898,7 +1969,7 @@ private fun PalmMobileWorkspace(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = meaning?.title ?: line.lineType.name,
+                            text = meaning?.title ?: line.lineType.localized(translator),
                             style = AynvoraTheme.typography.body14.copy(fontWeight = FontWeight.Bold),
                             color = AynvoraTheme.colors.Gold,
                         )
@@ -1912,13 +1983,13 @@ private fun PalmMobileWorkspace(
                     Spacer(Modifier.height(6.sdp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.sdp)) {
                         Box(Modifier.background(AynvoraTheme.colors.CelestialBlue.copy(alpha = 0.2f), RoundedCornerShape(4.dp)).padding(horizontal = 4.sdp, vertical = 2.sdp)) {
-                            Text("OBSERVED", fontSize = 9.sp, color = AynvoraTheme.colors.CelestialBlue, fontWeight = FontWeight.Bold)
+                            Text(translator.translate(TranslationKey.Palmistry.ObservedTag), fontSize = 9.sp, color = AynvoraTheme.colors.CelestialBlue, fontWeight = FontWeight.Bold)
                         }
                         Box(Modifier.background(AynvoraTheme.colors.Gold.copy(alpha = 0.2f), RoundedCornerShape(4.dp)).padding(horizontal = 4.sdp, vertical = 2.sdp)) {
-                            Text("DERIVED", fontSize = 9.sp, color = AynvoraTheme.colors.Gold, fontWeight = FontWeight.Bold)
+                            Text(translator.translate(TranslationKey.Palmistry.DerivedTag), fontSize = 9.sp, color = AynvoraTheme.colors.Gold, fontWeight = FontWeight.Bold)
                         }
                         Box(Modifier.background(Color(0xFFE57373).copy(alpha = 0.2f), RoundedCornerShape(4.dp)).padding(horizontal = 4.sdp, vertical = 2.sdp)) {
-                            Text("TRADITIONAL REFLECTION", fontSize = 9.sp, color = Color(0xFFE57373), fontWeight = FontWeight.Bold)
+                            Text(translator.translate(TranslationKey.Palmistry.TraditionalTag), fontSize = 9.sp, color = Color(0xFFE57373), fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -2117,7 +2188,7 @@ private fun PalmFeatureDetailScreen(
             .verticalScroll(rememberScrollState()),
     ) {
         PalmistryHeaderBar(
-            title = meaning?.title ?: line.lineType.name,
+            title = meaning?.title ?: line.lineType.localized(translator),
             onBack = onBack,
         )
 
@@ -2228,7 +2299,7 @@ private fun PalmTimelineScreen(
                     )
                     Spacer(Modifier.height(2.sdp))
                     Text(
-                        text = event.eventType.name.replace("_", " "),
+                        text = event.eventType.localized(),
                         style = AynvoraTheme.typography.body14.copy(fontWeight = FontWeight.Bold),
                         color = AynvoraTheme.colors.Gold,
                     )

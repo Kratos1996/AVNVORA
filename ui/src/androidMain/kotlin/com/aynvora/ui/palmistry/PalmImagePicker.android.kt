@@ -169,7 +169,7 @@ private fun launchCameraInternal(
  * 2. Downsampling to a max dimension of 1920px to prevent memory exhaustion during line analysis.
  * 3. Compressing to a standard JPEG byte stream.
  */
-internal fun normalizeImageBytes(bytes: ByteArray, filePath: String?): ByteArray {
+fun normalizeImageBytes(bytes: ByteArray, filePath: String?): ByteArray {
     if (bytes.isEmpty()) return bytes
 
     return try {

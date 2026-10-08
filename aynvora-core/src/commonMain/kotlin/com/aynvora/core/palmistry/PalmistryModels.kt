@@ -133,6 +133,74 @@ data class PalmModelMetadata(
     val tfliteAuditResult: String = "TensorFlow/TFLite palm-line model integration not completed because no acceptable licensed/technically compatible model was verified.",
 )
 
+@Serializable
+data class ImageSpaceTransform(
+    val sourceWidth: Int,
+    val sourceHeight: Int,
+    val displayWidth: Float,
+    val displayHeight: Float,
+    val offsetX: Float,
+    val offsetY: Float,
+    val scale: Float = 1.0f,
+    val isMirrored: Boolean = false,
+) {
+    /**
+     * Projects a normalized point [0.0..1.0] onto the canvas coordinate frame.
+     */
+    fun toCanvasPoint(p: Point2D): Point2D {
+        val normX = if (isMirrored) (1.0f - p.x) else p.x
+        val cx = offsetX + normX * displayWidth
+        val cy = offsetY + p.y * displayHeight
+        return Point2D(cx, cy)
+    }
+
+    /**
+     * Inverts a canvas coordinate back into normalized [0.0..1.0] image space.
+     */
+    fun toNormalizedPoint(canvasX: Float, canvasY: Float): Point2D {
+        val relX = if (displayWidth > 0f) (canvasX - offsetX) / displayWidth else 0f
+        val relY = if (displayHeight > 0f) (canvasY - offsetY) / displayHeight else 0f
+        val normX = if (isMirrored) (1.0f - relX) else relX
+        return Point2D(normX.coerceIn(0f, 1f), relY.coerceIn(0f, 1f))
+    }
+
+    companion object {
+        /**
+         * Calculates the aspect-fit transform for rendering a source image on a canvas of [canvasWidth] x [canvasHeight].
+         */
+        fun fit(sourceWidth: Int, sourceHeight: Int, canvasWidth: Float, canvasHeight: Float, isMirrored: Boolean = false): ImageSpaceTransform {
+            val sw = if (sourceWidth > 0) sourceWidth.toFloat() else canvasWidth
+            val sh = if (sourceHeight > 0) sourceHeight.toFloat() else canvasHeight
+            val imageAspect = if (sh > 0f) sw / sh else 1.0f
+            val canvasAspect = if (canvasHeight > 0f) canvasWidth / canvasHeight else 1.0f
+
+            val (dispW, dispH, ox, oy) = if (imageAspect > canvasAspect) {
+                // Letterbox: image is wider than canvas
+                val dw = canvasWidth
+                val dh = if (imageAspect > 0f) canvasWidth / imageAspect else canvasHeight
+                listOf(dw, dh, 0f, (canvasHeight - dh) / 2f)
+            } else {
+                // Pillarbox: image is taller than canvas
+                val dh = canvasHeight
+                val dw = canvasHeight * imageAspect
+                listOf(dw, dh, (canvasWidth - dw) / 2f, 0f)
+            }
+
+            val scale = if (sw > 0f) dispW / sw else 1.0f
+            return ImageSpaceTransform(
+                sourceWidth = if (sourceWidth > 0) sourceWidth else canvasWidth.toInt(),
+                sourceHeight = if (sourceHeight > 0) sourceHeight else canvasHeight.toInt(),
+                displayWidth = dispW,
+                displayHeight = dispH,
+                offsetX = ox,
+                offsetY = oy,
+                scale = scale,
+                isMirrored = isMirrored,
+            )
+        }
+    }
+}
+
 /**
  * Machine-readable palm evidence object capturing all verified vision telemetry.
  */
@@ -159,6 +227,9 @@ data class PalmEvidence(
         else -> PalmHandValidationStatus.WRONG_HAND
     },
     val userContext: PalmUserContext? = null,
+    val rawHandLabel: String = detectedHand?.name ?: "UNKNOWN",
+    val rawHandScore: Float = handConfidence,
+    val decisionReason: String = "",
 )
 
 /**
@@ -235,6 +306,7 @@ data class PalmImageSource(
     val heightPx: Int = 0,
     val sourceType: PalmImageSourceType = PalmImageSourceType.CAMERA,
     val capturedAtEpochMs: Long = 0L,
+    val inferredHand: HandType? = null,
 )
 
 /**

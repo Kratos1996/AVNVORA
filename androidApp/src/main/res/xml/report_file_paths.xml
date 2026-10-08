@@ -6,4 +6,10 @@
     <cache-path
         name="palm_images"
         path="palm_images/" />
+    <cache-path
+        name="cache_root"
+        path="." />
+    <external-files-path
+        name="external_reports"
+        path="." />
 </paths>

@@ -71,32 +71,9 @@ fun AynvoraLocalizationProviderForLocale(
         LocalAynvoraLocalizationProvider provides translator,
         LocalAynvoraIsRtl provides isRtl,
     ) {
-
-    if (useReducedMotion) {
-            // Skip animation for reduced-motion users
-            content()
-        } else {
-            AnimatedContent(
-                targetState = locale.localeId,
-                transitionSpec = {
-                    fadeIn(
-                        animationSpec = androidx.compose.animation.core.tween(
-                            durationMillis = AynvoraMotion.durationDefault,
-                        ),
-                    ) togetherWith fadeOut(
-                        animationSpec = androidx.compose.animation.core.tween(
-                            durationMillis = AynvoraMotion.durationDefault,
-                        ),
-                    )
-                },
-                label = "locale_transition",
-            ) { targetLocaleId ->
-                // Content recomposes for any locale change.
-                // The targetLocaleId is intentionally unused — we use CompositionLocals instead.
-                @Suppress("UNUSED_EXPRESSION")
-                targetLocaleId
-                content()
-            }
-        }
+        // Directly compose content with updated CompositionLocals.
+        // Reactive snapshot state in Compose automatically recomposes all text nodes
+        // seamlessly while preserving screen destinations, user input, and PalmEvidence.
+        content()
     }
 }
